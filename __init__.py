@@ -8,80 +8,87 @@ bl_info = {
     "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
     "description" : "",
     "blender" : (4, 2, 0),
-    "version" : (0, 0, 1),
+    "version" : (0, 0, 2),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
 }
 
-
 import bpy
-import os
-import importlib #?
 
-# PLEASE READ!
+from . import gltf_extensions_definitions
+
+#region Docs [REQUIRED]
 
 # welcome to the beautiful mess that is developing a blender addon with multiple scripts.
 
 # you will need:
 # 1) fake bpy: https://github.com/nutti/fake-bpy-module
 # 2) possibly the Blender Development addon in vscode extensions.
-#
-
 
 # some rules about this autoload:
 # 1) there can only be 1 register/deregister function, and it must be in __init.py__ where bl_info is. do not register in other scripts!
 # 2) panels and operators are autoloaded, but you must load property classes manually here, example at bottom.
 # 3) if everything is setup correctly, reload the addon with F3>reload script (or TODO try make lazy reload button) 
 
+#endregion
 
 
-# this is an old version which only loads panels and operators from _this_ directory.
-## TODO update to new autoloader, which can dig through the addons sub folders.
 
 
-### thank you VERY MUCH to Valy Arhal for this autoload script and all the extra help! <3
 
-#### AUTOLOADER
-folder_blacklist = ["__pycache__"]
-file_blacklist = ["__init__.py"]
+#region Modue Auto loader
 
-addon_folders = list([__path__[0]])
-addon_folders.extend( [os.path.join(__path__[0], folder_name) for folder_name in os.listdir(__path__[0]) if ( os.path.isdir( os.path.join(__path__[0], folder_name) ) ) and (folder_name not in folder_blacklist) ] )
+#thank you VERY MUCH to Valy Arhal for this autoload script and all the extra help! <3
 
-addon_files = [[folder_path, file_name[0:-3]] for folder_path in addon_folders for file_name in os.listdir(folder_path) if (file_name not in file_blacklist) and (file_name.endswith(".py"))]
+from typing import Iterable
+import importlib
+from os import sep as os_separator
+from pathlib import Path
+
+
+folder_name_blacklist: list[str]=["__pycache__"] 
+file_name_blacklist: list[str]=["__init__.py"]
+if (bpy.app.version[0]<=4 and bpy.app.version[1]<=1):
+    file_name_blacklist.extend(["addon_updater", "addon_updater_ops"])
+
+
+addon_folders = []
+addon_files = []
+
+addon_path_iter = [ Path( __path__[0] ) ]
+addon_path_iter.extend(Path( __path__[0] ).iterdir())
+
+for folder_path in addon_path_iter:
+    
+    
+    if ( folder_path.is_dir() ) and ( folder_path.exists() ) and ( folder_path.name not in folder_name_blacklist ):
+        addon_folders.append( folder_path )
+
+        for subfolder_path in folder_path.iterdir():
+            if ( subfolder_path.is_dir() ) and ( subfolder_path.exists()):
+                addon_path_iter.append( subfolder_path )
+                addon_folders.append( subfolder_path )
+
+addon_files = [[folder_path, file_name.name[0:-3]] for folder_path in addon_folders for file_name in folder_path.iterdir() if ( file_name.is_file() ) and ( file_name.name not in file_name_blacklist ) and ( file_name.suffix == ".py" )]
 
 for folder_file_batch in addon_files:
-    if (os.path.basename(folder_file_batch[0]) == os.path.basename(__path__[0])):
-        file = folder_file_batch[1]
-
-        if (file not in locals()):
-            import_line = f"from . import {file}"
-            exec(import_line)
-        else:
-            reload_line = f"{file} = importlib.reload({file})"
-            exec(reload_line)
+    file = folder_file_batch[1]
     
+    if (file not in locals()):
+        relative_path = str(folder_file_batch[0].relative_to( __path__[0] ) ).replace(os_separator,"." )
+
+        import_line = f"from . {relative_path if relative_path != '.' else ''} import {file}"
+        exec(import_line)
     else:
-        if (os.path.basename(folder_file_batch[0]) != os.path.basename(__path__[0])):
-            file = folder_file_batch[1]
-
-            if (file not in locals()):
-                import_line = f"from . {os.path.basename(folder_file_batch[0])} import {file}"
-                exec(import_line)
-            else:
-                reload_line = f"{file} = importlib.reload({file})"
-                exec(reload_line)
-
+        reload_line = f"{file} = importlib.reload({file})"
+        exec(reload_line)
 
 import inspect
-
-class_blacklist = []
-
-bpy_class_object_list = tuple(bpy_class[1] for bpy_class in inspect.getmembers(bpy.types, inspect.isclass) if (bpy_class not in class_blacklist))
-_class_object_list = tuple(_class[1] for file_batch in addon_files for _class in inspect.getmembers(eval(file_batch[1]), inspect.isclass) if issubclass(_class[1], bpy_class_object_list) and (not issubclass(_class[1], bpy.types.WorkSpaceTool)))
+_class_object_list = tuple(alx_class[1] for file_batch in addon_files for alx_class in inspect.getmembers(eval(file_batch[1]), inspect.isclass) )
 
 ClassQueue = _class_object_list
+
 
 
 def register_class_queue():
@@ -101,19 +108,58 @@ def unregister_class_queue():
             bpy.utils.unregister_class(Class)
         except:
             print("Can't Unregister", Class)
-#### AUTOLOADER
 
 
 
-## again, huge thanks Valy Arhal.
+# again, huge thanks Valy Arhal.
 
+#endregion
 
+class glTF2ExportUserExtension:
 
+    def __init__(self):
+        # We need to wait until we create the gltf2UserExtension to import the gltf2 modules
+        # Otherwise, it may fail because the gltf2 may not be loaded yet
+        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore [available to blender not vscode and won't throw an error]
+        self.Extension = Extension
 
+    def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
+        if gltf_plan.extensions is None:
+            gltf_plan.extensions = {}
+        
+        # here is where you need to load up the shapes associated with the OMI_physics_body
 
+        n = "OMI_physics_shape"
+        gltf_plan.extensions[n] = self.Extension(
+            name=n,
+            extension={"shapes": [
+                {
+                    "type": "box",
+                    "box": {
+                        "size": [1,2,3]
+                    }
+                }
+            ]},
+            required=False
+        )
 
+        pass
 
-## TO LOAD PROPERTYS, you must do it here, manually. properties cannot be autoloaded.
+    def gather_node_hook(self, gltf2_object, blender_object, export_settings):
+        if gltf2_object.extensions is None:
+            gltf2_object.extensions = {}
+
+        # store possible options as an array, iterate, and then tag the gltf data
+        n = "OMI_physics_body"
+        if n in blender_object:
+            gltf2_object.extensions[n] = self.Extension(
+                name=n,
+                extension=blender_object[n],
+                required=False
+            )
+
+#region Property Docs
+## TO LOAD PROPERTIES, you must do it here, manually. properties cannot be autoloaded.
 
 
 # example:
@@ -126,23 +172,16 @@ def unregister_class_queue():
 #     my_string : bpy.props.StringProperty(
 #         name="string",
 #         description="words and stuff") #type: ignore
+#endregion
 
-
-# now register the properties!
-
-from . import object_extension_data
 def register_properties():
-    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=object_extension_data.OMI_Physics_Body)
-    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=object_extension_data.OMI_Physics_Shape)
-    pass
+    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_Physics_Body)
+    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_Physics_Shape)
 
 def unregister_properties():
     del bpy.types.Scene.body_properties
     del bpy.types.Scene.shape_properties
-    pass
 
-
-# ok! lets go!
 
 def register():
     register_class_queue()
