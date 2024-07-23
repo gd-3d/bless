@@ -130,15 +130,15 @@ def unregister_class_queue():
 
 # now register the properties!
 
-from . import physics_body
+from . import object_extension_data
 def register_properties():
-    bpy.types.Scene.motion_properties = bpy.props.PointerProperty(type=physics_body.MotionBodyProperties)
-    bpy.types.Scene.collision_properties = bpy.props.PointerProperty(type=physics_body.CollisionBodyProperties)
+    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=object_extension_data.OMI_Physics_Body)
+    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=object_extension_data.OMI_Physics_Shape)
     pass
 
 def unregister_properties():
-    del bpy.types.Scene.motion_properties
-    del bpy.types.Scene.collision_properties
+    del bpy.types.Scene.body_properties
+    del bpy.types.Scene.shape_properties
     pass
 
 
