@@ -200,8 +200,8 @@ class glTF2ExportUserExtension:
             extension_include = f'"extensionsUsed":[{extension_list}]' # TODO. something better 
 
             if extension in blender_object:
-                gltf2_object.extensions[n] = self.Extension(
-                    name=n,
+                gltf2_object.extensions[extension] = self.Extension(
+                    name=extension,
                     extension=blender_object[n],
                     required=False
                 )
