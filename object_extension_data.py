@@ -152,15 +152,14 @@ class ApplyProps(bpy.types.Operator):
         
         # declare shapes to be used by bodies
 
-        for obj in context.selected_objects:
-            obj["OMI_physics_shape"] = {
-                "type" : shape.shape_types
+        # for obj in context.selected_objects:
+        #     obj["OMI_physics_shape"] = {
+        #         "type" : shape.shape_types
             
-            # each shape declaration goes here
+        #     # each shape declaration goes here
 
 
-            }
-
+        #     }
 
         for obj in context.selected_objects:
             obj["OMI_physics_body"] = {
@@ -188,18 +187,20 @@ extension_list = [
 
 class glTF2ExportUserExtension:
     def __init__(self):
+        # We need to wait until we create the gltf2UserExtension to import the gltf2 modules
+        # Otherwise, it may fail because the gltf2 may not be loaded yet
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type: ignore
         self.Extension = Extension
 
     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
+        extension_include = f'"extensionsUsed":[{extension_list}]' # TODO. something better 
+        
         if gltf2_object.extensions is None:
-            gltf2_object.extensions = {}
+            gltf2_object.extensions = {extension_include}
 
-
+        
+        # get possible options as an array, iterate, and then tag the gltf data
         for extension in extension_list:
-            
-            extension_include = f'"extensionsUsed":[{extension_list}]' # TODO. something better 
-
             if extension in blender_object:
                 gltf2_object.extensions[extension] = self.Extension(
                     name=extension,
