@@ -1,80 +1,126 @@
+## gd-3d blender
+
+## addon init + operator and panel registration autoload.
+
+## required.
 bl_info = {
-    "name": "gd3d",
-    "category": "Generic",
-    "version": (1, 0, 0),
-    "blender": (2, 80, 0),
-    'location': 'File > Export > glTF 2.0',
-    'description': 'Example addon to add a custom extension to an exported glTF file.',
-    'tracker_url': "https://github.com/KhronosGroup/glTF-Blender-IO/issues/",  # Replace with your issue tracker
-    'isDraft': False,
-    'developer': "(Your name here)", # Replace this
-    'url': 'https://your_url_here',  # Replace this
+    "name" : "gd-3d blender", 
+    "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
+    "description" : "",
+    "blender" : (4, 2, 0),
+    "version" : (0, 0, 2),
+    "location" : "",
+    "warning" : "",
+    "category" : "Generic"
 }
 
 import bpy
 
-class TestExportPanel(bpy.types.Panel):
-    bl_idname = "OBJECT_PT_test_export"
-    bl_label = "Test Export"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = "objectmode"
-    bl_category = "Test Export"
-            
-    def draw(self, context):
-        layout = self.layout
+from . import gltf_extensions_definitions
 
-        box = layout.box()
-        
-        row = box.row()
-        row.operator("object.gd3d_apply_props", icon="NONE", text="Apply Props")
+#region Docs [REQUIRED]
 
-class ApplyProps(bpy.types.Operator):
-    """Apply Props"""
-    bl_idname = "object.gd3d_apply_props"
-    bl_label = "Apply Props"
-    bl_options = {'REGISTER', 'UNDO'}
+# welcome to the beautiful mess that is developing a blender addon with multiple scripts.
 
-    def execute(self, context):
-        
-        for obj in context.selected_objects:
-            
-            # HARD CODED FOR NOW
-            # implement all motion type and shape options from the OMI standards as dropdowns
-            obj["OMI_physics_body"] = {
-                "motion": {
-                    "type": "dynamic"
-                },
-                "collider": {
-                    "shape": 0
-                }
-            }
-        
-        return {'FINISHED'}
+# you will need:
+# 1) fake bpy: https://github.com/nutti/fake-bpy-module
+# 2) possibly the Blender Development addon in vscode extensions.
+
+# some rules about this autoload:
+# 1) there can only be 1 register/deregister function, and it must be in __init.py__ where bl_info is. do not register in other scripts!
+# 2) panels and operators are autoloaded, but you must load property classes manually here, example at bottom.
+# 3) if everything is setup correctly, reload the addon with F3>reload script (or TODO try make lazy reload button) 
+
+#endregion
 
 
-classes = [TestExportPanel, ApplyProps]
 
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
 
-    # when props are needed...
-    #bpy.types.Scene.ExampleExtensionProperties = bpy.props.PointerProperty(type=ExampleExtensionProperties)
 
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+#region Modue Auto loader
+
+#thank you VERY MUCH to Valy Arhal for this autoload script and all the extra help! <3
+
+from typing import Iterable
+import importlib
+from os import sep as os_separator
+from pathlib import Path
+
+
+folder_name_blacklist: list[str]=["__pycache__"] 
+file_name_blacklist: list[str]=["__init__.py"]
+if (bpy.app.version[0]<=4 and bpy.app.version[1]<=1):
+    file_name_blacklist.extend(["addon_updater", "addon_updater_ops"])
+
+
+addon_folders = []
+addon_files = []
+
+addon_path_iter = [ Path( __path__[0] ) ]
+addon_path_iter.extend(Path( __path__[0] ).iterdir())
+
+for folder_path in addon_path_iter:
     
-    # props
-    #del bpy.types.Scene.ExampleExtensionProperties
+    
+    if ( folder_path.is_dir() ) and ( folder_path.exists() ) and ( folder_path.name not in folder_name_blacklist ):
+        addon_folders.append( folder_path )
+
+        for subfolder_path in folder_path.iterdir():
+            if ( subfolder_path.is_dir() ) and ( subfolder_path.exists()):
+                addon_path_iter.append( subfolder_path )
+                addon_folders.append( subfolder_path )
+
+addon_files = [[folder_path, file_name.name[0:-3]] for folder_path in addon_folders for file_name in folder_path.iterdir() if ( file_name.is_file() ) and ( file_name.name not in file_name_blacklist ) and ( file_name.suffix == ".py" )]
+
+for folder_file_batch in addon_files:
+    file = folder_file_batch[1]
+    
+    if (file not in locals()):
+        relative_path = str(folder_file_batch[0].relative_to( __path__[0] ) ).replace(os_separator,"." )
+
+        import_line = f"from . {relative_path if relative_path != '.' else ''} import {file}"
+        exec(import_line)
+    else:
+        reload_line = f"{file} = importlib.reload({file})"
+        exec(reload_line)
+
+import inspect
+_class_object_list = tuple(alx_class[1] for file_batch in addon_files for alx_class in inspect.getmembers(eval(file_batch[1]), inspect.isclass) )
+
+ClassQueue = _class_object_list
+
+
+
+def register_class_queue():
+    for Class in ClassQueue:
+        try:
+            bpy.utils.register_class(Class)
+        except:
+            try:
+                bpy.utils.unregister_class(Class)
+                bpy.utils.register_class(Class)
+            except:
+                pass
+
+def unregister_class_queue():
+    for Class in ClassQueue:
+        try:
+            bpy.utils.unregister_class(Class)
+        except:
+            print("Can't Unregister", Class)
+
+
+
+# again, huge thanks Valy Arhal.
+
+#endregion
 
 class glTF2ExportUserExtension:
 
     def __init__(self):
         # We need to wait until we create the gltf2UserExtension to import the gltf2 modules
         # Otherwise, it may fail because the gltf2 may not be loaded yet
-        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
+        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore [available to blender not vscode and won't throw an error]
         self.Extension = Extension
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
@@ -112,5 +158,35 @@ class glTF2ExportUserExtension:
                 required=False
             )
 
-if __name__ == "__main__":
-    register()
+#region Property Docs
+## TO LOAD PROPERTIES, you must do it here, manually. properties cannot be autoloaded.
+
+
+# example:
+# (you will need a panel_template.py in the same dir as a module, that includes a MyProps class)
+
+
+# inside /panel_template.py:
+
+# class MyProps(bpy.types.PropertyGroup):
+#     my_string : bpy.props.StringProperty(
+#         name="string",
+#         description="words and stuff") #type: ignore
+#endregion
+
+def register_properties():
+    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_Physics_Body)
+    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_Physics_Shape)
+
+def unregister_properties():
+    del bpy.types.Scene.body_properties
+    del bpy.types.Scene.shape_properties
+
+
+def register():
+    register_class_queue()
+    register_properties()
+
+def unregister():
+    unregister_class_queue()
+    unregister_properties()

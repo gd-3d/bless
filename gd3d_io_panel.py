@@ -58,5 +58,3 @@ class ObjectPanel(bpy.types.Panel):
             prop_column.row().prop(body_properties, "center_of_mass", text="center of mass")
 
             prop_column.row().prop(body_properties, "shape_index", text="shape index")
-
-
