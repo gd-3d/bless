@@ -5,7 +5,7 @@ import bpy
 ## props
 
 class ObjectPanel(bpy.types.Panel):
-    bl_label = "Collision Panel"
+    bl_label = "Object Panel"
     bl_idname = "VIEW3D_PT_object_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
