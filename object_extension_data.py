@@ -13,24 +13,51 @@ class ObjectPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        motion = context.scene.motion_properties
-        collision = context.scene.collision_properties
+        body = context.scene.body_properties
+        shape = context.scene.shape_properties
         obj = context.object
 
         if obj is None:
             layout.label(text="No object selected.")
         else:
-
             row = layout.row()
             row.operator("object.gd3d_apply_props", text="apply")
+            
+            layout.label(text="Body Properties")
             row = layout.row()
-            row.prop(motion, "is_motion")
+            row.prop(body, "is_motion")
             row = layout.row()
-            row.prop(motion, "motion_types")
+            row.prop(body, "motion_types")
             row = layout.row()
-            row.prop(collision, "shape_types")
+            row.prop(body, "mass")
             row = layout.row()
-            row.prop(collision, "is_trigger")
+            row.prop(body, "linear_velocity")
+            row = layout.row()
+            row.prop(body, "angular_velocity")
+            row = layout.row()
+            row.prop(body, "center_of_mass")
+            row = layout.row()
+            row.prop(body, "is_trigger")
+            row = layout.row()
+            row.prop(body, "shape_index")
+
+            layout.separator()
+            
+            layout.label(text="Shape Properties")
+            row = layout.row()
+            row.prop(shape, "is_collision")
+            row = layout.row()
+            row.prop(shape, "index")
+            row = layout.row()
+            row.prop(shape, "shape_types")
+            row = layout.row()
+            row.prop(shape, "size")
+            row = layout.row()
+            row.prop(shape, "radius")
+            row = layout.row()
+            row.prop(shape, "height")
+            row = layout.row()
+            row.prop(shape, "mesh")
 
 
 
@@ -170,7 +197,7 @@ class glTF2ExportUserExtension:
 
         for extension in extension_list:
             
-            json_include = f'"extensionsUsed":[{extension_list}]' # TODO. something better 
+            extension_include = f'"extensionsUsed":[{extension_list}]' # TODO. something better 
 
             if extension in blender_object:
                 gltf2_object.extensions[n] = self.Extension(
