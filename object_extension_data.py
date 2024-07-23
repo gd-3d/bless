@@ -156,7 +156,7 @@ class ApplyProps(bpy.types.Operator):
             obj["OMI_physics_shape"] = {
                 "type" : shape.shape_types
             
-            # each shape declaration goes here.
+            # each shape declaration goes here
 
 
             }
@@ -203,6 +203,6 @@ class glTF2ExportUserExtension:
             if extension in blender_object:
                 gltf2_object.extensions[extension] = self.Extension(
                     name=extension,
-                    extension=blender_object[n],
+                    extension=blender_object[extension],
                     required=False
                 )
