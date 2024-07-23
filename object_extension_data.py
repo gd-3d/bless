@@ -155,7 +155,8 @@ class ApplyProps(bpy.types.Operator):
         for obj in context.selected_objects:
             obj["OMI_physics_shape"] = {
                 "type" : shape.shape_types
-
+            
+            # each shape declaration goes here.
 
 
             }
