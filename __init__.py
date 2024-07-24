@@ -140,7 +140,9 @@ class glTF2ExportUserExtension:
         for obj in bpy.context.scene.objects:
             shape_array.append(obj[n])
                 # what the flip
-       
+        
+        # deduplicate
+        #shape_array = [shape_array.append(x) for x in shape_array if x not in shape_array]
         
         gltf_plan.extensions[n] = self.Extension(
             name=n,
