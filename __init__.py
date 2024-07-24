@@ -115,6 +115,12 @@ def unregister_class_queue():
 
 #endregion
 
+
+
+
+## hooks found and implemented by michaeljared from this original gist:
+## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
+
 class glTF2ExportUserExtension:
 
     def __init__(self):
@@ -127,19 +133,18 @@ class glTF2ExportUserExtension:
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
-        # here is where you need to load up the shapes associated with the OMI_physics_body
-
+        from . import gltf_extensions_definitions
         n = "OMI_physics_shape"
+        # here is where you need to load up the shapes associated with the OMI_physics_body
+        shape_array = []
+        for obj in bpy.context.scene.objects:
+            shape_array.append(obj[n])
+                # what the flip
+       
+        
         gltf_plan.extensions[n] = self.Extension(
             name=n,
-            extension={"shapes": [
-                {
-                    "type": "box",
-                    "box": {
-                        "size": [1,2,3]
-                    }
-                }
-            ]},
+            extension={"shapes": shape_array},
             required=False
         )
 
