@@ -103,20 +103,22 @@ def build_body_dictionary(body):
     body_data = {}
 
     if body.is_motion:
-        body_data = {
-            "type": body.motion_types,
-            "shape_index" : body.shape_index
 
-        }
+
+        motion_data = {"type": body.motion_types}
+        shape_type = {"shape": body.shape_index}
+
+        body_data["motion"] = motion_data
+        body_data["collider"] = shape_type
 
     # if rigid
-    if body.motion_types is "1":
-        body_data = {
-            "mass": body.mass,
-            "linearVelocity": body.linear_velocity,
-            "angularVelocity": body.angular_velocity,
-            "centerOfMass": body.center_of_mass,
-        }
+    # if body.motion_types is "1":
+    #     body_data = {
+    #         "mass": body.mass,
+    #         "linearVelocity": body.linear_velocity,
+    #         "angularVelocity": body.angular_velocity,
+    #         "centerOfMass": body.center_of_mass,
+    #     }
     
     return body_data
 

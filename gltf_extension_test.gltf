@@ -32,8 +32,12 @@
 		{
 			"extensions":{
 				"OMI_physics_body":{
-					"type":"static",
-					"shape_index":0
+					"motion":{
+						"type":"static"
+					},
+					"collider":{
+						"shape":0
+					}
 				}
 			},
 			"mesh":0,
