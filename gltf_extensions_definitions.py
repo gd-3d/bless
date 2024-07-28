@@ -2,7 +2,7 @@
 
 import bpy
 
-class OMI_Physics_Shape(bpy.types.PropertyGroup):
+class OMI_physics_shape(bpy.types.PropertyGroup):
 
     # possibly needed for internal for gd3d
     is_collision: bpy.props.BoolProperty(default=False)  # type: ignore
@@ -30,12 +30,12 @@ class OMI_Physics_Shape(bpy.types.PropertyGroup):
     
     # The index of the glTF mesh in the document to use as a mesh shape.
     mesh: bpy.props.IntProperty(default=-1) # type: ignore
-
+    
 
 
 ## https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_body
 
-class OMI_Physics_Body(bpy.types.PropertyGroup):
+class OMI_physics_body(bpy.types.PropertyGroup):
     
     shape_index: bpy.props.IntProperty(default=-1) # type: ignore
 
@@ -111,16 +111,9 @@ def build_body_dictionary(body):
         body_data["motion"] = motion_data
         body_data["collider"] = shape_type
 
-    # if rigid
-    # if body.motion_types is "1":
-    #     body_data = {
-    #         "mass": body.mass,
-    #         "linearVelocity": body.linear_velocity,
-    #         "angularVelocity": body.angular_velocity,
-    #         "centerOfMass": body.center_of_mass,
-    #     }
     
     return body_data
+
 
 
 def build_shape_dictionary(body, shape):
@@ -135,6 +128,7 @@ def build_shape_dictionary(body, shape):
     
     if shape.shape_types in ["capsule", "cylinder"]:
         subdata["height"] = shape.height
+    
     if shape.shape_types in ["trimesh", "convex"]:
         subdata["mesh"] = shape.mesh
 

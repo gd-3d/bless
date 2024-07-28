@@ -18,7 +18,8 @@ import bpy
 
 from . import gltf_extensions_definitions
 
-#region Docs [REQUIRED]
+#region 
+# Docs [REQUIRED]
 
 # welcome to the beautiful mess that is developing a blender addon with multiple scripts.
 
@@ -133,24 +134,28 @@ class glTF2ExportUserExtension:
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
-        from . import gltf_extensions_definitions
-        n = "OMI_physics_shape"
-        # here is where you need to load up the shapes associated with the OMI_physics_body
+        extension_name = "OMI_physics_shape"
         shape_array = []
+
+        mesh_id_map = {mesh.name: idx for idx, mesh in enumerate(bpy.data.meshes)}
+
         for obj in bpy.context.scene.objects:
-            shape_array.append(obj[n])
-                # what the flip
-        
-        # deduplicate
-        #shape_array = [shape_array.append(x) for x in shape_array if x not in shape_array]
-        
-        gltf_plan.extensions[n] = self.Extension(
-            name=n,
+            try:
+                shape_data = obj[extension_name]
+            except KeyError:
+                continue
+            else:
+                #
+                #if shape_data["type"] in ["convex", "trimesh"]:
+                #    shape_data[shape_data["type"]]["mesh"] = mesh_id_map.get(shape_data[shape_data["type"]]["mesh"], -1) # idk
+                shape_array.append(shape_data)
+
+        gltf_plan.extensions[extension_name] = self.Extension(
+            name=extension_name,
             extension={"shapes": shape_array},
             required=False
         )
 
-        pass
 
     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
         if gltf2_object.extensions is None:
@@ -182,8 +187,8 @@ class glTF2ExportUserExtension:
 #endregion
 
 def register_properties():
-    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_Physics_Body)
-    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_Physics_Shape)
+    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_physics_body)
+    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_physics_shape)
 
 def unregister_properties():
     del bpy.types.Scene.body_properties
