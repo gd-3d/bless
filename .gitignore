@@ -158,3 +158,21 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+
+# bpy gitignore!
+# filter blend files:
+#*.blend
+
+
+# filter glb/gltf files:
+
+*.glb
+#*.gltf
+#*.bin
+
+
+# filter blender backups:
+*.blend1
+#..
+*.blend2 

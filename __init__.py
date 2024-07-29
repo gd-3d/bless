@@ -185,15 +185,16 @@ class glTF2ExportUserExtension:
 #         name="string",
 #         description="words and stuff") #type: ignore
 #endregion
-
+from . import grid
 def register_properties():
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_physics_body)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_physics_shape)
+    bpy.types.Scene.unit_size = bpy.props.FloatProperty(type=grid.unit_size)
 
 def unregister_properties():
     del bpy.types.Scene.body_properties
     del bpy.types.Scene.shape_properties
-
+    del bpy.types.Scene.unit_size
 
 def register():
     register_class_queue()
