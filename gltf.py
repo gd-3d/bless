@@ -2,6 +2,8 @@
 
 import bpy
 
+
+
 ## hooks found and implemented by michaeljared from this original gist:
 ## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
 
@@ -47,8 +49,6 @@ class glTF2ExportUserExtension:
                 extension=blender_object[n],
                 required=False
             )
-
-
 
 # TODO expand...
 

@@ -1,6 +1,5 @@
 ## gd-3d blender
 
-## addon init + operator and panel registration autoload.
 
 ## required.
 bl_info = {
@@ -167,6 +166,10 @@ def register():
     register_class_queue()
     register_properties()
 
+
+
+
 def unregister():
     unregister_class_queue()
     unregister_properties()
+    
