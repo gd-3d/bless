@@ -1,3 +1,4 @@
+# NOTE : unit size is not a good idea - use grid size instead.
 
 
 # a grid panel, to half or double the grid with 2 buttons, and also set the size with a property.

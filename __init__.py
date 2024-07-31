@@ -16,7 +16,7 @@ bl_info = {
 
 import bpy
 
-from . import gltf_extensions_definitions
+from . import gltf
 
 #region 
 # Docs [REQUIRED]
@@ -38,7 +38,8 @@ from . import gltf_extensions_definitions
 
 
 
-#region Modue Auto loader
+ 
+# Module Auto loader
 
 #thank you VERY MUCH to Valy Arhal for this autoload script and all the extra help! <3
 
@@ -119,58 +120,22 @@ def unregister_class_queue():
 
 
 
-## hooks found and implemented by michaeljared from this original gist:
-## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
-
-class glTF2ExportUserExtension:
-
-    def __init__(self):
-        # We need to wait until we create the gltf2UserExtension to import the gltf2 modules
-        # Otherwise, it may fail because the gltf2 may not be loaded yet
-        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore [available to blender not vscode and won't throw an error]
-        self.Extension = Extension
-
-    def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
-        if gltf_plan.extensions is None:
-            gltf_plan.extensions = {}
-        
-        extension_name = "OMI_physics_shape"
-        shape_array = []
-
-        mesh_id_map = {mesh.name: idx for idx, mesh in enumerate(bpy.data.meshes)}
-
-        for obj in bpy.context.scene.objects:
-            try:
-                shape_data = obj[extension_name]
-            except KeyError:
-                continue
-            else:
-                #
-                #if shape_data["type"] in ["convex", "trimesh"]:
-                #    shape_data[shape_data["type"]]["mesh"] = mesh_id_map.get(shape_data[shape_data["type"]]["mesh"], -1) # idk
-                shape_array.append(shape_data)
-
-        gltf_plan.extensions[extension_name] = self.Extension(
-            name=extension_name,
-            extension={"shapes": shape_array},
-            required=False
-        )
 
 
-    def gather_node_hook(self, gltf2_object, blender_object, export_settings):
-        if gltf2_object.extensions is None:
-            gltf2_object.extensions = {}
 
-        # store possible options as an array, iterate, and then tag the gltf data
-        n = "OMI_physics_body"
-        if n in blender_object:
-            gltf2_object.extensions[n] = self.Extension(
-                name=n,
-                extension=blender_object[n],
-                required=False
-            )
 
-#region Property Docs
+
+
+
+
+
+
+
+
+ 
+# registration
+# region 
+# Property Docs
 ## TO LOAD PROPERTIES, you must do it here, manually. properties cannot be autoloaded.
 
 
@@ -185,10 +150,12 @@ class glTF2ExportUserExtension:
 #         name="string",
 #         description="words and stuff") #type: ignore
 #endregion
+
+
 from . import grid
 def register_properties():
-    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_physics_body)
-    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf_extensions_definitions.OMI_physics_shape)
+    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_body)
+    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_shape)
     bpy.types.Scene.unit_size = bpy.props.FloatProperty(type=grid.unit_size)
 
 def unregister_properties():
