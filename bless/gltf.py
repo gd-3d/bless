@@ -7,6 +7,10 @@ import bpy
 ## hooks found and implemented by michaeljared from this original gist:
 ## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
 
+
+OMI_PHYSICS_SHAPE = "OMI_physics_shape"
+OMI_PHYSICS_BODY = "OMI_physics_body"
+
 class bless_glTF2Extension:
 
     def __init__(self):
@@ -16,19 +20,19 @@ class bless_glTF2Extension:
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
-        extension_name = "OMI_physics_shape"
+        
         shape_array = []
 
         for obj in bpy.context.scene.objects:
             try:
-                shape_data = obj[extension_name]
+                shape_data = obj[ OMI_PHYSICS_SHAPE ]
             except KeyError:
                 continue
             else:
                 shape_array.append(shape_data)
 
-        gltf_plan.extensions[extension_name] = self.Extension(
-            name=extension_name,
+        gltf_plan.extensions[ OMI_PHYSICS_SHAPE ] = self.Extension(
+            name= OMI_PHYSICS_SHAPE,
             extension={"shapes": shape_array},
             required=False
         )
@@ -39,11 +43,11 @@ class bless_glTF2Extension:
             gltf2_object.extensions = {}
 
         # store possible options as an array, iterate, and then tag the gltf data
-        n = "OMI_physics_body"
-        if n in blender_object:
-            gltf2_object.extensions[n] = self.Extension(
-                name=n,
-                extension=blender_object[n],
+        
+        if OMI_PHYSICS_BODY in blender_object:
+            gltf2_object.extensions[ OMI_PHYSICS_BODY ] = self.Extension(
+                name= OMI_PHYSICS_BODY,
+                extension=blender_object[ OMI_PHYSICS_BODY ],
                 required=False
             )
 
