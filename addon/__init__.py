@@ -86,13 +86,10 @@ def unregister_class_queue():
 
 #endregion
 
-from . import addon_updater_ops
 
-from . import bless_keymap_utils
 
-from . import gltf
-from .level import grid
 
+# this allows using this class outside of __init__.py
 
 class glTF2ExportUserExtension(gltf.bless_glTF2Extension):
 
@@ -107,6 +104,10 @@ class glTF2ExportUserExtension(gltf.bless_glTF2Extension):
         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
+from .core import gltf
+from .level import grid
+
+
 def register_properties():
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_body)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_shape)
@@ -117,6 +118,11 @@ def unregister_properties():
     del bpy.types.Scene.shape_properties
     del bpy.types.Scene.unit_size
 
+
+
+
+from .core import addon_updater_ops
+from .core import bless_keymap_utils
 
 
 def register():

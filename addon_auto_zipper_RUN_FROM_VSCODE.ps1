@@ -5,9 +5,9 @@ if ( get-childitem -Include __pycache__ -Recurse -force )
 {
     get-childitem -Include __pycache__ -Recurse -force | Remove-Item -Force -Recurse
 }
-if ( Test-Path ".\$target_subfolder\bless" )
+if ( Test-Path ".\$target_subfolder\addon" )
 {
-    Remove-Item  -Recurse -Path ".\$target_subfolder\bless"
+    Remove-Item  -Recurse -Path ".\$target_subfolder\addon"
 }
 if ( Test-Path ".\$target_subfolder")
 {
