@@ -7,13 +7,10 @@ import bpy
 ## hooks found and implemented by michaeljared from this original gist:
 ## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
 
-class glTF2ExportUserExtension:
+class bless_glTF2Extension:
 
     def __init__(self):
-        # We need to wait until we create the gltf2UserExtension to import the gltf2 modules
-        # Otherwise, it may fail because the gltf2 may not be loaded yet
-        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore [available to blender not vscode and won't throw an error]
-        self.Extension = Extension
+        pass
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
@@ -182,7 +179,7 @@ class PhysicsPanel(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_object_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Collision'
+    bl_category = 'gd3d-Bless'
 
     def draw(self, context):
         layout = self.layout.row()
