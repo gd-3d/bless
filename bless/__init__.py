@@ -1,26 +1,16 @@
-## gd-3d bless
-
-
-## required.
 bl_info = {
     "name" : "gd-3d bless", 
     "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
     "description" : "",
     "blender" : (4, 2, 0),
-    "version" : (0, 0, 3),
+    "version" : (0, 0, 4),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
 }
 
 import bpy
-from . import gltf
-
 from . import addon_updater_ops
-from . import bless_keymap_utils
-
-
-from . import grid
 
 
 
@@ -51,8 +41,7 @@ from pathlib import Path
 
 folder_name_blacklist: list[str]=["__pycache__"] 
 file_name_blacklist: list[str]=["__init__.py"]
-if (bpy.app.version[0]<=4 and bpy.app.version[1]<=1):
-    file_name_blacklist.extend(["addon_updater", "addon_updater_ops"])
+file_name_blacklist.extend(["addon_updater", "addon_updater_ops"])
 
 
 addon_folders = []
@@ -131,10 +120,16 @@ def unregister_class_queue():
 #         description="words and stuff") #type: ignore
 #endregion
 
+from . import gltf
+from . import bless_keymap_utils
+
+
+from . import grid
+
 def register_properties():
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_body)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_shape)
-    bpy.types.Scene.unit_size = bpy.props.FloatProperty(type=grid.unit_size)
+    bpy.types.Scene.unit_size = grid.unit_size
 
 def unregister_properties():
     del bpy.types.Scene.body_properties
@@ -144,6 +139,7 @@ def unregister_properties():
 
 
 def register():
+    addon_updater_ops.update_path_fix = __path__
     addon_updater_ops.register(bl_info)
 
     register_class_queue()

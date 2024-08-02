@@ -5,7 +5,7 @@
 import bpy
 
 # Define custom property for unit_size
-bpy.types.Scene.unit_size = bpy.props.FloatProperty(
+unit_size = bpy.props.FloatProperty(
     name="Unit Size",
     description="Size of the grid units in meters",
     default=1.0,

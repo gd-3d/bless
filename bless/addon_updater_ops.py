@@ -21,6 +21,8 @@
 Implements draw calls, popups, and operators that use the addon_updater.
 """
 
+update_path_fix = None
+
 import os
 import traceback
 
@@ -1384,7 +1386,7 @@ def register(bl_info):
     # Needs to be within the same folder as the addon itself
     # Need to supply a full, absolute path to folder
     from pathlib import Path
-    updater._updater_path = str( Path.absolute( Path(__path__[0]) ) )
+    updater._updater_path = str( Path.absolute( Path(update_path_fix[0]) ) )
     # set path of updater folder, by default:
     # 			/addons/{__package__}/{__package__}_updater
 
