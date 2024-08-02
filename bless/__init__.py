@@ -150,6 +150,8 @@ def register():
     bpy.context.preferences.use_preferences_save = True
 
 def unregister():
+    addon_updater_ops.unregister()
+
     unregister_class_queue()
     unregister_properties()
     
