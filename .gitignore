@@ -1,4 +1,6 @@
 *.zip
+bless_updater_status.json
+__pycache__
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
