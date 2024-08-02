@@ -1,24 +1,30 @@
-## gd-3d blender
+## gd-3d bless
 
 
 ## required.
 bl_info = {
-    "name" : "gd-3d blender", 
+    "name" : "gd-3d bless", 
     "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
     "description" : "",
     "blender" : (4, 2, 0),
-    "version" : (0, 0, 2),
+    "version" : (0, 0, 3),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
 }
 
 import bpy
-
 from . import gltf
 
-#region 
-# Docs [REQUIRED]
+from . import addon_updater_ops
+from . import bless_keymap_utils
+
+
+from . import grid
+
+
+
+#region Docs [REQUIRED]
 
 # welcome to the beautiful mess that is developing a blender addon with multiple scripts.
 
@@ -33,12 +39,7 @@ from . import gltf
 
 #endregion
 
-
-
-
-
- 
-# Module Auto loader
+#region Module Autoloader
 
 #thank you VERY MUCH to Valy Arhal for this autoload script and all the extra help! <3
 
@@ -110,31 +111,11 @@ def unregister_class_queue():
         except:
             print("Can't Unregister", Class)
 
-
-
 # again, huge thanks Valy Arhal.
 
 #endregion
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-# registration
-# region 
-# Property Docs
+# region Property Docs
 ## TO LOAD PROPERTIES, you must do it here, manually. properties cannot be autoloaded.
 
 
@@ -150,8 +131,6 @@ def unregister_class_queue():
 #         description="words and stuff") #type: ignore
 #endregion
 
-
-from . import grid
 def register_properties():
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_body)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_shape)
@@ -162,12 +141,17 @@ def unregister_properties():
     del bpy.types.Scene.shape_properties
     del bpy.types.Scene.unit_size
 
+
+
 def register():
+    addon_updater_ops.register(bl_info)
+
     register_class_queue()
     register_properties()
 
+    bless_keymap_utils.bless_CreateKeymaps()
 
-
+    bpy.context.preferences.use_preferences_save = True
 
 def unregister():
     unregister_class_queue()
