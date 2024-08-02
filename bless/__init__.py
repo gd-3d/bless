@@ -1,5 +1,5 @@
 bl_info = {
-    "name" : "gd-3d bless", 
+    "name" : "bless", 
     "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
     "description" : "",
     "blender" : (4, 2, 0),
@@ -91,7 +91,7 @@ from . import addon_updater_ops
 from . import bless_keymap_utils
 
 from . import gltf
-from . import grid
+from .level import grid
 
 
 class glTF2ExportUserExtension(gltf.bless_glTF2Extension):
