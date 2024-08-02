@@ -1,15 +1,17 @@
+$addon_name = "bless"
+
+
 $parent_directory = Split-Path -Path (Get-Location) -Leaf -Resolve
 $target_subfolder = Split-Path -Path ".\$parent_directory" -Leaf -Resolve
-$addon_name = "bless"
 
 
 if ( get-childitem -Include __pycache__ -Recurse -force )
 {
     get-childitem -Include __pycache__ -Recurse -force | Remove-Item -Force -Recurse
 }
-if ( Test-Path ".\$target_subfolder\$name" )
+if ( Test-Path ".\$target_subfolder\$addon_name" )
 {
-    Remove-Item  -Recurse -Path ".\$target_subfolder\$name"
+    Remove-Item  -Recurse -Path ".\$target_subfolder\$addon_name"
 }
 if ( Test-Path ".\$target_subfolder")
 {
