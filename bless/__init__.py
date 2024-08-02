@@ -1,24 +1,20 @@
-## gd-3d blender
-
-
-## required.
 bl_info = {
-    "name" : "gd-3d blender", 
+    "name" : "gd-3d bless", 
     "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
     "description" : "",
     "blender" : (4, 2, 0),
-    "version" : (0, 0, 2),
+    "version" : (0, 0, 4),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
 }
 
 import bpy
+from . import addon_updater_ops
 
-from . import gltf
 
-#region 
-# Docs [REQUIRED]
+
+#region Docs [REQUIRED]
 
 # welcome to the beautiful mess that is developing a blender addon with multiple scripts.
 
@@ -33,12 +29,7 @@ from . import gltf
 
 #endregion
 
-
-
-
-
- 
-# Module Auto loader
+#region Module Autoloader
 
 #thank you VERY MUCH to Valy Arhal for this autoload script and all the extra help! <3
 
@@ -50,8 +41,7 @@ from pathlib import Path
 
 folder_name_blacklist: list[str]=["__pycache__"] 
 file_name_blacklist: list[str]=["__init__.py"]
-if (bpy.app.version[0]<=4 and bpy.app.version[1]<=1):
-    file_name_blacklist.extend(["addon_updater", "addon_updater_ops"])
+file_name_blacklist.extend(["addon_updater", "addon_updater_ops"])
 
 
 addon_folders = []
@@ -110,31 +100,11 @@ def unregister_class_queue():
         except:
             print("Can't Unregister", Class)
 
-
-
 # again, huge thanks Valy Arhal.
 
 #endregion
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-# registration
-# region 
-# Property Docs
+# region Property Docs
 ## TO LOAD PROPERTIES, you must do it here, manually. properties cannot be autoloaded.
 
 
@@ -150,26 +120,38 @@ def unregister_class_queue():
 #         description="words and stuff") #type: ignore
 #endregion
 
+from . import gltf
+from . import bless_keymap_utils
+
 
 from . import grid
+
 def register_properties():
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_body)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_shape)
-    bpy.types.Scene.unit_size = bpy.props.FloatProperty(type=grid.unit_size)
+    bpy.types.Scene.unit_size = grid.unit_size
 
 def unregister_properties():
     del bpy.types.Scene.body_properties
     del bpy.types.Scene.shape_properties
     del bpy.types.Scene.unit_size
 
+
+
 def register():
+    addon_updater_ops.update_path_fix = __path__
+    addon_updater_ops.register(bl_info)
+
     register_class_queue()
     register_properties()
 
+    bless_keymap_utils.bless_CreateKeymaps()
 
-
+    bpy.context.preferences.use_preferences_save = True
 
 def unregister():
+    addon_updater_ops.unregister()
+
     unregister_class_queue()
     unregister_properties()
     
