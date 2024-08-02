@@ -3,35 +3,17 @@ bl_info = {
     "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
     "description" : "",
     "blender" : (4, 2, 0),
-    "version" : (0, 0, 4),
+    "version" : (0, 0, 5),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
 }
 
 import bpy
-from . import addon_updater_ops
-
-
-
-#region Docs [REQUIRED]
-
-# welcome to the beautiful mess that is developing a blender addon with multiple scripts.
-
-# you will need:
-# 1) fake bpy: https://github.com/nutti/fake-bpy-module
-# 2) possibly the Blender Development addon in vscode extensions.
-
-# some rules about this autoload:
-# 1) there can only be 1 register/deregister function, and it must be in __init.py__ where bl_info is. do not register in other scripts!
-# 2) panels and operators are autoloaded, but you must load property classes manually here, example at bottom.
-# 3) if everything is setup correctly, reload the addon with F3>reload script (or TODO try make lazy reload button) 
-
-#endregion
-
-#region Module Autoloader
 
 #thank you VERY MUCH to Valy Arhal for this autoload script and all the extra help! <3
+
+#region Module Autoloader
 
 from typing import Iterable
 import importlib
@@ -104,27 +86,26 @@ def unregister_class_queue():
 
 #endregion
 
-# region Property Docs
-## TO LOAD PROPERTIES, you must do it here, manually. properties cannot be autoloaded.
+from . import addon_updater_ops
 
-
-# example:
-# (you will need a panel_template.py in the same dir as a module, that includes a MyProps class)
-
-
-# inside /panel_template.py:
-
-# class MyProps(bpy.types.PropertyGroup):
-#     my_string : bpy.props.StringProperty(
-#         name="string",
-#         description="words and stuff") #type: ignore
-#endregion
-
-from . import gltf
 from . import bless_keymap_utils
 
-
+from . import gltf
 from . import grid
+
+
+class glTF2ExportUserExtension(gltf.bless_glTF2Extension):
+
+    def __init__(self):
+        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore [available to blender not vscode and won't throw an error]
+        self.Extension = Extension
+
+    def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
+        return super().gather_gltf_extensions_hook(gltf_plan, export_settings)
+    
+    def gather_node_hook(self, gltf2_object, blender_object, export_settings):
+        return super().gather_node_hook(gltf2_object, blender_object, export_settings)
+
 
 def register_properties():
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_body)

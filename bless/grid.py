@@ -21,7 +21,7 @@ class GridPanel(bpy.types.Panel):
     bl_idname = "EDITOR_PT_grid"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Map"
+    bl_category = "gd3d-Bless"
 
     def draw(self, context):
         layout = self.layout
