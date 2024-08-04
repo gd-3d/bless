@@ -17,7 +17,7 @@ from bpy_extras.view3d_utils import location_3d_to_region_2d, region_2d_to_locat
 
 class MapPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
-    bl_label = "Map"
+    bl_label = "Brush"
     bl_idname = "VIEW3D_PT_map"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

@@ -91,7 +91,7 @@ def unregister_class_queue():
 
 # this allows using this class outside of __init__.py
 
-class glTF2ExportUserExtension(gltf.bless_glTF2Extension):
+class glTF2ExportUserExtension(physics.bless_glTF2Extension):
 
     def __init__(self):
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore [available to blender not vscode and won't throw an error]
@@ -104,13 +104,13 @@ class glTF2ExportUserExtension(gltf.bless_glTF2Extension):
         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
-from .core import gltf
+from .core import physics
 from .level import grid
 
 
 def register_properties():
-    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_body)
-    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=gltf.OMI_physics_shape)
+    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=physics.OMI_physics_body)
+    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=physics.OMI_physics_shape)
     bpy.types.Scene.unit_size = grid.unit_size
 
 def unregister_properties():

@@ -175,7 +175,7 @@ def build_shape_dictionary(body, shape):
 
 
 class PhysicsPanel(bpy.types.Panel):
-    bl_label = "Physics Panel"
+    bl_label = "Physics"
     bl_idname = "VIEW3D_PT_object_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
