@@ -187,9 +187,11 @@ class PhysicsPanel(bpy.types.Panel):
         shape_properties = context.scene.shape_properties
 
         layout.separator(factor=2.0)
+        
 
-        indented_layout = layout.column()
         if (context.object is not None):
+            indented_layout = layout.column()
+            indented_layout.row().operator("object.autoconvex")
             indented_layout.row().operator("object.gd3d_apply_props", text="apply")
 
             indented_layout.label(text="Shape Properties:")
@@ -228,3 +230,37 @@ class PhysicsPanel(bpy.types.Panel):
             prop_column.row().prop(body_properties, "center_of_mass", text="center of mass")
 
             prop_column.row().prop(body_properties, "shape_index", text="shape index")
+
+
+
+class AutoConvexObject(bpy.types.Operator):
+    bl_idname = "object.autoconvex"
+    bl_label = "Auto Convex Selected Objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # Ensure the object is in object mode before switching to edit mode
+        if bpy.context.object.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+        
+        # Switch to edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Execute the node group (ensure it exists and is correctly referenced)
+        try:
+            bpy.ops.geometry.execute_node_group(name="ConvexSplitTool")
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to execute node group: {e}")
+            return {'CANCELLED'}
+        
+        # Separate the mesh by loose parts
+        try:
+            bpy.ops.mesh.separate(type='LOOSE')
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to separate mesh: {e}")
+            return {'CANCELLED'}
+        
+        # Switch back to object mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        return {'FINISHED'}
