@@ -28,7 +28,7 @@ class MapPanel(bpy.types.Panel):
         row = layout.row()
         row.label(text="Geometry", icon='WORLD_DATA')
         row = layout.row()
-        row.operator("object.brush_mode")
+        row.operator("object.autoconvex")
         row = layout.row()
         row.operator("object.brush_draw")
 
