@@ -19,7 +19,7 @@ class MapPanel(bpy.types.Panel):
         row = layout.row()
         row.operator("map.add_map")
         row = layout.row()
-        # row.operator("map.add_layer")
+        row.operator("map.quick_test")
         # row = layout.row()
 
 

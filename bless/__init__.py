@@ -104,7 +104,7 @@ class glTF2ExportUserExtension(physics.bless_glTF2Extension):
         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
-from .core import physics
+from .gltf import physics
 from .level import grid
 
 
@@ -121,8 +121,8 @@ def unregister_properties():
 
 
 
-from .core import addon_updater_ops
-from .core import bless_keymap_utils
+from . import addon_updater_ops
+from . import bless_keymap_utils
 
 
 def register():
