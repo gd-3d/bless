@@ -106,11 +106,12 @@ class glTF2ExportUserExtension(physics.bless_glTF2Extension):
 
 from .gltf import physics
 from .level import grid
-
+from .level import map
 
 def register_properties():
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=physics.OMI_physics_body)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=physics.OMI_physics_shape)
+    bpy.types.Scene.map_properties = bpy.props.PointerProperty(type=map.MapProperties)
     bpy.types.Scene.unit_size = grid.unit_size
 
 def unregister_properties():

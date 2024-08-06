@@ -15,18 +15,47 @@ class MapPanel(bpy.types.Panel):
         obj = context.object
     
         scene = context.scene
-        
-        row = layout.row()
-        row.operator("map.add_map")
-        row = layout.row()
-        row.operator("map.quick_test")
-        # row = layout.row()
 
+        map_props = scene.map_properties
+
+        layout = self.layout
+        collection = context.collection
+
+        if obj:
+            if map_props["lock_camera"] == True:
+                bpy.context.space_data.lock_object = bpy.data.objects[obj.name]
+            else:
+                bpy.context.space_data.lock_object = None
+
+        # Check if the collection has the custom property "is_map"
+        if "is_map" in collection:
+            row = layout.row()
+            row.label(text="Collection Properties")
+            row = layout.row()
+            row.operator("map.quick_test")
+            # Iterate over the custom properties of the collection and display them
+            row = layout.row()
+            row.prop(map_props, "lock_camera")
+            row = layout.row()
+            row.prop(map_props, "is_trimesh")
+            row = layout.row()
+            row.prop(map_props, "convex_parts")
+        else:
+            row = layout.row()
+            row.operator("map.add_map")
+            
 
 class AddMap(bpy.types.Operator):
     bl_idname = "map.add_map"
     bl_label = "Add Map"
     def execute(self, context):
         map = bpy.data.collections.new("map")
+        map["is_map"] = True
         bpy.context.scene.collection.children.link(map)
+        return{'FINISHED'}
 
+
+class MapProperties(bpy.types.PropertyGroup):
+    lock_camera: bpy.props.BoolProperty(default=False) # type: ignore
+    is_trimesh: bpy.props.BoolProperty(default=False)  # type: ignore
+    convex_parts: bpy.props.BoolProperty(default=False)  # type: ignore
