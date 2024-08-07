@@ -90,8 +90,8 @@ def unregister_class_queue():
 
 
 # this allows using this class outside of __init__.py
-
-class glTF2ExportUserExtension(physics.bless_glTF2Extension):
+from .gltf import export
+class glTF2ExportUserExtension(export.bless_glTF2Extension):
 
     def __init__(self):
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore [available to blender not vscode and won't throw an error]
