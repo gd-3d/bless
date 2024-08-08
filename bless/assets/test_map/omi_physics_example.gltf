@@ -1,0 +1,81 @@
+{
+"extensions": {
+    "OMI_physics_shape": {
+        "shapes": [
+            {
+                "mesh": 0,
+                "type": "hull"
+            }
+        ]
+    }
+},
+"extensionsUsed": [
+    "OMI_physics_body",
+    "OMI_physics_shape"
+],
+"meshes": [
+    {
+        "extras": {
+            "targetNames": []
+        },
+        "primitives": [
+            {
+                "attributes": {
+                    "POSITION": 0
+                },
+                "indices": 1,
+                "mode": 4
+            }
+        ]
+    },
+    {
+        "extras": {
+            "targetNames": []
+        },
+        "primitives": [
+            {
+                "attributes": {
+                    "NORMAL": 4,
+                    "POSITION": 2,
+                    "TANGENT": 3,
+                    "TEXCOORD_0": 5
+                },
+                "indices": 6,
+                "mode": 4
+            }
+        ]
+    }
+],
+"nodes": [
+    {
+        "children": [1, 2],
+        "extensions": {
+            "OMI_physics_body": {
+                "type": "static"
+            }
+        },
+        "name": "StaticBody"
+    },
+    {
+        "extensions": {
+            "OMI_physics_shape": {
+                "shape": 0
+            }
+        },
+        "name": "ConvexHull"
+    },
+    {
+        "extensions": {},
+        "mesh": 1,
+        "name": "ConvexMesh"
+    }
+],
+"scene": 0,
+"scenes": [
+    {
+        "nodes": [
+            0
+        ]
+    }
+]
+}

@@ -7,45 +7,48 @@ import bpy
 ## hooks found and implemented by michaeljared from this original gist:
 ## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
 
-class bless_glTF2Extension:
 
-    def __init__(self):
-        pass
+# TODO: old testing exporter... per object. archive soon.
 
-    def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
-        if gltf_plan.extensions is None:
-            gltf_plan.extensions = {}
+# class bless_glTF2Extension:
+
+#     def __init__(self):
+#         pass
+
+#     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
+#         if gltf_plan.extensions is None:
+#             gltf_plan.extensions = {}
         
-        extension_name = "OMI_physics_shape"
-        shape_array = []
+#         extension_name = "OMI_physics_shape"
+#         shape_array = []
 
-        for obj in bpy.context.scene.objects:
-            try:
-                shape_data = obj[extension_name]
-            except KeyError:
-                continue
-            else:
-                shape_array.append(shape_data)
+#         for obj in bpy.context.scene.objects:
+#             try:
+#                 shape_data = obj[extension_name]
+#             except KeyError:
+#                 continue
+#             else:
+#                 shape_array.append(shape_data)
 
-        gltf_plan.extensions[extension_name] = self.Extension(
-            name=extension_name,
-            extension={"shapes": shape_array},
-            required=False
-        )
+#         gltf_plan.extensions[extension_name] = self.Extension(
+#             name=extension_name,
+#             extension={"shapes": shape_array},
+#             required=False
+#         )
 
 
-    def gather_node_hook(self, gltf2_object, blender_object, export_settings):
-        if gltf2_object.extensions is None:
-            gltf2_object.extensions = {}
+#     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
+#         if gltf2_object.extensions is None:
+#             gltf2_object.extensions = {}
 
-        # store possible options as an array, iterate, and then tag the gltf data
-        n = "OMI_physics_body"
-        if n in blender_object:
-            gltf2_object.extensions[n] = self.Extension(
-                name=n,
-                extension=blender_object[n],
-                required=False
-            )
+#         # store possible options as an array, iterate, and then tag the gltf data
+#         n = "OMI_physics_body"
+#         if n in blender_object:
+#             gltf2_object.extensions[n] = self.Extension(
+#                 name=n,
+#                 extension=blender_object[n],
+#                 required=False
+#             )
 
 # TODO expand...
 
@@ -128,49 +131,19 @@ class ApplyProps(bpy.types.Operator):
         body = scene.body_properties
         shape = scene.shape_properties
         
+        # retired debug operator. TODO - archive or reuse soon! 
 
-        for obj in objects:
-            if body.is_motion:
-                body_data = build_body_dictionary(body)
-                obj["OMI_physics_body"] = body_data
-        for obj in objects:
+        # for obj in objects:
+        #     if body.is_motion:
+        #         body_data = build_body_dictionary(body)
+        #         obj["OMI_physics_body"] = body_data
+        # for obj in objects:
 
-            shape_data = build_shape_dictionary(body, shape)
-            obj["OMI_physics_shape"] = shape_data
+        #     shape_data = build_shape_dictionary(body, shape)
+        #     obj["OMI_physics_shape"] = shape_data
 
         return {'FINISHED'}
-    
-# TODO stub
-def build_body_dictionary(body):
-    body_data = {}
-    if body.is_motion:
-        motion_data = {"type": body.motion_types}
-        shape_type = {"shape": body.shape_index}
-       
-        body_data["motion"] = motion_data
-        body_data["collider"] = shape_type
-    return body_data
 
-
-# TODO stub
-def build_shape_dictionary(body, shape):
-    subdata = {}
-
-    if shape.shape_types == "box":
-        subdata["size"] = shape.size
-    elif shape.shape_types in ["sphere", "capsule", "cylinder"]:
-        subdata["radius"] = shape.radius
-    
-    if shape.shape_types in ["capsule", "cylinder"]:
-        subdata["height"] = shape.height
-    
-    if shape.shape_types in ["trimesh", "convex"]:
-        subdata["mesh"] = shape.mesh
-
-    shape_data = {"type": shape.shape_types}
-
-    shape_data[shape.shape_types] = subdata
-    return shape_data
 
 
 

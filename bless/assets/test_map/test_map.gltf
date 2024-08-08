@@ -37,12 +37,6 @@
 				{
 					"type":"convex",
 					"convex":{
-						"mesh":4
-					}
-				},
-				{
-					"type":"convex",
-					"convex":{
 						"mesh":5
 					}
 				},
@@ -51,12 +45,6 @@
 					"convex":{
 						"mesh":6
 					}
-				},
-				{
-					"type":"convex",
-					"convex":{
-						"mesh":7
-					}
 				}
 			]
 		}
@@ -64,28 +52,6 @@
 	"scene":0,
 	"scenes":[
 		{
-			"extras":{
-				"body_properties":{
-					"is_motion":1,
-					"shape_index":0
-				},
-				"shape_properties":{
-					"is_collision":1,
-					"mesh":0,
-					"index":0,
-					"shape_types":16,
-					"size":[
-						2.0,
-						2.0,
-						2.0
-					]
-				},
-				"unit_size":1.0,
-				"map_properties":{
-					"lock_camera":0,
-					"is_trimesh":0
-				}
-			},
 			"name":"Scene",
 			"nodes":[
 				0,
@@ -104,14 +70,7 @@
 			"extensions":{
 				"OMI_physics_body":{
 					"collider":{
-						"shape":8
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":0
+						"shape":48
 					}
 				}
 			},
@@ -133,14 +92,7 @@
 			"extensions":{
 				"OMI_physics_body":{
 					"collider":{
-						"shape":9
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":1
+						"shape":49
 					}
 				}
 			},
@@ -156,14 +108,7 @@
 			"extensions":{
 				"OMI_physics_body":{
 					"collider":{
-						"shape":10
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":2
+						"shape":50
 					}
 				}
 			},
@@ -179,14 +124,7 @@
 			"extensions":{
 				"OMI_physics_body":{
 					"collider":{
-						"shape":11
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":3
+						"shape":51
 					}
 				}
 			},
@@ -199,20 +137,6 @@
 			]
 		},
 		{
-			"extensions":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":12
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":4
-					}
-				}
-			},
 			"mesh":4,
 			"name":"rigidbody_Sphere",
 			"translation":[
@@ -225,14 +149,7 @@
 			"extensions":{
 				"OMI_physics_body":{
 					"collider":{
-						"shape":13
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":5
+						"shape":52
 					}
 				}
 			},
@@ -248,14 +165,7 @@
 			"extensions":{
 				"OMI_physics_body":{
 					"collider":{
-						"shape":14
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":6
+						"shape":53
 					}
 				}
 			},
@@ -271,20 +181,6 @@
 			"children":[
 				6
 			],
-			"extensions":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":15
-					}
-				}
-			},
-			"extras":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":7
-					}
-				}
-			},
 			"mesh":7,
 			"name":"CubeParent",
 			"translation":[
@@ -295,15 +191,24 @@
 		},
 		{
 			"mesh":8,
-			"name":"floor",
-			"translation":[
-				0,
-				-0.04000000283122063,
-				0.40000250935554504
-			]
+			"name":"floor"
 		}
 	],
 	"materials":[
+		{
+			"doubleSided":true,
+			"name":"Material",
+			"pbrMetallicRoughness":{
+				"baseColorFactor":[
+					0.800000011920929,
+					0.800000011920929,
+					0.800000011920929,
+					1
+				],
+				"metallicFactor":0,
+				"roughnessFactor":0.5
+			}
+		},
 		{
 			"doubleSided":true,
 			"name":"floor",
@@ -380,7 +285,8 @@
 						"NORMAL":16,
 						"TEXCOORD_0":17
 					},
-					"indices":18
+					"indices":18,
+					"material":0
 				}
 			]
 		},
@@ -433,7 +339,7 @@
 						"TEXCOORD_0":32
 					},
 					"indices":26,
-					"material":0
+					"material":1
 				}
 			]
 		}
