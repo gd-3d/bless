@@ -48,7 +48,7 @@
 ],
 "nodes": [
     {
-        "children": [1, 2],
+        "children": [1],
         "extensions": {
             "OMI_physics_body": {
                 "type": "static"

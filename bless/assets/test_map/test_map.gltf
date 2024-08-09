@@ -12,39 +12,31 @@
 			"shapes":[
 				{
 					"type":"convex",
-					"convex":{
-						"mesh":0
-					}
+					"mesh":0
 				},
 				{
 					"type":"convex",
-					"convex":{
-						"mesh":1
-					}
+					"mesh":1
 				},
 				{
 					"type":"convex",
-					"convex":{
-						"mesh":2
-					}
+					"mesh":2
 				},
 				{
 					"type":"convex",
-					"convex":{
-						"mesh":3
-					}
+					"mesh":3
 				},
 				{
 					"type":"convex",
-					"convex":{
-						"mesh":5
-					}
+					"mesh":4
 				},
 				{
 					"type":"convex",
-					"convex":{
-						"mesh":6
-					}
+					"mesh":5
+				},
+				{
+					"type":"convex",
+					"mesh":6
 				}
 			]
 		}
@@ -60,17 +52,91 @@
 				3,
 				4,
 				5,
+				6,
 				7,
-				8
+				8,
+				9,
+				10,
+				11,
+				12,
+				13
 			]
 		}
 	],
 	"nodes":[
 		{
+			"mesh":0,
+			"name":"stairs",
+			"rotation":[
+				0,
+				-0.7071067094802856,
+				0,
+				0.7071068286895752
+			],
+			"translation":[
+				0,
+				1.5,
+				48.5
+			]
+		},
+		{
+			"mesh":1,
+			"name":"platform",
+			"translation":[
+				0,
+				1.5,
+				53.5
+			]
+		},
+		{
+			"mesh":2,
+			"name":"cylinder",
+			"translation":[
+				-21,
+				10.000001907348633,
+				28.000001907348633
+			]
+		},
+		{
+			"mesh":3,
+			"name":"difficult_shape",
+			"translation":[
+				0,
+				0,
+				-16
+			]
+		},
+		{
+			"mesh":4,
+			"name":"Sphere",
+			"translation":[
+				-19.00000762939453,
+				5.000010013580322,
+				16.00002098083496
+			]
+		},
+		{
+			"mesh":5,
+			"name":"character",
+			"translation":[
+				0,
+				19.185256958007812,
+				-15.930672645568848
+			]
+		},
+		{
+			"mesh":6,
+			"name":"floor"
+		},
+		{
+			"children":[
+				0
+			],
 			"extensions":{
 				"OMI_physics_body":{
+					"type":"static",
 					"collider":{
-						"shape":48
+						"shape":0
 					}
 				}
 			},
@@ -89,10 +155,14 @@
 			]
 		},
 		{
+			"children":[
+				1
+			],
 			"extensions":{
 				"OMI_physics_body":{
+					"type":"static",
 					"collider":{
-						"shape":49
+						"shape":1
 					}
 				}
 			},
@@ -105,10 +175,14 @@
 			]
 		},
 		{
+			"children":[
+				2
+			],
 			"extensions":{
 				"OMI_physics_body":{
+					"type":"static",
 					"collider":{
-						"shape":50
+						"shape":2
 					}
 				}
 			},
@@ -121,24 +195,39 @@
 			]
 		},
 		{
+			"children":[
+				3
+			],
 			"extensions":{
 				"OMI_physics_body":{
+					"type":"static",
 					"collider":{
-						"shape":51
+						"shape":3
 					}
 				}
 			},
 			"mesh":3,
 			"name":"difficult_shape",
 			"translation":[
-				-20.000003814697266,
-				7.864574432373047,
-				39.000003814697266
+				0,
+				0,
+				-16
 			]
 		},
 		{
+			"children":[
+				4
+			],
+			"extensions":{
+				"OMI_physics_body":{
+					"type":"static",
+					"collider":{
+						"shape":4
+					}
+				}
+			},
 			"mesh":4,
-			"name":"rigidbody_Sphere",
+			"name":"Sphere",
 			"translation":[
 				-19.00000762939453,
 				5.000010013580322,
@@ -146,10 +235,14 @@
 			]
 		},
 		{
+			"children":[
+				5
+			],
 			"extensions":{
 				"OMI_physics_body":{
+					"type":"static",
 					"collider":{
-						"shape":52
+						"shape":5
 					}
 				}
 			},
@@ -157,40 +250,23 @@
 			"name":"character",
 			"translation":[
 				0,
-				3.1852574348449707,
-				0.06932714581489563
-			]
-		},
-		{
-			"extensions":{
-				"OMI_physics_body":{
-					"collider":{
-						"shape":53
-					}
-				}
-			},
-			"mesh":6,
-			"name":"CubeChild",
-			"translation":[
-				3.000001907348633,
-				3.141935348510742,
-				-2.5709686279296875
+				19.185256958007812,
+				-15.930672645568848
 			]
 		},
 		{
 			"children":[
 				6
 			],
-			"mesh":7,
-			"name":"CubeParent",
-			"translation":[
-				21.502424240112305,
-				2.0972976684570312,
-				32.17814636230469
-			]
-		},
-		{
-			"mesh":8,
+			"extensions":{
+				"OMI_physics_body":{
+					"type":"static",
+					"collider":{
+						"shape":6
+					}
+				}
+			},
+			"mesh":6,
 			"name":"floor"
 		}
 	],
@@ -304,39 +380,13 @@
 			]
 		},
 		{
-			"name":"Cube.006",
+			"name":"Cube.008",
 			"primitives":[
 				{
 					"attributes":{
 						"POSITION":23,
 						"NORMAL":24,
 						"TEXCOORD_0":25
-					},
-					"indices":26
-				}
-			]
-		},
-		{
-			"name":"Cube.007",
-			"primitives":[
-				{
-					"attributes":{
-						"POSITION":27,
-						"NORMAL":28,
-						"TEXCOORD_0":29
-					},
-					"indices":26
-				}
-			]
-		},
-		{
-			"name":"Cube.008",
-			"primitives":[
-				{
-					"attributes":{
-						"POSITION":30,
-						"NORMAL":31,
-						"TEXCOORD_0":32
 					},
 					"indices":26,
 					"material":1
@@ -446,14 +496,14 @@
 			"componentType":5126,
 			"count":110,
 			"max":[
-				2.7123947143554688,
-				6.787287712097168,
-				3.1319961547851562
+				2.712390899658203,
+				14.651862144470215,
+				3.131999969482422
 			],
 			"min":[
-				-2.7123870849609375,
-				-7.864574432373047,
-				-3.1320037841796875
+				-2.712390899658203,
+				0,
+				-3.131999969482422
 			],
 			"type":"VEC3"
 		},
@@ -548,14 +598,14 @@
 			"componentType":5126,
 			"count":24,
 			"max":[
-				1.35406494140625,
-				1.3540658950805664,
-				1.3540668487548828
+				79.99999237060547,
+				0.050000015646219254,
+				79.99999237060547
 			],
 			"min":[
-				-1.3540668487548828,
-				-1.3540661334991455,
-				-1.3540668487548828
+				-79.99999237060547,
+				-0.05000000819563866,
+				-79.99999237060547
 			],
 			"type":"VEC3"
 		},
@@ -576,62 +626,6 @@
 			"componentType":5123,
 			"count":36,
 			"type":"SCALAR"
-		},
-		{
-			"bufferView":27,
-			"componentType":5126,
-			"count":24,
-			"max":[
-				1.5709686279296875,
-				1.570967674255371,
-				1.5709686279296875
-			],
-			"min":[
-				-1.5709667205810547,
-				-1.570967674255371,
-				-1.5709686279296875
-			],
-			"type":"VEC3"
-		},
-		{
-			"bufferView":28,
-			"componentType":5126,
-			"count":24,
-			"type":"VEC3"
-		},
-		{
-			"bufferView":29,
-			"componentType":5126,
-			"count":24,
-			"type":"VEC2"
-		},
-		{
-			"bufferView":30,
-			"componentType":5126,
-			"count":24,
-			"max":[
-				79.99999237060547,
-				0.050000015646219254,
-				79.99999237060547
-			],
-			"min":[
-				-79.99999237060547,
-				-0.05000000819563866,
-				-79.99999237060547
-			],
-			"type":"VEC3"
-		},
-		{
-			"bufferView":31,
-			"componentType":5126,
-			"count":24,
-			"type":"VEC3"
-		},
-		{
-			"bufferView":32,
-			"componentType":5126,
-			"count":24,
-			"type":"VEC2"
 		}
 	],
 	"bufferViews":[
@@ -796,47 +790,11 @@
 			"byteLength":72,
 			"byteOffset":145584,
 			"target":34963
-		},
-		{
-			"buffer":0,
-			"byteLength":288,
-			"byteOffset":145656,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":288,
-			"byteOffset":145944,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":192,
-			"byteOffset":146232,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":288,
-			"byteOffset":146424,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":288,
-			"byteOffset":146712,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":192,
-			"byteOffset":147000,
-			"target":34962
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":147192,
+			"byteLength":145656,
 			"uri":"test_map.bin"
 		}
 	]
