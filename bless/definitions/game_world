@@ -1,0 +1,44 @@
+##
+import bpy
+
+# for maps, levels, zones, areas, rooms, dimensions.. 
+
+# the idea with this script is that you can create custom blender collection modules
+# these modules will have configurations based on the collections property
+# these collections will act as special folders for objects
+# and will decide on how the objects are exported into gltf
+
+
+# something like:
+
+class Game:
+    game_name = "New Game Project"
+    filepath = ""
+    
+    engine = ["godot", "unity", "unreal", "generic"]
+    
+
+
+class GameWorld:
+
+    # use your own language and terminologies.
+    name = "map"
+    description = ""
+
+    export = None # export settings go here?, in 4.2 you can export per collection.
+
+    collisions = True
+    collision_type = "convex"
+    convex_split = False
+
+
+
+# the user fills this with collection modules in blender and godot
+world_containers : list[GameWorld] 
+
+
+class bless_GameFile:
+    data = {}
+    # then we start to make a json, or some other text format.
+    for stuff in world_containers:
+        data += stuff

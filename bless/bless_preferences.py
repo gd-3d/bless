@@ -4,6 +4,9 @@ import rna_keymap_ui
 from .addon_updater_ops import make_annotations, update_settings_ui
 from . import bless_keymap_utils
 
+class BlessGameConfig(bpy.types.PropertyGroup):
+    game : bpy.props.StringProperty(name="Game", description="Title of your project.", default="My Game")#type:ignore
+    game_directory : bpy.props.StringProperty(name="Game Directory", description="Directory of the game.", default="C:\'")#type:ignore
 
 @make_annotations
 class bless_AddonPreferences(bpy.types.AddonPreferences):
@@ -28,13 +31,18 @@ class bless_AddonPreferences(bpy.types.AddonPreferences):
     updater_interval_minutes : bpy.props.IntProperty(name='Minutes', description="Number of minutes between checking for updates", default=0, min=0, max=59) #type:ignore
 
 
+
     def draw(self, context:bpy.types.Context):
         preference_box = self.layout
 
         keymap_configs = context.window_manager.keyconfigs.user
-        
+        layout = self.layout
         
         preference_box.grid_flow(row_major=True, align=True).prop(self, "addon_preference_tabs", expand=True)
+        
+        if (self.addon_preference_tabs == "HOME"):
+            row = layout.row()
+            row.prop
 
         if (self.addon_preference_tabs == "KEYBINDS"):
             keybinds_column = preference_box.column()

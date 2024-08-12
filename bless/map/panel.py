@@ -37,9 +37,6 @@ class MapPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(map_props, "lock_camera")
             row = layout.row()
-            row.prop(map_props, "is_trimesh")
-            row = layout.row()
-            row.prop(map_props, "convex_parts")
         else:
             row = layout.row()
             row.operator("map.add_map")
@@ -57,5 +54,3 @@ class AddMap(bpy.types.Operator):
 
 class MapProperties(bpy.types.PropertyGroup):
     lock_camera: bpy.props.BoolProperty(default=False) # type: ignore
-    is_trimesh: bpy.props.BoolProperty(default=False)  # type: ignore
-    convex_parts: bpy.props.BoolProperty(default=False)  # type: ignore

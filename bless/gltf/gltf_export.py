@@ -1,7 +1,51 @@
 import copy
+import bpy
 
 
-nodes = []
+###### NODES ############
+
+# here we have some built in arrays to catch and sort nodes and process them at different steps.
+# common blender-gltf objects.
+mesh_nodes = []
+light_nodes = []
+camera_nodes = []
+collection_nodes = []
+#speaker_nodes = [] # TODO: KHR_audio_emitter
+
+
+# these nodes are generated in this script AFTER reading the scene.
+body_nodes = []
+#shape_nodes = [] #--not used
+
+
+###### EXTENSIONS #######
+
+# these extensions are used by bless for collisions and base class objects.
+core_extensions =   ["OMI_physics_body",
+                    "OMI_physics_shape",
+                    #OMI_physics_joint,
+                    #OMI_audio_emitter,
+                    ]
+
+
+# these optional extensions WILL BE included with bless and can be used as presets. (TODO)
+bless_extensions = [
+                    #"OMI_seat", 
+                    #"OMI_spawn_point", 
+                    #"OMI_vehicle"
+                    ] 
+
+
+# these are imported per "game project". for example some extensions are used in
+user_extensions = []
+
+#TODO find a way to "install" these automagically from outside the file.
+
+# pseudo-example: 
+# from .definitions import game
+# user_extensions = [ game.install_extensions() ]
+
+
 
 
 class bless_glTF2Extension:
@@ -18,21 +62,55 @@ class bless_glTF2Extension:
         if gltf2_object.extensions is None:
             gltf2_object.extensions = {}
 
-        nodes.append(gltf2_object)
+
+
+        
+        # Check the type of blender_object and append to the appropriate array
+        print("[BLESS]>> processing object : [", blender_object.name, "]")
+        if hasattr(blender_object, "type"):
+
+            print("[BLESS]>> object type : [", blender_object.type, "]")
+            if blender_object.type == "MESH":
+                mesh_nodes.append(gltf2_object)
+
+            elif blender_object.type == "LIGHT":
+                light_nodes.append(gltf2_object)
+
+            elif blender_object.type == "CAMERA":
+                camera_nodes.append(gltf2_object)
+
+            elif blender_object.type == "EMPTY":
+                collection_nodes.append(gltf2_object)
+            
+            elif blender_object.type == "COLLECTION":
+                collection_nodes.append(gltf2_object)
+        else:
+            print("no object :", blender_object.name)
 
         print("[BLESS]>> gather node finished")
 
+    
     def gather_scene_hook(self, gltf2_scene, blender_scene, export_settings):
-        total_nodes = len(gltf2_scene.nodes)
-        for index in range(0, len(gltf2_scene.nodes)):
-            new_object_index = index + total_nodes
-            gltf2_scene.nodes.append(new_object_index)
+        
+        # this adds indexes to scene:{nodes{[0,1,2,3]} in the gltf if required
+        # total_mesh_nodes = len(mesh_nodes)
+        # for index in range(0, total_mesh_nodes):
+        #     new_object_index = index + total_mesh_nodes
+        #     gltf2_scene.nodes.append(new_object_index)
 
+        for blender_object in blender_scene.collection.children:
+            print(blender_object.name)
+        #print(blender_scene.collection.name)
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
+
+
+        print("[BLESS]>> export setting ####", export_settings.get("use_custom_props"))
+    ## collisions + physics.  
+
         gltf_plan.extensions_used = [
                                      "OMI_physics_body",
                                      "OMI_physics_shape"
@@ -42,16 +120,24 @@ class bless_glTF2Extension:
         shapes = []
 
         node_index = -1
-        for node in nodes:
+        for mesh_node in mesh_nodes:
             node_index += 1
             shape = build_shape_dictionary("convex", node_index)
             shapes.append(shape)
 
-            body = copy.deepcopy(node)
+            body = copy.deepcopy(mesh_node)
+            # attach body to the copy.. type should be static/trimesh
             body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=node_index)
             body.children = [node_index]
-            
+
             bodies.append(body)
+
+            mesh_node.name = mesh_node.name + "Mesh"
+            
+            # TODO: this is not good. causes issues. we need to 
+            mesh_node.translation = None 
+            #node.rotation = None
+
 
         node_index = 0
 
@@ -64,15 +150,31 @@ class bless_glTF2Extension:
         )
 
 
-
-
+    ## lights.
         
+        # this fixes the light scale factor from blender and godot, which is rougly 680
+        # godot uses values from 0.0 to 1.0
+        # blender uses watts, and shit like that.
 
-        total_nodes = len(nodes)
-        print("total_nodes: ",total_nodes)
+
+        # for light in gltf_plan.extensions["KHR_lights_punctual"]["lights"]:
+        #     blender_intensity = light["intensity"]
+            
+        #     # TODO, convert light intensity better.
+        #     if blender_intensity > 100.0:
+        #         light["intensity"] = blender_intensity / 680 # light factor for godot
+
+
+
+        # this is already too much, do a loop
+        mesh_nodes.clear()
+        light_nodes.clear()
+        camera_nodes.clear()
         print("[BLESS]>> gather extensions finished")
 
-        nodes.clear()
+        # cleanup internal nodes here:
+        body_nodes.clear()
+        
 
 def build_body_dictionary(type, mass=None, linear_velocity=None, angular_velocity=None, center_of_mass=None, shape_index=None):
     body_data = {"type": type}
