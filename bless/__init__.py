@@ -103,13 +103,13 @@ class glTF2ExportUserExtension(gltf_export.bless_glTF2Extension):
     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
-import bless_preferences
+#import bless_preferences
 from .gltf import physics
 from .map import grid
 from .map import panel
 
 def register_properties():
-    bpy.types.World.game = bpy.props.PointerProperty(type=bless_preferences.BlessGameConfig)
+    #bpy.types.World.game = bpy.props.PointerProperty(type=bless_preferences.BlessGameConfig)
 
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=physics.OMI_physics_body)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=physics.OMI_physics_shape)

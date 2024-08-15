@@ -102,11 +102,13 @@ class bless_glTF2Extension:
             print(blender_object.name)
         #print(blender_scene.collection.name)
 
+    def gather_material_hook(self, gltf2_material, blender_material, export_settings):
+        print(gltf2_material.name)
+
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
-
 
         print("[BLESS]>> export setting ####", export_settings.get("use_custom_props"))
     ## collisions + physics.  

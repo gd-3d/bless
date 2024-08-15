@@ -42,7 +42,6 @@ class bless_AddonPreferences(bpy.types.AddonPreferences):
         
         if (self.addon_preference_tabs == "HOME"):
             row = layout.row()
-            row.prop
 
         if (self.addon_preference_tabs == "KEYBINDS"):
             keybinds_column = preference_box.column()
