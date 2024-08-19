@@ -9,6 +9,8 @@ not working yet! come back later.
 # for bless developers:
 if you want to work on Bless, you will need to: 
 - symlink the reponame/bless directory to blenders addon directory.
+- example, Blender 4.2 on Windows: run Command Prompt as admin and then run: `mklink /D "C:\Program Files\Blender Foundation\Blender 4.2\4.2\scripts\addons_core\bless" "C:\repofolder\bless"`
+- `bless` should show up as a Built-In addon after restarting Blender
 
 all exporting logic is done in `gltf_export.py`. it will export all meshes and attach shapes and bodies in the gltf file.
 
