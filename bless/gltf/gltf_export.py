@@ -2,6 +2,51 @@ import copy
 import bpy
 
 
+##
+
+# default settings: 
+# Full Heirarchy
+# glTF + .bin
+# ...
+
+
+
+###### EXTENSIONS #######
+
+# these extensions are used by bless for collisions and base class objects/nodes.
+core_extensions =   ["OMI_physics_body", # PhysicsBody3D
+                    "OMI_physics_shape", # CollisionShape3D
+                    #OMI_physics_joint, # Joint3D
+                    #KHR_audio_emitter, # AudioStreamPlayer3D
+                    ]
+
+
+# these optional extensions WILL BE included with bless and can be used as presets. (TODO)
+vendor_extensions = [
+                    #"OMI_seat", # Seat3D
+                    #"OMI_spawn_point", # SpawnPoint3D
+                    #"OMI_vehicle" # Vehicle3D (NOT body)
+                    # look for some more.
+                    ] 
+
+
+# these are imported per "game project". for example some extensions are used in
+user_extensions = []
+
+#TODO find a way to "install" these automagically from outside the file.
+
+# pseudo-example: 
+# from .definitions import game
+# user_extensions = [ game.install_extensions() ]
+
+# if no extension exists - or one is not needed, then we can grab classes/scenes from the game engine
+user_library = []
+# user_library = [game.install_library()]
+
+
+
+
+
 ###### NODES ############
 
 # here we have some built in arrays to catch and sort nodes and process them at different steps.
@@ -17,36 +62,11 @@ collection_nodes = []
 body_nodes = []
 #shape_nodes = [] #--not used
 
-
-###### EXTENSIONS #######
-
-# these extensions are used by bless for collisions and base class objects.
-core_extensions =   ["OMI_physics_body",
-                    "OMI_physics_shape",
-                    #OMI_physics_joint,
-                    #OMI_audio_emitter,
-                    ]
+convex_collections = []
+trimesh_collections = []
 
 
-# these optional extensions WILL BE included with bless and can be used as presets. (TODO)
-bless_extensions = [
-                    #"OMI_seat", 
-                    #"OMI_spawn_point", 
-                    #"OMI_vehicle"
-                    ] 
-
-
-# these are imported per "game project". for example some extensions are used in
-user_extensions = []
-
-#TODO find a way to "install" these automagically from outside the file.
-
-# pseudo-example: 
-# from .definitions import game
-# user_extensions = [ game.install_extensions() ]
-
-
-
+###### EXPORT #######
 
 class bless_glTF2Extension:
 
@@ -82,10 +102,24 @@ class bless_glTF2Extension:
             elif blender_object.type == "EMPTY":
                 collection_nodes.append(gltf2_object)
             
-            elif blender_object.type == "COLLECTION":
-                collection_nodes.append(gltf2_object)
+            # elif blender_object.type == "COLLECTION": # does mot work ?
+            #     collection_nodes.append(gltf2_object)
         else:
-            print("no object :", blender_object.name)
+            ## must be a collection.
+            print("collection :", blender_object.name)
+            
+            for thing in blender_object:
+                print(thing.name)
+
+            if blender_object["is_trimesh"]:
+                print("ITS A TRIMESH SHAPE!!!!!!!!!!!!!!!")
+                trimesh_collections.append(blender_object)
+            else:
+                print("ITS CONVEX, HA!")
+                convex_collections.append(blender_object)
+
+
+
 
         print("[BLESS]>> gather node finished")
 
@@ -101,9 +135,6 @@ class bless_glTF2Extension:
         for blender_object in blender_scene.collection.children:
             print(blender_object.name)
         #print(blender_scene.collection.name)
-
-    def gather_material_hook(self, gltf2_material, blender_material, export_settings):
-        print(gltf2_material.name)
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
@@ -128,10 +159,9 @@ class bless_glTF2Extension:
             shapes.append(shape)
 
             body = copy.deepcopy(mesh_node)
-            # attach body to the copy.. type should be static/trimesh
+            # attach body to the copy.. type should be static or trimesh
             body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=node_index)
             body.children = [node_index]
-
             bodies.append(body)
 
             mesh_node.name = mesh_node.name + "Mesh"

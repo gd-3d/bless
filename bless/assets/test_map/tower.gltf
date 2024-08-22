@@ -11,207 +11,207 @@
 		"OMI_physics_shape":{
 			"shapes":[
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":0
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":1
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":2
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":3
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":4
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":5
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":6
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":7
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":8
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":9
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":10
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":11
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":12
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":13
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":14
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":15
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":16
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":17
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":18
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":19
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":20
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":21
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":22
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":23
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":24
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":25
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":26
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":27
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":28
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":29
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":30
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":31
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":32
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":33
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":34
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":35
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":36
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":37
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":38
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":39
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":40
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":41
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":42
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":43
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":44
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":45
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":46
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":47
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":48
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":49
 				},
 				{
-					"type":"convex",
+					"type":"trimesh",
 					"mesh":50
 				}
 			]
@@ -1519,21 +1519,6 @@
 		},
 		{
 			"doubleSided":true,
-			"name":"stone base 01",
-			"normalTexture":{
-				"index":0
-			},
-			"pbrMetallicRoughness":{
-				"baseColorTexture":{
-					"index":1
-				},
-				"metallicRoughnessTexture":{
-					"index":2
-				}
-			}
-		},
-		{
-			"doubleSided":true,
 			"name":"stone",
 			"pbrMetallicRoughness":{
 				"baseColorFactor":[
@@ -1613,7 +1598,7 @@
 						"TEXCOORD_0":17
 					},
 					"indices":18,
-					"material":1
+					"material":0
 				}
 			]
 		},
@@ -1627,7 +1612,7 @@
 						"TEXCOORD_0":21
 					},
 					"indices":22,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1641,7 +1626,7 @@
 						"TEXCOORD_0":25
 					},
 					"indices":14,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1655,7 +1640,7 @@
 						"TEXCOORD_0":28
 					},
 					"indices":29,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1809,7 +1794,7 @@
 						"TEXCOORD_0":67
 					},
 					"indices":68,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1823,7 +1808,7 @@
 						"TEXCOORD_0":71
 					},
 					"indices":72,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1837,7 +1822,7 @@
 						"TEXCOORD_0":75
 					},
 					"indices":76,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1851,7 +1836,7 @@
 						"TEXCOORD_0":79
 					},
 					"indices":72,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1879,7 +1864,7 @@
 						"TEXCOORD_0":85
 					},
 					"indices":72,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1907,7 +1892,7 @@
 						"TEXCOORD_0":92
 					},
 					"indices":89,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1921,7 +1906,7 @@
 						"TEXCOORD_0":95
 					},
 					"indices":96,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1949,7 +1934,7 @@
 						"TEXCOORD_0":102
 					},
 					"indices":76,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1963,7 +1948,7 @@
 						"TEXCOORD_0":105
 					},
 					"indices":72,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -1991,7 +1976,7 @@
 						"TEXCOORD_0":111
 					},
 					"indices":112,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2005,7 +1990,7 @@
 						"TEXCOORD_0":115
 					},
 					"indices":116,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2019,7 +2004,7 @@
 						"TEXCOORD_0":119
 					},
 					"indices":7,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2033,7 +2018,7 @@
 						"TEXCOORD_0":122
 					},
 					"indices":7,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2047,7 +2032,7 @@
 						"TEXCOORD_0":125
 					},
 					"indices":126,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2061,7 +2046,7 @@
 						"TEXCOORD_0":129
 					},
 					"indices":130,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2075,7 +2060,7 @@
 						"TEXCOORD_0":133
 					},
 					"indices":134,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2089,7 +2074,7 @@
 						"TEXCOORD_0":137
 					},
 					"indices":138,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2117,7 +2102,7 @@
 						"TEXCOORD_0":145
 					},
 					"indices":146,
-					"material":2
+					"material":1
 				}
 			]
 		},
@@ -2260,37 +2245,6 @@
 					"material":0
 				}
 			]
-		}
-	],
-	"textures":[
-		{
-			"sampler":0,
-			"source":0
-		},
-		{
-			"sampler":0,
-			"source":1
-		},
-		{
-			"sampler":0,
-			"source":2
-		}
-	],
-	"images":[
-		{
-			"mimeType":"image/jpeg",
-			"name":"stone_base_01_normal",
-			"uri":"stone_base_01_normal.jpg"
-		},
-		{
-			"mimeType":"image/jpeg",
-			"name":"stone_base_01_basecolor",
-			"uri":"stone_base_01_basecolor.jpg"
-		},
-		{
-			"mimeType":"image/png",
-			"name":"stone_base_01_metallic-stone_base_01_roughness",
-			"uri":"stone_base_01_metallic-stone_base_01_roughness.png"
 		}
 	],
 	"accessors":[
@@ -4953,12 +4907,6 @@
 			"byteLength":192,
 			"byteOffset":42224,
 			"target":34962
-		}
-	],
-	"samplers":[
-		{
-			"magFilter":9729,
-			"minFilter":9987
 		}
 	],
 	"buffers":[
