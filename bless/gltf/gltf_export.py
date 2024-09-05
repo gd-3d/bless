@@ -9,7 +9,7 @@ import bpy
 # glTF + .bin
 # ...
 
-
+gltf_light_factor = 680
 
 ###### EXTENSIONS #######
 
@@ -23,10 +23,9 @@ core_extensions =   ["OMI_physics_body", # PhysicsBody3D
 
 # these optional extensions WILL BE included with bless and can be used as presets. (TODO)
 vendor_extensions = [
-                    #"OMI_seat", # Seat3D
-                    #"OMI_spawn_point", # SpawnPoint3D
-                    #"OMI_vehicle" # Vehicle3D (NOT body)
-                    # look for some more.
+                    "OMI_seat", # Seat3D
+                    "OMI_spawn_point", # SpawnPoint3D
+                    "OMI_vehicle", # Vehicle3D (NOT body?)
                     ] 
 
 
@@ -68,6 +67,15 @@ trimesh_collections = []
 
 ###### EXPORT #######
 
+def bless_print(message, is_header=False):
+    separator = "=" * 50
+    if is_header:
+        print(f"\n{separator}")
+        print(f"[BLESS] {message}")
+        print(f"{separator}")
+    else:
+        print(f"[BLESS] {message}")
+
 class bless_glTF2Extension:
 
     def __init__(self):
@@ -82,14 +90,10 @@ class bless_glTF2Extension:
         if gltf2_object.extensions is None:
             gltf2_object.extensions = {}
 
-
-
+        bless_print(f"Processing object: [{blender_object.name}]", is_header=True)
         
-        # Check the type of blender_object and append to the appropriate array
-        print("[BLESS]>> processing object : [", blender_object.name, "]")
         if hasattr(blender_object, "type"):
-
-            print("[BLESS]>> object type : [", blender_object.type, "]")
+            bless_print(f"Object type: [{blender_object.type}]")
             if blender_object.type == "MESH":
                 mesh_nodes.append(gltf2_object)
 
@@ -121,27 +125,20 @@ class bless_glTF2Extension:
 
 
 
-        print("[BLESS]>> gather node finished")
+        bless_print("Gather node finished")
 
     
     def gather_scene_hook(self, gltf2_scene, blender_scene, export_settings):
-        
-        # this adds indexes to scene:{nodes{[0,1,2,3]} in the gltf if required
-        # total_mesh_nodes = len(mesh_nodes)
-        # for index in range(0, total_mesh_nodes):
-        #     new_object_index = index + total_mesh_nodes
-        #     gltf2_scene.nodes.append(new_object_index)
-
+        bless_print("Scene objects:", is_header=True)
         for blender_object in blender_scene.collection.children:
-            print(blender_object.name)
-        #print(blender_scene.collection.name)
+            bless_print(f"- {blender_object.name}")
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
 
-        print("[BLESS]>> export setting ####", export_settings.get("use_custom_props"))
+        bless_print(f"Export setting: {export_settings.get('use_custom_props')}", is_header=True)
     ## collisions + physics.  
 
         gltf_plan.extensions_used = [
@@ -168,7 +165,8 @@ class bless_glTF2Extension:
             
             # TODO: this is not good. causes issues. we need to 
             mesh_node.translation = None 
-            #node.rotation = None
+            mesh_node.rotation = None
+            mesh_node.scale = None
 
 
         node_index = 0
@@ -181,32 +179,22 @@ class bless_glTF2Extension:
         required=False
         )
 
+        # lights    
+        # TODO game definition: has_light_factor
+        if "KHR_lights_punctual" in gltf_plan.extensions:
+            for light in gltf_plan.extensions["KHR_lights_punctual"]["lights"]:
+                blender_intensity = light.get("intensity", 0)
+                light["intensity"] = blender_intensity / gltf_light_factor # light factor for godot
 
-    ## lights.
-        
-        # this fixes the light scale factor from blender and godot, which is rougly 680
-        # godot uses values from 0.0 to 1.0
-        # blender uses watts, and shit like that.
+        bless_print("Gather extensions finished", is_header=True)
 
-
-        # for light in gltf_plan.extensions["KHR_lights_punctual"]["lights"]:
-        #     blender_intensity = light["intensity"]
-            
-        #     # TODO, convert light intensity better.
-        #     if blender_intensity > 100.0:
-        #         light["intensity"] = blender_intensity / 680 # light factor for godot
-
-
-
-        # this is already too much, do a loop
+        # cleanup internal nodes here:
         mesh_nodes.clear()
         light_nodes.clear()
         camera_nodes.clear()
-        print("[BLESS]>> gather extensions finished")
-
-        # cleanup internal nodes here:
         body_nodes.clear()
-        
+
+
 
 def build_body_dictionary(type, mass=None, linear_velocity=None, angular_velocity=None, center_of_mass=None, shape_index=None):
     body_data = {"type": type}
