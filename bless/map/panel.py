@@ -21,25 +21,25 @@ class MapPanel(bpy.types.Panel):
         layout = self.layout
         collection = context.collection
 
-        if obj:
-            if map_props["lock_camera"] == True:
-                bpy.context.space_data.lock_object = bpy.data.objects[obj.name]
-            else:
-                bpy.context.space_data.lock_object = None
+        # if obj:
+        #     if map_props["lock_camera"] == True:
+        #         bpy.context.space_data.lock_object = bpy.data.objects[obj.name]
+        #     else:
+        #         bpy.context.space_data.lock_object = None
 
-        # Check if the collection has the custom property "is_map"
-        if "is_map" in collection:
-            row = layout.row()
-            row.label(text="Collection Properties")
-            row = layout.row()
-            row.operator("map.quick_test")
-            # Iterate over the custom properties of the collection and display them
-            row = layout.row()
-            row.prop(map_props, "lock_camera")
-            row = layout.row()
-        else:
-            row = layout.row()
-            row.operator("map.add_map")
+        # # Check if the collection has the custom property "is_map"
+        # if "is_map" in collection:
+        #     row = layout.row()
+        #     row.label(text="Collection Properties")
+        #     row = layout.row()
+        #     row.operator("map.quick_test")
+        #     # Iterate over the custom properties of the collection and display them
+        #     row = layout.row()
+        #     row.prop(map_props, "lock_camera")
+        #     row = layout.row()
+        # else:
+        #     row = layout.row()
+        #     row.operator("map.add_map")
             
 
 class AddMap(bpy.types.Operator):
