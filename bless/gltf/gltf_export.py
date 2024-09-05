@@ -99,24 +99,6 @@ class bless_glTF2Extension:
             elif blender_object.type == "CAMERA":
                 camera_nodes.append(gltf2_object)
 
-        #     elif blender_object.type == "EMPTY":
-        #         collection_nodes.append(gltf2_object)
-            
-        #     # elif blender_object.type == "COLLECTION": # does mot work ?
-        #     #     collection_nodes.append(gltf2_object)
-        # else:
-        #     ## must be a collection.
-        #     print("collection :", blender_object.name)
-            
-        #     for thing in blender_object:
-        #         print(thing.name)
-
-        #     if blender_object["is_trimesh"]:
-        #         print("ITS A TRIMESH SHAPE!!!!!!!!!!!!!!!")
-        #         trimesh_collections.append(blender_object)
-        #     else:
-        #         print("ITS CONVEX, HA!")
-        #         convex_collections.append(blender_object)
 
 
 
@@ -126,11 +108,6 @@ class bless_glTF2Extension:
     
     def gather_scene_hook(self, gltf2_scene, blender_scene, export_settings):
         
-        # this adds indexes to scene:{nodes{[0,1,2,3]} in the gltf if required
-        # total_mesh_nodes = len(mesh_nodes)
-        # for index in range(0, total_mesh_nodes):
-        #     new_object_index = index + total_mesh_nodes
-        #     gltf2_scene.nodes.append(new_object_index)
 
         for blender_object in blender_scene.collection.children:
             print(blender_object.name)
@@ -140,10 +117,6 @@ class bless_glTF2Extension:
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
-
-        print("[BLESS]>> export setting ####", export_settings.get("use_custom_props"))
-    ## collisions + physics.  
-
         gltf_plan.extensions_used = [
                                      "OMI_physics_body",
                                      "OMI_physics_shape"
@@ -180,22 +153,6 @@ class bless_glTF2Extension:
         extension={"shapes": shapes},
         required=False
         )
-
-
-    ## lights.
-        
-        # this fixes the light scale factor from blender and godot, which is rougly 680
-        # godot uses values from 0.0 to 1.0
-        # blender uses watts, and shit like that.
-
-
-        # for light in gltf_plan.extensions["KHR_lights_punctual"]["lights"]:
-        #     blender_intensity = light["intensity"]
-            
-        #     # TODO, convert light intensity better.
-        #     if blender_intensity > 100.0:
-        #         light["intensity"] = blender_intensity / 680 # light factor for godot
-
 
 
         # this is already too much, do a loop
