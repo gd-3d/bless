@@ -1,47 +1,39 @@
 import copy
 import bpy
 
-
-##
-
-# default settings: 
-# Full Heirarchy
-# glTF + .bin
-# ...
-
+#### constants
 gltf_light_factor = 680
 
+
+
+
+
 ###### EXTENSIONS #######
+#extensions are used by bless for collisions and base class objects/nodes.
+core_extensions =       [
+                        "KHR_audio_emitter", # AudioStreamPlayer3D
+                        "EXT_mesh_gpu_instancing", # MultiMeshInstance3D
+                        "KHR_xmp_json_ld", # Metadata
+                        ]
 
-# these extensions are used by bless for collisions and base class objects/nodes.
-core_extensions =   ["OMI_physics_body", # PhysicsBody3D
-                    "OMI_physics_shape", # CollisionShape3D
-                    #OMI_physics_joint, # Joint3D
-                    #KHR_audio_emitter, # AudioStreamPlayer3D
-                    ]
+physics_extensions =    [
+                        "OMI_physics_body", # PhysicsBody3D
+                        "OMI_physics_shape", # CollisionShape3D
+                        #OMI_physics_joint, # Joint3D
+                        ]
+
+# optional extensions WILL BE included with bless and can be used as installable presets. (TODO)
+bless_extensions =     [
+                        "OMI_seat", # Seat3D
+                        "OMI_spawn_point", # SpawnPoint3D
+                        "OMI_vehicle", # Vehicle3D (NOT body?)
+                        ] 
 
 
-# these optional extensions WILL BE included with bless and can be used as presets. (TODO)
-vendor_extensions = [
-                    "OMI_seat", # Seat3D
-                    "OMI_spawn_point", # SpawnPoint3D
-                    "OMI_vehicle", # Vehicle3D (NOT body?)
-                    ] 
-
-
-# these are imported per "game project". for example some extensions are used in
-user_extensions = []
 
 #TODO find a way to "install" these automagically from outside the file.
-
-# pseudo-example: 
-# from .definitions import game
-# user_extensions = [ game.install_extensions() ]
-
-# if no extension exists - or one is not needed, then we can grab classes/scenes from the game engine
-user_library = []
-# user_library = [game.install_library()]
-
+# glTF extensions library / package manager...
+user_extensions = []
 
 
 
@@ -122,10 +114,7 @@ class bless_glTF2Extension:
         bless_print(f"Export setting: {export_settings.get('use_custom_props')}", is_header=True)
         ## collisions + physics.  
 
-        gltf_plan.extensions_used = [
-                                     "OMI_physics_body",
-                                     "OMI_physics_shape"
-                                     ]
+        gltf_plan.extensions_used += physics_extensions
 
         bodies = []
         shapes = []
