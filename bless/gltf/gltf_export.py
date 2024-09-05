@@ -109,19 +109,29 @@ class bless_glTF2Extension:
         # Second pass: Update parent-child relationships
         for i, node in enumerate(gltf_plan.nodes):
             if i in node_map:
-                body_index = node_map[i]
-                body = bodies[body_index - len(gltf_plan.nodes)]
+                new_node = bodies[node_map[i] - len(gltf_plan.nodes)]
+                
                 if node.children:
-                    body.children = []
+                    new_node.children = []
                     for child_index in node.children:
                         if child_index in node_map:
-                            body.children.append(node_map[child_index])
+                            new_node.children.append(node_map[child_index])
                         else:
-                            body.children.append(child_index)
+                            new_node.children.append(child_index)
                 
-                # Make the original node a child of the body node
-                body.children.append(i)
+                # Make the original node a child of the new node
+                new_node.children.append(i)
                 node.children = []  # Remove children from the original node
+            elif node_tree.get(node.name, {}).get("type") == "collection":
+                # Handle collections
+                if node.children:
+                    new_children = []
+                    for child_index in node.children:
+                        if child_index in node_map:
+                            new_children.append(node_map[child_index])
+                        else:
+                            new_children.append(child_index)
+                    node.children = new_children
 
         # Update the main node list
         gltf_plan.nodes += bodies
