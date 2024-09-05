@@ -37,31 +37,14 @@ user_extensions = []
 
 
 
-
-###### NODES ############
-
-# here we have some built in arrays to catch and sort nodes and process them at different steps.
-# common blender-gltf objects.
-mesh_nodes = []
-light_nodes = []
-camera_nodes = []
-collection_nodes = []
-#speaker_nodes = [] # TODO: KHR_audio_emitter
-
-
-# these nodes are generated in this script AFTER reading the scene.
-body_nodes = []
-#shape_nodes = [] #--not used
-
-convex_collections = []
-trimesh_collections = []
+node_tree = {}
 
 
 ###### EXPORT #######
 
-def bless_print(message, is_header=False):
+def bless_print(message, header=False):
     separator = "=" * 50
-    if is_header:
+    if header:
         print(f"\n{separator}")
         print(f"[BLESS] {message}")
         print(f"{separator}")
@@ -71,8 +54,6 @@ def bless_print(message, is_header=False):
 class bless_glTF2Extension:
 
     def __init__(self):
-        # We need to wait until we create the gltf2UserExtension to import the gltf2 modules
-        # Otherwise, it may fail because the gltf2 may not be loaded yet
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore
         self.Extension = Extension
     
@@ -81,88 +62,80 @@ class bless_glTF2Extension:
     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
         if gltf2_object.extensions is None:
             gltf2_object.extensions = {}
-
-        bless_print(f"Processing object: [{blender_object.name}]", is_header=True)
         
         if hasattr(blender_object, "type"):
             bless_print(f"Object type: [{blender_object.type}]")
+            node_tree[blender_object.name] = {}
             if blender_object.type == "MESH":
-                mesh_nodes.append(gltf2_object)
+                node_tree[blender_object.name]["type"] = "mesh"
 
             elif blender_object.type == "LIGHT":
-                light_nodes.append(gltf2_object)
+                node_tree[blender_object.name]["type"] = "light"
 
             elif blender_object.type == "CAMERA":
-                camera_nodes.append(gltf2_object)
-
-
-
-
-
-        bless_print("Gather node finished")
-
-    
-    def gather_scene_hook(self, gltf2_scene, blender_scene, export_settings):
-        bless_print("Scene objects:", is_header=True)
-        for blender_object in blender_scene.collection.children:
-            bless_print(f"- {blender_object.name}")
+                node_tree[blender_object.name]["type"] = "camera"
+        else:
+            # its a collection.
+            node_tree[blender_object.name] = {}
+            node_tree[blender_object.name]["type"] = "collection"
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
-        
-        bless_print(f"Export setting: {export_settings.get('use_custom_props')}", is_header=True)
-        ## collisions + physics.  
-
-        gltf_plan.extensions_used += physics_extensions
 
         bodies = []
         shapes = []
+        node_map = {}  # To keep track of original nodes and their new body nodes
 
-        node_index = -1
-        for mesh_node in mesh_nodes:
-            node_index += 1
-            shape = build_shape_dictionary("convex", node_index)
-            shapes.append(shape)
+        # First pass: Create shapes and body nodes
+        for i, node in enumerate(gltf_plan.nodes):
+            if node.name in node_tree:
+                if node_tree[node.name]["type"] == "mesh":
+                    # Create shape
+                    shape = build_shape_dictionary("convex", node.mesh)
+                    shapes.append(shape)
+                    
+                    # Create body node
+                    body = copy.deepcopy(node)
+                    body.name = f"{node.name}_body"
+                    body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                    node.translation = None
+                    node.rotation = None
+                    node.scale = None
+                    
+                    bodies.append(body)
+                    node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
 
-            body = copy.deepcopy(mesh_node)
-            # attach body to the copy.. type should be static or trimesh
-            body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=node_index)
-            body.children = [node_index]
-            bodies.append(body)
+        # Second pass: Update parent-child relationships
+        for i, node in enumerate(gltf_plan.nodes):
+            if i in node_map:
+                body_index = node_map[i]
+                body = bodies[body_index - len(gltf_plan.nodes)]
+                if node.children:
+                    body.children = []
+                    for child_index in node.children:
+                        if child_index in node_map:
+                            body.children.append(node_map[child_index])
+                        else:
+                            body.children.append(child_index)
+                
+                # Make the original node a child of the body node
+                body.children.append(i)
+                node.children = []  # Remove children from the original node
 
-            mesh_node.name = mesh_node.name + "Mesh"
-            
-            # TODO: this is not good. causes issues. we need to 
-            mesh_node.translation = None 
-            mesh_node.rotation = None
-            mesh_node.scale = None
-
-
-        node_index = 0
-
+        # Update the main node list
         gltf_plan.nodes += bodies
-        
+
+        # Add physics extensions
+        gltf_plan.extensions_used += physics_extensions
         gltf_plan.extensions["OMI_physics_shape"] = self.Extension(
-        name="OMI_physics_shape",
-        extension={"shapes": shapes},
-        required=False
+            name="OMI_physics_shape",
+            extension={"shapes": shapes},
+            required=False
         )
 
-        # lights    
-        # TODO game definition: has_light_factor
-        if "KHR_lights_punctual" in gltf_plan.extensions:
-            for light in gltf_plan.extensions["KHR_lights_punctual"]["lights"]:
-                blender_intensity = light.get("intensity", 0)
-                light["intensity"] = blender_intensity / gltf_light_factor # light factor for godot
+        bless_print("Gather extensions finished", header=True)
 
-        bless_print("Gather extensions finished", is_header=True)
-
-        # cleanup internal nodes here:
-        mesh_nodes.clear()
-        light_nodes.clear()
-        camera_nodes.clear()
-        body_nodes.clear()
 
 
 
