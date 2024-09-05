@@ -103,24 +103,6 @@ class bless_glTF2Extension:
             elif blender_object.type == "CAMERA":
                 camera_nodes.append(gltf2_object)
 
-        #     elif blender_object.type == "EMPTY":
-        #         collection_nodes.append(gltf2_object)
-            
-        #     # elif blender_object.type == "COLLECTION": # does mot work ?
-        #     #     collection_nodes.append(gltf2_object)
-        # else:
-        #     ## must be a collection.
-        #     print("collection :", blender_object.name)
-            
-        #     for thing in blender_object:
-        #         print(thing.name)
-
-        #     if blender_object["is_trimesh"]:
-        #         print("ITS A TRIMESH SHAPE!!!!!!!!!!!!!!!")
-        #         trimesh_collections.append(blender_object)
-        #     else:
-        #         print("ITS CONVEX, HA!")
-        #         convex_collections.append(blender_object)
 
 
 
@@ -137,9 +119,8 @@ class bless_glTF2Extension:
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
         
-
         bless_print(f"Export setting: {export_settings.get('use_custom_props')}", is_header=True)
-    ## collisions + physics.  
+        ## collisions + physics.  
 
         gltf_plan.extensions_used = [
                                      "OMI_physics_body",
