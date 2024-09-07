@@ -17,8 +17,9 @@ import bpy
 
 from typing import Iterable
 import importlib
+from os import name as os_name
 from os import sep as os_separator
-from pathlib import Path
+from pathlib import WindowsPath, PosixPath
 
 
 folder_name_blacklist: list[str]=["__pycache__"] 
@@ -29,13 +30,19 @@ file_name_blacklist.extend(["addon_updater", "addon_updater_ops"])
 addon_folders = []
 addon_files = []
 
-addon_path_iter = [ Path( __path__[0] ) ]
-addon_path_iter.extend(Path( __path__[0] ).iterdir())
+PATHTYPE = ""
+match os_name:
+    case "posix":
+        PATHTYPE = "PosixPath"
+    case "nt":
+        PATHTYPE = "WindowsPath"
+
+addon_path_iter = [ eval(PATHTYPE)( __path__[0] ) ]
+addon_path_iter.extend(eval(PATHTYPE)( __path__[0] ).iterdir())
 
 for folder_path in addon_path_iter:
     
-    
-    if ( folder_path.is_dir() ) and ( folder_path.exists() ) and ( folder_path.name not in folder_name_blacklist ):
+    if (  folder_path.is_dir() ) and ( folder_path.exists() ) and ( folder_path.name not in folder_name_blacklist ):
         addon_folders.append( folder_path )
 
         for subfolder_path in folder_path.iterdir():
