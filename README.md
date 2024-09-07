@@ -1,18 +1,14 @@
-# B.L.E.S.S
-## Blender Level Editor Software Suite
+# Blender Level Editor Software Suite
+## B.l.e.s.s
 
+Bless is a level editor addon for blender, made primarily for Godot, but has hopes in the future to support more engines (please get in touch!)
 
-# for bless users:
-there will be docs at some point soon. still getting it all set up. 
+Using this addon you will be able to design full 3D levels that are game-ready, including addng scripts and scenes from your
+game engine to your `.blend` level file.
 
-## v0.1 - collisions
-convex collisions will be added for each object in the blender scene. enable the addon and export to gltf as normal. The gltf file will contain the convex shapes and static bodies for each mesh, and the hierarchy should work as expected.
+All exports are handled with `.gltf` and some reasearch has done into nested glTF files - so that will likely be supported in the near future for instancing scenes.
 
-## v0.1.1
-there will be working interface to setup collisions based on per-collection or per-object basis, including making meshes other bodies (not static) and using primitive shapes, also includes being able to remove collisions with this setup. this way you can manage the collision system from a top-down level and only things you set will be overrided. 
-
-## v0.1.2
-coming soon.
+Bless is under heavy construction. Check for the 0.2 milestone, that is when Bless will be "production ready".
 
 --
 
@@ -25,3 +21,12 @@ if you want to work on Bless, you will need to:
 all exporting logic is done in `gltf_export.py`. it will export all meshes and attach shapes and bodies in the gltf file.
 
 ![bless](https://github.com/gd-3d/bless/blob/4367949e2e3b77bc53d203e79a29a8738974d94e/bless/assets/logo/logo.png)
+
+
+### Thank you
+A big thank you to these contributers: 
+- Valy Arlhal -- for the blender expertise, autoregistration scripts and the release pipeline and all the extra help with bpy
+- michael jared -- the OG blender-godot-pipeline toolsmith, figured out the extension hooking and just a general chad
+- Aaron Franke, OMI group -- maintainer of godot gltf, as well as writing glTF extensions used in Bless
+- dogman35 -- the 3D bless logo asset and 
+- unfa -- for adopting bless into Liblast, the first game to officially do so! the blueprint! 
