@@ -30,6 +30,7 @@ All the features below are under development and will work in Bless, we have don
 - Animation tools.
 - Example project, levels, resources.
 
+# In the future:
 These are things that are important but will take some time, so we have put them here.
 ## 2.0 Features
 - Terrain generation / sculpting system.
