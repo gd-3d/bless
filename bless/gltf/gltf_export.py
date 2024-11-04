@@ -31,13 +31,21 @@ bless_extensions =     [
 
 
 
-#TODO find a way to "install" these automagically from outside the file.
+#TODO find a way to "install" these automagically from outside the addon.
 # glTF extensions library / package manager...
 user_extensions = []
 
 
 
 node_tree = {}
+materials = {}
+
+
+collision_tree = []
+
+trimesh_collisions = []
+convex_collisions = []
+custom_collisions = []
 
 
 ###### EXPORT #######
@@ -57,7 +65,13 @@ class bless_glTF2Extension:
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore
         self.Extension = Extension
     
-    
+    # def gather_material_hook(self, gltf2_material, blender_material, export_settings):
+    #     if gltf2_material.extensions is None:
+    #         gltf2_material.extensions = {}
+        
+    # def gather_material_pbr_metallic_roughness_hook(self, gltf2_material, blender_material, orm_texture, export_settings):
+    #     print(len(gltf2_material.extensions))
+
 
     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
         if gltf2_object.extensions is None:
@@ -67,18 +81,46 @@ class bless_glTF2Extension:
             bless_print(f"Object type: [{blender_object.type}]")
             node_tree[blender_object.name] = {}
             if blender_object.type == "MESH":
+        
                 node_tree[blender_object.name]["type"] = "mesh"
-
+                
+                print("node is: ",node_tree[blender_object.name], "and type: ", node_tree[blender_object.name]["type"])
+            
             elif blender_object.type == "LIGHT":
                 node_tree[blender_object.name]["type"] = "light"
+                print("node is: ",node_tree[blender_object.name], "and type: ", node_tree[blender_object.name]["type"])
 
             elif blender_object.type == "CAMERA":
                 node_tree[blender_object.name]["type"] = "camera"
+                print("node is: ",node_tree[blender_object.name], "and type: ", node_tree[blender_object.name]["type"])
         else:
             # its a collection.
             node_tree[blender_object.name] = {}
             node_tree[blender_object.name]["type"] = "collection"
+            print("collection is: ", blender_object.name)
 
+            collection = blender_object
+            
+            if blender_object.get("collision"):
+                if blender_object["collision"] == "":
+                    # exact type value or no shape is given.
+                    pass
+
+                # otherwise, sort the tagged objects into their piles for later.
+
+                if blender_object["collision"] == "trimesh":
+                    trimesh_collisions.append(blender_object)
+                elif blender_object["collision"] == "convex":
+                    convex_collisions.append(blender_object)
+                
+                ## TODO, implement compound / custom collision setups.
+                # elif blender_object["collision"] == "custom":
+                #     custom_collisions.append(blender_object)   
+          
+
+    
+    
+    
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
@@ -90,24 +132,30 @@ class bless_glTF2Extension:
         # First pass: Create shapes and body nodes
         for i, node in enumerate(gltf_plan.nodes):
             if node.name in node_tree:
-                if node_tree[node.name]["type"] == "mesh":
-                    # Create shape
-                    shape = build_shape_dictionary("convex", node.mesh)
-                    shapes.append(shape)
-                    
-                    # Create body node
-                    body = copy.deepcopy(node)
-                    body.name = f"{node.name}_body"
-                    body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
-                    node.translation = None
-                    node.rotation = None
-                    node.scale = None
-                    
-                    bodies.append(body)
-                    node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
+                print("found a ", node.name)
+                if "type" in node_tree[node.name]:
+                    if node_tree[node.name]["type"] == "mesh":
+                        # Create shape
+                        shape = build_shape_dictionary("trimesh", node.mesh)
+                        shapes.append(shape)
+                        
+
+                        # Create body node
+                        body = copy.deepcopy(node)
+                        body.name = f"{node.name}_Body_"
+                        body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                        node.translation = None
+                        node.rotation = None
+                        node.scale = None
+                        
+                        bodies.append(body)
+                        node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
+
 
         # Second pass: Update parent-child relationships
         for i, node in enumerate(gltf_plan.nodes):
+
+            # regular node, object, light, etc.
             if i in node_map:
                 new_node = bodies[node_map[i] - len(gltf_plan.nodes)]
                 
@@ -121,9 +169,19 @@ class bless_glTF2Extension:
                 
                 # Make the original node a child of the new node
                 new_node.children.append(i)
-                node.children = []  # Remove children from the original node
+               
+                # Remove children from the original node
+                node.children = []  
+            
+            # Handle collections
             elif node_tree.get(node.name, {}).get("type") == "collection":
-                # Handle collections
+                
+                
+                print(f"found a map collection named {node.name}")
+
+
+
+
                 if node.children:
                     new_children = []
                     for child_index in node.children:
@@ -132,6 +190,7 @@ class bless_glTF2Extension:
                         else:
                             new_children.append(child_index)
                     node.children = new_children
+
 
         # Update the main node list
         gltf_plan.nodes += bodies
@@ -145,7 +204,6 @@ class bless_glTF2Extension:
         )
 
         bless_print("Gather extensions finished", header=True)
-
 
 
 
@@ -181,3 +239,37 @@ def build_shape_dictionary(shape_type, mesh_index=-1, size=None, radius=None, he
             shape_data[shape_type]["height"] = height or 2.0
 
     return shape_data
+
+
+        #TODO FIXME HACK MOVE TO GODOT !!!!!!
+
+        ### gltf fixes...
+        # these are issues/bugs that a little elbow grease and a few lines of code can solve :]
+
+        # ## Lights
+        # # lights are too bright, inconsistent and light units are different than blenders.
+        # if "KHR_lights_punctual" in gltf_plan.extensions:
+        #     for light_data in gltf_plan.extensions["KHR_lights_punctual"]["lights"]:
+        #         blender_intensity = light_data["intensity"]
+                
+        #         # TODO, convert light intensity properly.
+        #         if blender_intensity > 100.0:
+        #             light_data["intensity"] = blender_intensity / 680 # light factor for godot
+                
+        #         # TODO, fix distances for point lights
+
+
+        
+        # ## Materials
+        # # KHR texture transform is inconsistent / scale is incorrect
+        # # https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform
+        # for material in gltf_plan.materials:
+        #     print(material.name)
+        #     extensions = material.pbr_metallic_roughness.extensions # FIXME - why is this empty?
+        #     for ext in extensions: 
+        #         print(ext)
+
+        #TODO FIXME HACK MOVE TO GODOT !!!!!!
+
+
+
