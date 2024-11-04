@@ -47,6 +47,11 @@ trimesh_collisions = []
 convex_collisions = []
 custom_collisions = []
 
+# each node as a dict with each flag.
+# locked (selectable)
+# hidden (in)
+# exclude from render...
+node_flags = []
 
 ###### EXPORT #######
 
@@ -80,6 +85,32 @@ class bless_glTF2Extension:
         if hasattr(blender_object, "type"):
             bless_print(f"Object type: [{blender_object.type}]")
             node_tree[blender_object.name] = {}
+            
+
+            
+            
+            
+            # Dictionary to store the node flags for each Blender object
+            node_flags = {}
+            
+            # Collect the lock, hidden, and exclude properties for each Blender object
+            locked = blender_object.hide_select  # Determines if the object is locked
+            hidden = blender_object.hide_get()  # Determines if the object is hidden
+            exclude = blender_object.hide_render  # Determines if the object is excluded from rendering
+
+            # Add these flags to a dictionary for the current node
+            node_flags["locked"] = locked
+            node_flags["hidden"] = hidden
+            node_flags["exclude"] = exclude
+
+            # Create the final dictionary with the object name as the key and node flags as the value
+            node_tree[blender_object.name] = node_flags
+
+            # Print the node flags dictionary for debugging
+            print(node_flags)
+            
+
+
             if blender_object.type == "MESH":
         
                 node_tree[blender_object.name]["type"] = "mesh"
@@ -109,9 +140,9 @@ class bless_glTF2Extension:
                 # otherwise, sort the tagged objects into their piles for later.
 
                 if blender_object["collision"] == "trimesh":
-                    trimesh_collisions.append(blender_object)
+                    trimesh_collisions.append(blender_object.name )
                 elif blender_object["collision"] == "convex":
-                    convex_collisions.append(blender_object)
+                    convex_collisions.append(blender_object.name )
                 
                 ## TODO, implement compound / custom collision setups.
                 # elif blender_object["collision"] == "custom":
@@ -134,23 +165,52 @@ class bless_glTF2Extension:
             if node.name in node_tree:
                 print("found a ", node.name)
                 if "type" in node_tree[node.name]:
+                    
+                    
                     if node_tree[node.name]["type"] == "mesh":
-                        # Create shape
-                        shape = build_shape_dictionary("trimesh", node.mesh)
-                        shapes.append(shape)
                         
-
-                        # Create body node
-                        body = copy.deepcopy(node)
-                        body.name = f"{node.name}_Body_"
-                        body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
-                        node.translation = None
-                        node.rotation = None
-                        node.scale = None
+                        build_body = False
                         
-                        bodies.append(body)
-                        node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
+                        for trimesh in trimesh_collisions:
+                            print("TRIMESH = ",trimesh)
+                            if node.name == trimesh:
+                                print("MAKING trimesh SHAPE!!!!!")
+                                # Create shape
+                                shape = build_shape_dictionary("trimesh", node.mesh)
+                                shapes.append(shape)
+                                build_body = True
+                            else:
+                                pass
+                                print("NO COL FOUND")
+                        
+                        for convex in convex_collisions:
+                            print("CONVEX = ",convex)
+                            if node.name == convex:
+                            # Create shape
+                                shape = build_shape_dictionary("convex", node.mesh)
+                                print("MAKING convex SHAPE!!!!!")
+                                shapes.append(shape)
+                                build_body = True
+                            else:
+                                pass
+                                print("NO COL FOUND")
+                        
+                        
+                        if build_body:
+                            # Create body node
+                            body = copy.deepcopy(node)
+                            body.name = f"{node.name}_Body_"
+                            body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                            node.translation = None
+                            node.rotation = None
+                            node.scale = None
+                            
+                            bodies.append(body)
+                            node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
 
+        # Check if bodies were created
+        if not bodies:
+            bless_print("No bodies were created. Check your collision settings.", header=True)
 
         # Second pass: Update parent-child relationships
         for i, node in enumerate(gltf_plan.nodes):

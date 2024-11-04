@@ -14,23 +14,26 @@ import mathutils
 from bpy_extras.view3d_utils import location_3d_to_region_2d, region_2d_to_location_3d
 
 
+## TODO !!!
+## archive this script, using only 1 panel moving forward.
 
-class MapPanel(bpy.types.Panel):
-    """Creates a Panel in the Object properties window"""
-    bl_label = "Brush"
-    bl_idname = "VIEW3D_PT_map"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Bless"
 
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.label(text="Geometry", icon='WORLD_DATA')
-        row = layout.row()
-        row.operator("object.autoconvex")
-        row = layout.row()
-        row.operator("object.brush_mode")
+# class MapPanel(bpy.types.Panel):
+#     """Creates a Panel in the Object properties window"""
+#     bl_label = "Brush"
+#     bl_idname = "VIEW3D_PT_map"
+#     bl_space_type = "VIEW_3D"
+#     bl_region_type = "UI"
+#     bl_category = "Bless"
+
+#     def draw(self, context):
+#         layout = self.layout
+#         row = layout.row()
+#         row.label(text="Geometry", icon='WORLD_DATA')
+#         row = layout.row()
+#         row.operator("object.autoconvex")
+#         row = layout.row()
+#         row.operator("object.brush_mode")
 
 ## broken...
 ## TODO

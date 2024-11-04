@@ -3,23 +3,28 @@ import bpy
 # for collections:
 # for the level / map organisation
 
-class MapPanel(bpy.types.Panel):
-    bl_label = "Map"
-    bl_idname = "VIEW3D_PT_map_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Bless'
+
+## TODO archive this!!
+## moving forward using only 1 panel. 
+
+
+# class MapPanel(bpy.types.Panel):
+#     bl_label = "Map"
+#     bl_idname = "VIEW3D_PT_map_panel"
+#     bl_space_type = 'VIEW_3D'
+#     bl_region_type = 'UI'
+#     bl_category = 'Bless'
    
-    def draw(self, context):
-        layout = self.layout
-        obj = context.object
+#     def draw(self, context):
+#         layout = self.layout
+#         obj = context.object
     
-        scene = context.scene
+#         scene = context.scene
 
-        map_props = scene.map_properties
+#         map_props = scene.map_properties
 
-        layout = self.layout
-        collection = context.collection
+#         layout = self.layout
+#         collection = context.collection
 
         # if obj:
         #     if map_props["lock_camera"] == True:
