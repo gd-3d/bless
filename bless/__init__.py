@@ -115,21 +115,26 @@ from . import bless
 from .map import grid
 from .map import panel
 
-def register_properties():
-    #bpy.types.World.game = bpy.props.PointerProperty(type=bless_preferences.BlessGameConfig)
 
-    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
-    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsShape)
+
+def register_properties():
+    bpy.types.Object.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
+    bpy.types.Object.shape_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsShape)
     bpy.types.Object.collision_types = bpy.props.PointerProperty(type=bless.BlessCollisionTypes)
     bpy.types.Object.collision_layers = bpy.props.PointerProperty(type=bless.BlessCollisionLayers)
+    bpy.types.Object.collision_mask = bpy.props.PointerProperty(type=bless.BlessCollisionMaskLayers)
+
+    # Scene? or Workspace (whatever that is)?
     bpy.types.Scene.bless_tools = bpy.props.PointerProperty(type=bless.BlessTools)
     bpy.types.Scene.unit_size = grid.unit_size
 
 def unregister_properties():
-    del bpy.types.Scene.body_properties
-    del bpy.types.Scene.shape_properties
+    del bpy.types.Object.body_properties
+    del bpy.types.Object.shape_properties
     del bpy.types.Object.collision_types
     del bpy.types.Object.collision_layers
+    del bpy.types.Object.collision_mask
+
     del bpy.types.Scene.bless_tools
     del bpy.types.Scene.unit_size
 
