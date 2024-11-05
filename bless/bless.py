@@ -80,7 +80,7 @@ class BlessCollisionTypes(bpy.types.PropertyGroup):
         ])  # type: ignore
 
 class BlessCollisionLayers(bpy.types.PropertyGroup):
-    layer_1: bpy.props.BoolProperty(name="Layer 1")  # type: ignore
+    layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
     layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
     layer_3: bpy.props.BoolProperty(name="Layer 3")  # type: ignore
     layer_4: bpy.props.BoolProperty(name="Layer 4")  # type: ignore
