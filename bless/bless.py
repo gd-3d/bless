@@ -79,6 +79,10 @@ class BlessCollisionTypes(bpy.types.PropertyGroup):
             ("none", "None", "", 1<<3),
         ])  # type: ignore
 
+
+## TODO, does this need to have so many lines? could be a factoryfunction to make each prop.
+##
+
 class BlessCollisionLayers(bpy.types.PropertyGroup):
     layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
     layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
@@ -147,6 +151,10 @@ class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
     layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
 
+
+
+## TODO rework this as an operator to call from the panel rather than ins
+
 class BlessApplyCollisions(bpy.types.Operator):
     """Apply Props"""
     bl_idname = "object.gd3d_apply_collisions"
@@ -180,22 +188,18 @@ class BlessTools(bpy.types.PropertyGroup):
     trimesh_color: bpy.props.FloatVectorProperty(
         name="Trimesh Color",
         subtype='COLOR',
-        default=TRIMESH_COLOR,
+        default=(0.1, 0.8, 0.1, 1), # green
         min=0.0, max=1.0,
         size=4
     ) # type: ignore
     convex_color: bpy.props.FloatVectorProperty(
         name="Convex Color",
         subtype='COLOR',
-        default=CONVEX_COLOR,
+        default=(0.1, 0.1, 0.8, 1), # blue
         min=0.0, max=1.0,
         size=4
     ) # type: ignore
 
-
-
-TRIMESH_COLOR = (0.1, 0.8, 0.1, 1) # green
-CONVEX_COLOR = (0.1, 0.1, 0.8, 1) # blue
 
 class BlessPanel(bpy.types.Panel):
     bl_label = "Bless"
@@ -224,6 +228,13 @@ class BlessPanel(bpy.types.Panel):
         row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
 
 
+        ## TODO, make this next part safer, and add a check for the object type.
+        ## TODO check what the object collision type enum is, and use that to determine the operator to use etc
+        ## FIXME something in this code is makign the GUI flicker. Probably constantly checking stuff.  
+
+        ## TODO only show Apply (Batch) Collision button if there are MULTIPLE objects selected.
+        ## TODO add a check to see if the object is a mesh, and if not, don't show the collision type options.
+        ## TODO Put Layers and Mask options INSIDE the collision box on the panel.
 
         if context.object is not None:
             
