@@ -116,7 +116,7 @@ class BlessCollisionLayers(bpy.types.PropertyGroup):
 class BlessApplyCollisions(bpy.types.Operator):
     """Apply Props"""
     bl_idname = "object.gd3d_apply_collisions"
-    bl_label = "Apply Collisions"
+    bl_label = "Apply Multiple Collisions"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -125,10 +125,11 @@ class BlessApplyCollisions(bpy.types.Operator):
             self.report({'ERROR'}, "No objects selected or selection is invalid.")
             return {'CANCELLED'}
         
-        collision_type = context.scene.collision_types.collision_types
+        collision_type = context.object.collision_types.collision_types
 
         for obj in context.selected_objects:
-            obj["collision"] = collision_type
+            # set attribute, not custom property
+            obj.collision_types.collision_types = collision_type
 
         return {'FINISHED'}
 

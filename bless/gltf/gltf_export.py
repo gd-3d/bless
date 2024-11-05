@@ -129,24 +129,24 @@ class bless_glTF2Extension:
                         # Get the Blender object
                         blender_obj = bpy.data.objects.get(node.name)
                         if blender_obj:
-                            # Access the collision_types through the property group
                             collision_type = blender_obj.collision_types.collision_types
-                            
+                            generate_body_node = False
+                            shape = None  # Initialize shape variable
 
                             if collision_type == "trimesh":
-
                                 shape = build_shape_dictionary("trimesh", node.mesh)
                                 generate_body_node = True
                             elif collision_type == "convex":
                                 shape = build_shape_dictionary("convex", node.mesh)
                                 generate_body_node = True
                             elif collision_type == "none":
-                                generate_body_node = False
+                                continue  # Skip this iteration if no collision
                             else:
                                 print("custom collision type, skipping.")
                                 continue
 
-                            shapes.append(shape)
+                            if shape is not None:  # Only append if shape was created
+                                shapes.append(shape)
                             
                             if generate_body_node:
                                 # Create body node
