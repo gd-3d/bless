@@ -53,6 +53,20 @@ class OMIPhysicsBody(bpy.types.PropertyGroup):
     center_of_mass: bpy.props.FloatVectorProperty(default=[0.0, 0.0, 0.0]) # type: ignore
 
 
+## Default collision type for new objects.
+class BlessDefaultCollisionType(bpy.types.PropertyGroup):
+    collision_types: bpy.props.EnumProperty(
+        name="Collision Type",
+        description="Static level geometry.",
+        default="trimesh",
+        items=[
+            ("trimesh", "Trimesh", "", 1),
+            ("convex", "Convex", "", 1<<1),
+            ("custom", "Custom", "", 1<<2),
+            ("none", "None", "", 1<<3),
+        ])  # type: ignore
+
+
 class BlessCollisionTypes(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
         name="Collision Type",
@@ -150,59 +164,54 @@ class BlessPanel(bpy.types.Panel):
         if context.object is not None:
             
             ### COLLISION ###
-            # Check if an object is selected
-            collision_box = layout.row()
-
-           
-            collision_box = layout.box()  # Create a box to contain all the following UI elements   
-            # Add collision type label and selector
+            collision_box = layout.box()
             row = collision_box.row()
             row.label(text="Collision")
-            #row.alignment = "CENTER"
             
             row = collision_box.row()
             row.prop(collision_types, "collision_types", text="")
             row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
+            
             # Check if the "collision" property exists and display it
             collision_data = context.object.get("collision")
             collision_box.alignment = "CENTER"
             if collision_data:
                 collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
+                
+                # Only show custom collision settings if collision type is "custom"
+                if collision_data == "custom":
+                    custom_collision_box = collision_box.box()
+                    body_properties = context.scene.body_properties
+                    shape_properties = context.scene.shape_properties
+                    
+                    # TODO, make this neater/better
+                    # also, compound shapes are done a different way.
+
+                    indented_layout = custom_collision_box.column()
+                    indented_layout.label(text="Shape Properties:")
+                    prop_indented_layout = indented_layout.row()
+                    prop_indented_layout.separator(factor=2.0)
+                    prop_column = prop_indented_layout.column()
+                    row = prop_column.row()
+                    row.prop(shape_properties, "is_collision", text="collision object")
+                    row.prop(shape_properties, "index")
+                    prop_column.row().prop(shape_properties, "shape_types", text="")
+                    prop_column.row().prop(shape_properties, "size")
+                    row = prop_column.row()
+                    row.prop(shape_properties, "radius")
+                    row.prop(shape_properties, "height")
+                    prop_column.row().prop(shape_properties, "mesh")
+                    row = prop_column.row()
+                    row.prop(body_properties, "is_motion", text="motion object")
+                    row.prop(body_properties, "is_trigger", text="trigger object")
+                    prop_column.row().prop(body_properties, "motion_types")
+                    prop_column.row().prop(body_properties, "mass")
+                    prop_column.row().prop(body_properties, "linear_velocity", text="linear velocity")
+                    prop_column.row().prop(body_properties, "angular_velocity", text="angular velocity")
+                    prop_column.row().prop(body_properties, "center_of_mass", text="center of mass")
+                    prop_column.row().prop(body_properties, "shape_index", text="shape index")
             else:
                 collision_box.label(text="No collision data available.")
-
-            if context.object["collision"] == "custom":
-                custom_collision_box = collision_box.box()
-                body_properties = context.scene.body_properties
-                shape_properties = context.scene.shape_properties
-
-                
-                
-
-                indented_layout = custom_collision_box.column()
-                indented_layout.label(text="Shape Properties:")
-                prop_indented_layout = indented_layout.row()
-                prop_indented_layout.separator(factor=2.0)
-                prop_column = prop_indented_layout.column()
-                row = prop_column.row()
-                row.prop(shape_properties, "is_collision", text="collision object")
-                row.prop(shape_properties, "index")
-                prop_column.row().prop(shape_properties, "shape_types", text="")
-                prop_column.row().prop(shape_properties, "size")
-                row = prop_column.row()
-                row.prop(shape_properties, "radius")
-                row.prop(shape_properties, "height")
-                prop_column.row().prop(shape_properties, "mesh")
-                row = prop_column.row()
-                row.prop(body_properties, "is_motion", text="motion object")
-                row.prop(body_properties, "is_trigger", text="trigger object")
-                prop_column.row().prop(body_properties, "motion_types")
-                prop_column.row().prop(body_properties, "mass")
-                prop_column.row().prop(body_properties, "linear_velocity", text="linear velocity")
-                prop_column.row().prop(body_properties, "angular_velocity", text="angular velocity")
-                prop_column.row().prop(body_properties, "center_of_mass", text="center of mass")
-                prop_column.row().prop(body_properties, "shape_index", text="shape index")
-
 
             ### COLLISION LAYERS ###
             collision_layer_box = layout.box()  # Create a box to contain the button grid
