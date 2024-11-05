@@ -130,8 +130,8 @@ class BlessPanel(bpy.types.Panel):
     bl_category = 'Bless'
 
     def draw(self, context):
-        collision_types = context.scene.collision_types
-        collision_layers = context.scene.collision_layers
+        collision_types = context.object.collision_types
+        collision_layers = context.object.collision_layers
         layout = self.layout
         tools = context.scene.bless_tools
 
@@ -171,6 +171,39 @@ class BlessPanel(bpy.types.Panel):
             else:
                 collision_box.label(text="No collision data available.")
 
+            if context.object["collision"] == "custom":
+                custom_collision_box = collision_box.box()
+                body_properties = context.scene.body_properties
+                shape_properties = context.scene.shape_properties
+
+                
+                
+
+                indented_layout = custom_collision_box.column()
+                indented_layout.label(text="Shape Properties:")
+                prop_indented_layout = indented_layout.row()
+                prop_indented_layout.separator(factor=2.0)
+                prop_column = prop_indented_layout.column()
+                row = prop_column.row()
+                row.prop(shape_properties, "is_collision", text="collision object")
+                row.prop(shape_properties, "index")
+                prop_column.row().prop(shape_properties, "shape_types", text="")
+                prop_column.row().prop(shape_properties, "size")
+                row = prop_column.row()
+                row.prop(shape_properties, "radius")
+                row.prop(shape_properties, "height")
+                prop_column.row().prop(shape_properties, "mesh")
+                row = prop_column.row()
+                row.prop(body_properties, "is_motion", text="motion object")
+                row.prop(body_properties, "is_trigger", text="trigger object")
+                prop_column.row().prop(body_properties, "motion_types")
+                prop_column.row().prop(body_properties, "mass")
+                prop_column.row().prop(body_properties, "linear_velocity", text="linear velocity")
+                prop_column.row().prop(body_properties, "angular_velocity", text="angular velocity")
+                prop_column.row().prop(body_properties, "center_of_mass", text="center of mass")
+                prop_column.row().prop(body_properties, "shape_index", text="shape index")
+
+
             ### COLLISION LAYERS ###
             collision_layer_box = layout.box()  # Create a box to contain the button grid
             row = collision_layer_box.row()
@@ -203,6 +236,8 @@ class BlessPanel(bpy.types.Panel):
                 bpy.context.space_data.lock_object = None
 
 
+
+
         else:
             row = layout.row()
             row.label(text="No object selected!")
@@ -221,54 +256,7 @@ class BlessPanel(bpy.types.Panel):
 #     bl_category = 'Bless'
 
 #     def draw(self, context):
-#         layout = self.layout.row()
-#         body_properties = context.scene.body_properties
-#         shape_properties = context.scene.shape_properties
-
-#         layout.separator(factor=2.0)
-        
-
-#         if (context.object is not None):
-#             indented_layout = layout.column()
-
-#             indented_layout.row().operator("object.gd3d_apply_props", text="apply")
-
-#             indented_layout.label(text="Shape Properties:")
-            
-            
-#             prop_indented_layout = indented_layout.row()
-#             prop_indented_layout.separator(factor=2.0)
-
-#             prop_column = prop_indented_layout.column()
-#             row = prop_column.row()
-#             row.prop(shape_properties, "is_collision", text="collision object")
-#             row.prop(shape_properties, "index")
-
-#             prop_column.row().prop(shape_properties, "shape_types", text="")
-
-#             prop_column.row().prop(shape_properties, "size")
-
-#             row = prop_column.row()
-#             row.prop(shape_properties, "radius")
-#             row.prop(shape_properties, "height")
-
-#             prop_column.row().prop(shape_properties, "mesh")
-
-#             row = prop_column.row()
-#             row.prop(body_properties, "is_motion", text="motion object")
-#             row.prop(body_properties, "is_trigger", text="trigger object")
-
-#             prop_column.row().prop(body_properties, "motion_types")
-
-#             prop_column.row().prop(body_properties, "mass")
-
-#             prop_column.row().prop(body_properties, "linear_velocity", text="linear velocity")
-
-#             prop_column.row().prop(body_properties, "angular_velocity", text="angular velocity")
-  
-#             prop_column.row().prop(body_properties, "center_of_mass", text="center of mass")
-
-#             prop_column.row().prop(body_properties, "shape_index", text="shape index")
+#         
 
 
 

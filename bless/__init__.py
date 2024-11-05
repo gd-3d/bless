@@ -120,14 +120,17 @@ def register_properties():
 
     bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
     bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsShape)
-    bpy.types.Scene.collision_types = bpy.props.PointerProperty(type=bless.BlessCollisionTypes)
-    bpy.types.Scene.collision_layers = bpy.props.PointerProperty(type=bless.BlessCollisionLayers)
+    bpy.types.Object.collision_types = bpy.props.PointerProperty(type=bless.BlessCollisionTypes)
+    bpy.types.Object.collision_layers = bpy.props.PointerProperty(type=bless.BlessCollisionLayers)
     bpy.types.Scene.bless_tools = bpy.props.PointerProperty(type=bless.BlessTools)
     bpy.types.Scene.unit_size = grid.unit_size
 
 def unregister_properties():
     del bpy.types.Scene.body_properties
     del bpy.types.Scene.shape_properties
+    del bpy.types.Object.collision_types
+    del bpy.types.Object.collision_layers
+    del bpy.types.Scene.bless_tools
     del bpy.types.Scene.unit_size
 
 
