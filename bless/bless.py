@@ -172,8 +172,10 @@ class BlessPanel(bpy.types.Panel):
             row.prop(collision_types, "collision_types", text="")
             row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
             
-            # Check if the "collision" property exists and display it
-            collision_data = context.object.get("collision")
+            # Get collision type from the object's attribute
+            collision_data = collision_types.collision_types
+            print(f"Collision data: {collision_data}, Type: {type(collision_data)}")
+            
             collision_box.alignment = "CENTER"
             if collision_data:
                 collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
@@ -184,54 +186,26 @@ class BlessPanel(bpy.types.Panel):
                     body_properties = context.scene.body_properties
                     shape_properties = context.scene.shape_properties
                     
-                    # TODO, make this neater/better
-                    # also, compound shapes are done a different way.
-
                     indented_layout = custom_collision_box.column()
-                    indented_layout.label(text="Shape Properties:")
-                    prop_indented_layout = indented_layout.row()
-                    prop_indented_layout.separator(factor=2.0)
-                    prop_column = prop_indented_layout.column()
-                    row = prop_column.row()
-                    row.prop(shape_properties, "is_collision", text="collision object")
-                    row.prop(shape_properties, "index")
-                    prop_column.row().prop(shape_properties, "shape_types", text="")
-                    prop_column.row().prop(shape_properties, "size")
-                    row = prop_column.row()
-                    row.prop(shape_properties, "radius")
-                    row.prop(shape_properties, "height")
-                    prop_column.row().prop(shape_properties, "mesh")
-                    row = prop_column.row()
-                    row.prop(body_properties, "is_motion", text="motion object")
-                    row.prop(body_properties, "is_trigger", text="trigger object")
-                    prop_column.row().prop(body_properties, "motion_types")
-                    prop_column.row().prop(body_properties, "mass")
-                    prop_column.row().prop(body_properties, "linear_velocity", text="linear velocity")
-                    prop_column.row().prop(body_properties, "angular_velocity", text="angular velocity")
-                    prop_column.row().prop(body_properties, "center_of_mass", text="center of mass")
-                    prop_column.row().prop(body_properties, "shape_index", text="shape index")
+                    indented_layout.label(text=f"CUSTOM COLLISION NOT SUPPORTED IN THIS VERSION", icon="ERROR")
+
             else:
                 collision_box.label(text="No collision data available.")
 
             ### COLLISION LAYERS ###
-            collision_layer_box = layout.box()  # Create a box to contain the button grid
-            row = collision_layer_box.row()
-            row.label(text="Collision Layers")
-            # Arrange buttons in two main rows of 16 buttons (4 blocks of 4 buttons per row)
-            for main_row_index in range(2):  # Two main rows
-                main_row = collision_layer_box.row()  # Each main row contains 4 blocks of 4 buttons each
-                
-                for block_index in range(4):  # Four blocks per main row
-                    col = main_row.column()  # Create a column for each block
-                    
-                    # Each block is a single row with 4 toggle buttons
-                    row = col.row(align=True)  # Set align=True to join the 4 buttons together
-                    
-                    # Add 4 buttons in a single row to make them appear joined
-                    for button_index in range(4):
-                        index = (main_row_index * 16) + (block_index * 4) + button_index
-                        row.prop(collision_layers, f"layer_{index + 1}", text=str(index + 1), toggle=True)
-            
+            if collision_data and collision_data != "none":
+                collision_layer_box = layout.box()
+                row = collision_layer_box.row()
+                row.label(text="Collision Layers")
+                # Arrange buttons in two main rows of 16 buttons (4 blocks of 4 buttons per row)
+                for main_row_index in range(2):  # Two main rows
+                    main_row = collision_layer_box.row()
+                    for block_index in range(4):
+                        col = main_row.column()
+                        row = col.row(align=True)
+                        for button_index in range(4):
+                            index = (main_row_index * 16) + (block_index * 4) + button_index
+                            row.prop(collision_layers, f"layer_{index + 1}", text=str(index + 1), toggle=True)
 
             ### TOOLS ###
             tools_box = layout.box()
@@ -250,22 +224,4 @@ class BlessPanel(bpy.types.Panel):
         else:
             row = layout.row()
             row.label(text="No object selected!")
-
-
-
-
-
-## TODO! use later,  fancy custom physics panel for custom / compound shapes  
-
-# class PhysicsPanel(bpy.types.Panel):
-#     bl_label = "Physics"
-#     bl_idname = "VIEW3D_PT_object_panel"
-#     bl_space_type = 'VIEW_3D'
-#     bl_region_type = 'UI'
-#     bl_category = 'Bless'
-
-#     def draw(self, context):
-#         
-
-
 
