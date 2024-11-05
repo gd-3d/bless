@@ -5,7 +5,7 @@ import bpy
 
 
 ## https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
-class OMI_physics_shape(bpy.types.PropertyGroup):
+class OMIPhysicsShape(bpy.types.PropertyGroup):
     # possibly needed for internal for gd3d
     is_collision: bpy.props.BoolProperty(default=False)  # type: ignore
     index: bpy.props.IntProperty(default=0, description="index of the physics shape") # type: ignore
@@ -29,7 +29,7 @@ class OMI_physics_shape(bpy.types.PropertyGroup):
     
 
 ## https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_body
-class OMI_physics_body(bpy.types.PropertyGroup):
+class OMIPhysicsBody(bpy.types.PropertyGroup):
     shape_index: bpy.props.IntProperty(default=-1) # type: ignore
     # https://github.com/omigroup/gltf-extensions/blob/main/extensions/2.0/OMI_physics_body/README.motion.md
     is_motion: bpy.props.BoolProperty(default=False)  # type: ignore
@@ -53,7 +53,7 @@ class OMI_physics_body(bpy.types.PropertyGroup):
     center_of_mass: bpy.props.FloatVectorProperty(default=[0.0, 0.0, 0.0]) # type: ignore
 
 
-class BLESS_collision_types(bpy.types.PropertyGroup):
+class BlessCollisionTypes(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
         name="Collision Type",
         description="Static level geometry.",
@@ -65,7 +65,7 @@ class BLESS_collision_types(bpy.types.PropertyGroup):
             ("none", "None", "", 1<<3),
         ])  # type: ignore
 
-class BLESS_collision_layers(bpy.types.PropertyGroup):
+class BlessCollisionLayers(bpy.types.PropertyGroup):
     layer_1: bpy.props.BoolProperty(name="Layer 1")  # type: ignore
     layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
     layer_3: bpy.props.BoolProperty(name="Layer 3")  # type: ignore
@@ -99,7 +99,7 @@ class BLESS_collision_layers(bpy.types.PropertyGroup):
     layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
 
-class ApplyCollisions(bpy.types.Operator):
+class BlessApplyCollisions(bpy.types.Operator):
     """Apply Props"""
     bl_idname = "object.gd3d_apply_collisions"
     bl_label = "Apply Collisions"
@@ -118,6 +118,9 @@ class ApplyCollisions(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class BlessTools(bpy.types.PropertyGroup):
+    lock_camera: bpy.props.BoolProperty(default=False) # type: ignore
+
 
 class BlessPanel(bpy.types.Panel):
     bl_label = "Bless"
@@ -130,6 +133,10 @@ class BlessPanel(bpy.types.Panel):
         collision_types = context.scene.collision_types
         collision_layers = context.scene.collision_layers
         layout = self.layout
+        tools = context.scene.bless_tools
+
+
+
 
         ### GRID ###
         grid_box = layout.box()
@@ -140,19 +147,12 @@ class BlessPanel(bpy.types.Panel):
         row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
         row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
 
-        ### COLLISION ###
-        # Check if an object is selected
         if context.object is not None:
+            
+            ### COLLISION ###
+            # Check if an object is selected
             collision_box = layout.row()
 
-            # Check if the "collision" property exists and display it
-            collision_data = context.object.get("collision")
-            if collision_data:
-                collision_box.alignment = "CENTER"
-                collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
-
-            else:
-                collision_box.label(text="No collision data available.")
            
             collision_box = layout.box()  # Create a box to contain all the following UI elements   
             # Add collision type label and selector
@@ -163,6 +163,13 @@ class BlessPanel(bpy.types.Panel):
             row = collision_box.row()
             row.prop(collision_types, "collision_types", text="")
             row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
+            # Check if the "collision" property exists and display it
+            collision_data = context.object.get("collision")
+            collision_box.alignment = "CENTER"
+            if collision_data:
+                collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
+            else:
+                collision_box.label(text="No collision data available.")
 
             ### COLLISION LAYERS ###
             collision_layer_box = layout.box()  # Create a box to contain the button grid
@@ -182,9 +189,26 @@ class BlessPanel(bpy.types.Panel):
                     for button_index in range(4):
                         index = (main_row_index * 16) + (block_index * 4) + button_index
                         row.prop(collision_layers, f"layer_{index + 1}", text=str(index + 1), toggle=True)
+            
+
+            ### TOOLS ###
+            tools_box = layout.box()
+            row = tools_box.row()
+            row.label(text="Tools")
+            row = tools_box.row()
+            row.prop(tools, "lock_camera", text="Lock Camera")
+            if tools["lock_camera"] == True:
+                bpy.context.space_data.lock_object = bpy.data.objects[context.object.name]
+            else:
+                bpy.context.space_data.lock_object = None
+
+
         else:
             row = layout.row()
             row.label(text="No object selected!")
+
+
+
 
 
 ## TODO! use later,  fancy custom physics panel for custom / compound shapes  

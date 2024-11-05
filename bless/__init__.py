@@ -118,11 +118,11 @@ from .map import panel
 def register_properties():
     #bpy.types.World.game = bpy.props.PointerProperty(type=bless_preferences.BlessGameConfig)
 
-    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=bless.OMI_physics_body)
-    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=bless.OMI_physics_shape)
-    bpy.types.Scene.collision_types = bpy.props.PointerProperty(type=bless.BLESS_collision_types)
-    bpy.types.Scene.collision_layers = bpy.props.PointerProperty(type=bless.BLESS_collision_layers)
-    bpy.types.Scene.map_properties = bpy.props.PointerProperty(type=panel.MapProperties)
+    bpy.types.Scene.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
+    bpy.types.Scene.shape_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsShape)
+    bpy.types.Scene.collision_types = bpy.props.PointerProperty(type=bless.BlessCollisionTypes)
+    bpy.types.Scene.collision_layers = bpy.props.PointerProperty(type=bless.BlessCollisionLayers)
+    bpy.types.Scene.bless_tools = bpy.props.PointerProperty(type=bless.BlessTools)
     bpy.types.Scene.unit_size = grid.unit_size
 
 def unregister_properties():
