@@ -2,7 +2,7 @@ import copy
 import bpy
 
 #### constants
-gltf_light_factor = 680
+LIGHT_FACTOR = 680
 
 
 
@@ -163,59 +163,24 @@ class bless_glTF2Extension:
         # First pass: Create shapes and body nodes
         for i, node in enumerate(gltf_plan.nodes):
             if node.name in node_tree:
-                print("found a ", node.name)
-                if "type" in node_tree[node.name]:
+                if node_tree[node.name]["type"] == "mesh":
+                    # Create shape
+                    shape = build_shape_dictionary("convex", node.mesh)
+                    shapes.append(shape)
                     
+                    # Create body node
+                    body = copy.deepcopy(node)
+                    body.name = f"{node.name}_body"
+                    body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                    node.translation = None
+                    node.rotation = None
+                    node.scale = None
                     
-                    if node_tree[node.name]["type"] == "mesh":
-                        
-                        build_body = False
-                        
-                        for trimesh in trimesh_collisions:
-                            print("TRIMESH = ",trimesh)
-                            if node.name == trimesh:
-                                print("MAKING trimesh SHAPE!!!!!")
-                                # Create shape
-                                shape = build_shape_dictionary("trimesh", node.mesh)
-                                shapes.append(shape)
-                                build_body = True
-                            else:
-                                pass
-                                print("NO COL FOUND")
-                        
-                        for convex in convex_collisions:
-                            print("CONVEX = ",convex)
-                            if node.name == convex:
-                            # Create shape
-                                shape = build_shape_dictionary("convex", node.mesh)
-                                print("MAKING convex SHAPE!!!!!")
-                                shapes.append(shape)
-                                build_body = True
-                            else:
-                                pass
-                                print("NO COL FOUND")
-                        
-                        
-                        if build_body:
-                            # Create body node
-                            body = copy.deepcopy(node)
-                            body.name = f"{node.name}_Body_"
-                            body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
-                            node.translation = None
-                            node.rotation = None
-                            node.scale = None
-                            
-                            bodies.append(body)
-                            node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
-
-        # Check if bodies were created
-        if not bodies:
-            bless_print("No bodies were created. Check your collision settings.", header=True)
+                    bodies.append(body)
+                    node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
 
         # Second pass: Update parent-child relationships
         for i, node in enumerate(gltf_plan.nodes):
-
-            # regular node, object, light, etc.
             if i in node_map:
                 new_node = bodies[node_map[i] - len(gltf_plan.nodes)]
                 
@@ -229,19 +194,9 @@ class bless_glTF2Extension:
                 
                 # Make the original node a child of the new node
                 new_node.children.append(i)
-               
-                # Remove children from the original node
-                node.children = []  
-            
-            # Handle collections
+                node.children = []  # Remove children from the original node
             elif node_tree.get(node.name, {}).get("type") == "collection":
-                
-                
-                print(f"found a map collection named {node.name}")
-
-
-
-
+                # Handle collections
                 if node.children:
                     new_children = []
                     for child_index in node.children:
@@ -250,7 +205,6 @@ class bless_glTF2Extension:
                         else:
                             new_children.append(child_index)
                     node.children = new_children
-
 
         # Update the main node list
         gltf_plan.nodes += bodies
