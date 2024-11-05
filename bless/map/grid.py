@@ -16,23 +16,24 @@ unit_size = bpy.props.FloatProperty(
     update=lambda self, context: update_grid_scale(context, self.unit_size))
 
 
-class GridPanel(bpy.types.Panel):
-    bl_label = "Grid"
-    bl_idname = "EDITOR_PT_grid"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Bless"
+# class GridPanel(bpy.types.Panel):
+#     bl_label = "Grid"
+#     bl_idname = "EDITOR_PT_grid"
+#     bl_space_type = "VIEW_3D"
+#     bl_region_type = "UI"
+#     bl_category = "Bless"
 
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        layout.prop(scene, "unit_size", text="Unit Size (m)")
+#     def draw(self, context):
+#         layout = self.layout
+#         scene = context.scene
 
-        row = layout.row()
-        row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
-        row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
+#         row = layout.row()
+#         row.prop(scene, "unit_size", text="Unit Size (m)")
+        
+#         row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
+#         row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
 
-        # TODO add snap bool
+#         # TODO add snap bool
 
 # Update grid scale based on unit_size
 def update_grid_scale(context, unit_size):

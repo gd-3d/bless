@@ -131,38 +131,46 @@ class BlessPanel(bpy.types.Panel):
         collision_layers = context.scene.collision_layers
         layout = self.layout
 
+        ### GRID ###
+        grid_box = layout.box()
+        row = grid_box.row()
+        row.label(text="Grid")
+        row = grid_box.row()
+        row.prop(context.scene, "unit_size", text="Unit Size (m)")
+        row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
+        row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
+
+        ### COLLISION ###
         # Check if an object is selected
         if context.object is not None:
-            box = layout.row()
+            collision_box = layout.row()
 
             # Check if the "collision" property exists and display it
             collision_data = context.object.get("collision")
             if collision_data:
-                box.alignment = "CENTER"
-                box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
+                collision_box.alignment = "CENTER"
+                collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
 
             else:
-                box.label(text="No collision data available.")
+                collision_box.label(text="No collision data available.")
            
-            box = layout.box()  # Create a box to contain all the following UI elements   
+            collision_box = layout.box()  # Create a box to contain all the following UI elements   
             # Add collision type label and selector
-            row = box.row()
+            row = collision_box.row()
             row.label(text="Collision")
             #row.alignment = "CENTER"
             
-            row = box.row()
+            row = collision_box.row()
             row.prop(collision_types, "collision_types", text="")
             row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
 
-                
-
-
-            box = layout.box()  # Create a box to contain the button grid
-            row = box.row()
+            ### COLLISION LAYERS ###
+            collision_layer_box = layout.box()  # Create a box to contain the button grid
+            row = collision_layer_box.row()
             row.label(text="Collision Layers")
             # Arrange buttons in two main rows of 16 buttons (4 blocks of 4 buttons per row)
             for main_row_index in range(2):  # Two main rows
-                main_row = box.row()  # Each main row contains 4 blocks of 4 buttons each
+                main_row = collision_layer_box.row()  # Each main row contains 4 blocks of 4 buttons each
                 
                 for block_index in range(4):  # Four blocks per main row
                     col = main_row.column()  # Create a column for each block
