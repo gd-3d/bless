@@ -72,6 +72,22 @@ class bless_glTF2Extension:
         if hasattr(blender_object, "type"):
             bless_print(f"Object type: [{blender_object.type}]")
             node_tree[blender_object.name] = {}
+            
+             # Dictionary to store the node flags for each Blender object
+            node_flags = {}
+            
+            # Collect the lock, hidden, and exclude properties for each Blender object
+            # Add these flags to a dictionary for the current node
+            node_flags["locked"] = blender_object.hide_select  # Determines if the object is locked
+            node_flags["hidden"] = blender_object.hide_get()  # Determines if the object is hidden
+            node_flags["exclude"] = blender_object.hide_render  # Determines if the object is excluded from rendering
+
+            # Create the final dictionary with the object name as the key and node flags as the value
+            node_tree[blender_object.name]["flags"] = node_flags
+
+            # Print the node flags dictionary for debugging
+            print(node_flags)
+    
             if blender_object.type == "MESH":
                 node_tree[blender_object.name]["type"] = "mesh"
 
@@ -86,8 +102,6 @@ class bless_glTF2Extension:
             node_tree[blender_object.name]["type"] = "collection"
 
     
-    
-    
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
@@ -101,20 +115,31 @@ class bless_glTF2Extension:
             if node.name in node_tree:
                 if "type" in node_tree[node.name]:
                     if node_tree[node.name]["type"] == "mesh":
-                        # Create shape
-                        shape = build_shape_dictionary("trimesh", node.mesh)
-                        shapes.append(shape)
-                        
-                        # Create body node
-                        body = copy.deepcopy(node)
-                        body.name = f"{node.name}_Body_"
-                        body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
-                        node.translation = None
-                        node.rotation = None
-                        node.scale = None
-                        
-                        bodies.append(body)
-                        node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1  # Map original index to new body index
+                        # Safely get the collision type
+                        blender_obj = bpy.data.objects.get(node.name)
+                        if blender_obj and "collision" in blender_obj:
+                            collision_type = blender_obj["collision"]
+                            
+                            # Create shape based on collision type
+                            if collision_type == "trimesh":
+                                shape = build_shape_dictionary("trimesh", node.mesh)
+                            elif collision_type == "convex":
+                                shape = build_shape_dictionary("convex", node.mesh)
+                            else:
+                                continue  # Skip if collision type is not recognized
+                            
+                            shapes.append(shape)
+                            
+                            # Create body node
+                            body = copy.deepcopy(node)
+                            body.name = f"{node.name}_Body_"
+                            body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                            node.translation = None
+                            node.rotation = None
+                            node.scale = None
+                            
+                            bodies.append(body)
+                            node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1
 
         # Second pass: Update parent-child relationships
         for i, node in enumerate(gltf_plan.nodes):
