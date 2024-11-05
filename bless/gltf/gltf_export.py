@@ -53,16 +53,15 @@ def bless_print(message, header=False):
 
 class bless_glTF2Extension:
 
+
+
+
     def __init__(self):
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore
         self.Extension = Extension
-    
-    # def gather_material_hook(self, gltf2_material, blender_material, export_settings):
-    #     if gltf2_material.extensions is None:
-    #         gltf2_material.extensions = {}
-        
-    # def gather_material_pbr_metallic_roughness_hook(self, gltf2_material, blender_material, orm_texture, export_settings):
-    #     print(len(gltf2_material.extensions))
+
+
+
 
 
     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
@@ -102,6 +101,18 @@ class bless_glTF2Extension:
             node_tree[blender_object.name]["type"] = "collection"
 
     
+
+
+
+
+
+
+
+
+
+
+
+
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
@@ -115,31 +126,40 @@ class bless_glTF2Extension:
             if node.name in node_tree:
                 if "type" in node_tree[node.name]:
                     if node_tree[node.name]["type"] == "mesh":
-                        # Safely get the collision type
+                        # Get the Blender object
                         blender_obj = bpy.data.objects.get(node.name)
-                        if blender_obj and "collision" in blender_obj:
-                            collision_type = blender_obj["collision"]
+                        if blender_obj:
+                            # Access the collision_types through the property group
+                            collision_type = blender_obj.collision_types.collision_types
                             
-                            # Create shape based on collision type
+
                             if collision_type == "trimesh":
+
                                 shape = build_shape_dictionary("trimesh", node.mesh)
+                                generate_body_node = True
                             elif collision_type == "convex":
                                 shape = build_shape_dictionary("convex", node.mesh)
+                                generate_body_node = True
+                            elif collision_type == "none":
+                                generate_body_node = False
                             else:
-                                continue  # Skip if collision type is not recognized
-                            
+                                print("custom collision type, skipping.")
+                                continue
+
                             shapes.append(shape)
                             
-                            # Create body node
-                            body = copy.deepcopy(node)
-                            body.name = f"{node.name}_Body_"
-                            body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
-                            node.translation = None
-                            node.rotation = None
-                            node.scale = None
+                            if generate_body_node:
+                                # Create body node
+                                body = copy.deepcopy(node)
+                                body.name = f"{node.name}_Body_"
+                                body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                                bodies.append(body)
+                                node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1
                             
-                            bodies.append(body)
-                            node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1
+                                node.translation = None
+                                node.rotation = None
+                                node.scale = None
+                                
 
         # Second pass: Update parent-child relationships
         for i, node in enumerate(gltf_plan.nodes):
