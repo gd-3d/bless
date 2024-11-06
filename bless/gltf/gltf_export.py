@@ -115,7 +115,7 @@ class bless_glTF2Extension:
                     audio_emitter = {
                         "type": "spatial",
                         "gain": blender_object.data.volume,
-                        "maxDistance": blender_object.data.distance_max,
+                        "maxDistance": 0 if blender_object.data.distance_max > 1000000 else blender_object.data.distance_max,
                         "refDistance": blender_object.data.distance_reference,
                         "rolloffFactor": blender_object.data.attenuation,
                         "sound": blender_object.data.sound.filepath if blender_object.data.sound else None,
@@ -267,6 +267,21 @@ class bless_glTF2Extension:
                 extension={"collisionFilters": collision_filters},
                 required=False
             )
+
+        # Add the audio extension data at the root level
+        if hasattr(self, 'audio_emitters') and self.audio_emitters:
+            gltf_plan.extensions["KHR_audio_emitter"] = self.Extension(
+                name="KHR_audio_emitter",
+                extension={
+                    "audio": self.audio_data,
+                    "sources": self.audio_sources,
+                    "emitters": self.audio_emitters
+                },
+                required=False
+            )
+            
+            if "KHR_audio_emitter" not in gltf_plan.extensions_used:
+                gltf_plan.extensions_used.append("KHR_audio_emitter")
 
         bless_print("Gather extensions finished", header=True)
 
