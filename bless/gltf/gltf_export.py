@@ -11,15 +11,17 @@ gltf_light_factor = 680
 ###### EXTENSIONS #######
 #extensions are used by bless for collisions and base class objects/nodes.
 core_extensions =       [
-                        "KHR_audio_emitter", # AudioStreamPlayer3D
-                        "EXT_mesh_gpu_instancing", # MultiMeshInstance3D
-                        "KHR_xmp_json_ld", # Metadata
+                        "KHR_node_visibility", # Hidden nodes
+                        #"KHR_audio_emitter", # AudioStreamPlayer3D
+                        #"EXT_mesh_gpu_instancing", # MultiMeshInstance3D
+                        #"KHR_xmp_json_ld", # Metadata
                         ]
 
 physics_extensions =    [
                         "OMI_physics_body", # PhysicsBody3D
                         "OMI_physics_shape", # CollisionShape3D
                         #OMI_physics_joint, # Joint3D
+                        "OMI_physics_filter", # PhysicsFilter3D
                         ]
 
 # optional extensions WILL BE included with bless and can be used as installable presets. (TODO)
@@ -81,6 +83,10 @@ class bless_glTF2Extension:
             node_flags["hidden"] = blender_object.hide_get()  # Determines if the object is hidden
             node_flags["exclude"] = blender_object.hide_render  # Determines if the object is excluded from rendering
 
+            # Add KHR_node_visibility extension if object is hidden
+            if node_flags["hidden"]:
+                gltf2_object.extensions["KHR_node_visibility"] = {"visible": False}
+
             # Create the final dictionary with the object name as the key and node flags as the value
             node_tree[blender_object.name]["flags"] = node_flags
 
@@ -117,21 +123,24 @@ class bless_glTF2Extension:
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
 
+        # Add core extensions to extensionsUsed
+        gltf_plan.extensions_used += core_extensions
+        
         bodies = []
         shapes = []
-        node_map = {}  # To keep track of original nodes and their new body nodes
+        collision_filters = []  # New list to store collision filters
+        node_map = {}
 
-        # First pass: Create shapes and body nodes
+        # First pass: Create shapes, collision filters, and body nodes
         for i, node in enumerate(gltf_plan.nodes):
             if node.name in node_tree:
                 if "type" in node_tree[node.name]:
                     if node_tree[node.name]["type"] == "mesh":
-                        # Get the Blender object
                         blender_obj = bpy.data.objects.get(node.name)
                         if blender_obj:
                             collision_type = blender_obj.collision_types.collision_types
                             generate_body_node = False
-                            shape = None  # Initialize shape variable
+                            shape = None
 
                             if collision_type == "trimesh":
                                 shape = build_shape_dictionary("trimesh", node.mesh)
@@ -140,26 +149,32 @@ class bless_glTF2Extension:
                                 shape = build_shape_dictionary("convex", node.mesh)
                                 generate_body_node = True
                             elif collision_type == "none":
-                                continue  # Skip this iteration if no collision
+                                continue
                             else:
                                 print("custom collision type, skipping.")
                                 continue
 
-                            if shape is not None:  # Only append if shape was created
+                            if shape is not None:
                                 shapes.append(shape)
                             
                             if generate_body_node:
-                                # Create body node
                                 body = copy.deepcopy(node)
                                 body.name = f"{node.name}_Body_"
-                                body.extensions["OMI_physics_body"] = build_body_dictionary("static", shape_index=len(shapes) - 1)
+
+                                physics_body_data = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                                
+                                # Create collision filter and add its index to the body
+                                collision_filter = build_collision_filter(blender_obj)
+                                if collision_filter:
+                                    collision_filters.append(collision_filter)
+                                    physics_body_data["collisionFilter"] = len(collision_filters) - 1
+                                
+                                body.extensions["OMI_physics_body"] = physics_body_data
                                 bodies.append(body)
                                 node_map[i] = len(gltf_plan.nodes) + len(bodies) - 1
-                            
                                 node.translation = None
                                 node.rotation = None
                                 node.scale = None
-                                
 
         # Second pass: Update parent-child relationships
         for i, node in enumerate(gltf_plan.nodes):
@@ -193,14 +208,21 @@ class bless_glTF2Extension:
 
         # Add physics extensions
         gltf_plan.extensions_used += physics_extensions
+        
+        # Add shapes extension
         gltf_plan.extensions["OMI_physics_shape"] = self.Extension(
             name="OMI_physics_shape",
             extension={"shapes": shapes},
             required=False
         )
 
-
-        
+        # Add collision filters extension if we have any filters
+        if collision_filters:
+            gltf_plan.extensions["OMI_physics_filter"] = self.Extension(
+                name="OMI_physics_filter",
+                extension={"collisionFilters": collision_filters},
+                required=False
+            )
 
         bless_print("Gather extensions finished", header=True)
 
@@ -239,3 +261,25 @@ def build_shape_dictionary(shape_type, mesh_index=-1, size=None, radius=None, he
             shape_data[shape_type]["height"] = height or 2.0
 
     return shape_data
+
+def build_collision_filter(obj):
+    collision_systems = []
+    collide_with_systems = []
+    
+    # Convert enabled layers to system names (1-based indexing)
+    for i in range(1, 33):
+        if getattr(obj.collision_layers, f"layer_{i}"):
+            collision_systems.append(f"Layer{i}")
+        if getattr(obj.collision_mask, f"layer_{i}"):
+            collide_with_systems.append(f"Layer{i}")
+
+    # Only create filter if there are layers defined
+    if collision_systems or collide_with_systems:
+        filter_data = {}
+        if collision_systems:
+            filter_data["collisionSystems"] = collision_systems
+        if collide_with_systems:
+            filter_data["collideWithSystems"] = collide_with_systems
+        return filter_data
+    
+    return None
