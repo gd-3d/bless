@@ -268,7 +268,7 @@ class BlessPanel(bpy.types.Panel):
 
             ### COLLISION LAYERS ###
             if collision_data and collision_data != "none":
-                collision_layer_box = layout.box()
+                collision_layer_box = collision_box.box()
                 row = collision_layer_box.row()
                 row.label(text="Collision Layers")
                 # Arrange buttons in two main rows of 16 buttons (4 blocks of 4 buttons per row)
@@ -282,7 +282,7 @@ class BlessPanel(bpy.types.Panel):
                             row.prop(collision_layers, f"layer_{index + 1}", text=str(index + 1), toggle=True)
 
             ### COLLISION MASK ###
-                collision_mask_box = layout.box()
+                collision_mask_box = collision_box.box()
                 row = collision_mask_box.row()
                 row.label(text="Collision Mask")
                 for main_row_index in range(2):  # Two main rows
