@@ -249,7 +249,7 @@ class BlessPanel(bpy.types.Panel):
             
             # Get collision type from the object's attribute
             collision_data = collision_types.collision_types
-            print(f"Collision data: {collision_data}, Type: {type(collision_data)}")
+            #print(f"Collision data: {collision_data}, Type: {type(collision_data)}")
             
             collision_box.alignment = "CENTER"
             if collision_data:

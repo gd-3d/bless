@@ -13,7 +13,7 @@ gltf_light_factor = 680
 core_extensions =       [
                         "KHR_node_visibility", # Hidden nodes
                         "GODOT_node_lock", # Locked nodes
-                        #"KHR_audio_emitter", # AudioStreamPlayer3D
+                        "KHR_audio_emitter", # AudioStreamPlayer3D
                         #"EXT_mesh_gpu_instancing", # MultiMeshInstance3D
                         #"KHR_xmp_json_ld", # Metadata
                         ]
@@ -105,6 +105,30 @@ class bless_glTF2Extension:
 
             elif blender_object.type == "CAMERA":
                 node_tree[blender_object.name]["type"] = "camera"
+
+            elif blender_object.type == "SPEAKER":
+                bless_print("Processing speaker object...")  # Debug print
+                
+                # Only add audio emitter if there's a sound file assigned
+                if blender_object.data and blender_object.data.sound:
+                    bless_print(f"Found sound: {blender_object.data.sound.filepath}")  # Debug print
+                    audio_emitter = {
+                        "type": "spatial",
+                        "gain": blender_object.data.volume,
+                        "maxDistance": blender_object.data.distance_max,
+                        "refDistance": blender_object.data.distance_reference,
+                        "rolloffFactor": blender_object.data.attenuation,
+                        "sound": blender_object.data.sound.filepath if blender_object.data.sound else None,
+                        # Optional directional audio properties
+                        "coneInnerAngle": blender_object.data.cone_angle_inner,
+                        "coneOuterAngle": blender_object.data.cone_angle_outer,
+                        "coneOuterGain": blender_object.data.cone_volume_outer
+                    }
+                    
+                    gltf2_object.extensions["KHR_audio_emitter"] = audio_emitter
+                    bless_print(f"Added audio emitter for {blender_object.name}")
+                else:
+                    bless_print("No sound file assigned to speaker")  # Debug print
         else:
             # its a collection.
             node_tree[blender_object.name] = {}
@@ -130,6 +154,18 @@ class bless_glTF2Extension:
         # Add core extensions to extensionsUsed
         gltf_plan.extensions_used += core_extensions
         
+        # Check for audio emitters and explicitly add the extension
+        has_audio = False
+        for node in gltf_plan.nodes:
+            if node.extensions and "KHR_audio_emitter" in node.extensions:
+                has_audio = True
+                break
+        
+        if has_audio:
+            if "KHR_audio_emitter" not in gltf_plan.extensions_used:
+                gltf_plan.extensions_used.append("KHR_audio_emitter")
+                bless_print("Added KHR_audio_emitter to extensionsUsed")
+
         bodies = []
         shapes = []
         collision_filters = []  # New list to store collision filters
