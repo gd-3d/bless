@@ -12,6 +12,7 @@ gltf_light_factor = 680
 #extensions are used by bless for collisions and base class objects/nodes.
 core_extensions =       [
                         "KHR_node_visibility", # Hidden nodes
+                        "GODOT_node_lock", # Locked nodes
                         #"KHR_audio_emitter", # AudioStreamPlayer3D
                         #"EXT_mesh_gpu_instancing", # MultiMeshInstance3D
                         #"KHR_xmp_json_ld", # Metadata
@@ -83,7 +84,10 @@ class bless_glTF2Extension:
             node_flags["hidden"] = blender_object.hide_get()  # Determines if the object is hidden
             node_flags["exclude"] = blender_object.hide_render  # Determines if the object is excluded from rendering
 
-            # Add KHR_node_visibility extension if object is hidden
+            # Store the lock state in node_tree for later use with the physics body
+            node_tree[blender_object.name]["locked"] = node_flags["locked"]
+
+            # Only add visibility extension here (not lock)
             if node_flags["hidden"]:
                 gltf2_object.extensions["KHR_node_visibility"] = {"visible": False}
 
@@ -159,9 +163,13 @@ class bless_glTF2Extension:
                             
                             if generate_body_node:
                                 body = copy.deepcopy(node)
-                                body.name = f"{node.name}_Body_"
+                                body.name = f"{node.name}Body"
 
                                 physics_body_data = build_body_dictionary("static", shape_index=len(shapes) - 1)
+                                
+                                # Add the lock extension only to the body if the original object was locked
+                                if node_tree[node.name].get("locked", False):
+                                    body.extensions["GODOT_node_lock"] = {"locked": True}
                                 
                                 # Create collision filter and add its index to the body
                                 collision_filter = build_collision_filter(blender_obj)
