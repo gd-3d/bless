@@ -1,4 +1,6 @@
 import bpy
+import os
+import json
 
 ## hooks found and implemented by michaeljared from this original gist:
 ## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
@@ -185,6 +187,12 @@ class BlessApplyCollisions(bpy.types.Operator):
 
 class BlessTools(bpy.types.PropertyGroup):
     lock_camera: bpy.props.BoolProperty(default=False) # type: ignore
+    profile_filepath: bpy.props.StringProperty(
+        name="Game Profile Path",
+        description="Path to the game profile configuration",
+        default="",
+        subtype='FILE_PATH'
+    ) # type: ignore
     trimesh_color: bpy.props.FloatVectorProperty(
         name="Trimesh Color",
         subtype='COLOR',
@@ -199,7 +207,11 @@ class BlessTools(bpy.types.PropertyGroup):
         min=0.0, max=1.0,
         size=4
     ) # type: ignore
-
+    filter_glob: bpy.props.StringProperty(
+        default="*.json",  # Change this to match your profile file type
+        options={'HIDDEN'},
+        maxlen=255,
+    )#type: ignore
 
 class BlessPanel(bpy.types.Panel):
     bl_label = "Bless"
@@ -300,6 +312,15 @@ class BlessPanel(bpy.types.Panel):
             row = tools_box.row()
             row.label(text="Tools")
             
+            # Game Profile Path with file selector
+            profile_box = tools_box.box()
+            row = profile_box.row()
+            row.label(text="Game Profile:")
+            
+            row = profile_box.row(align=True)
+            row.prop(tools, "profile_filepath", text="")
+            row.operator("object.load_game_profile", text="Load Profile", icon='IMPORT')
+            
             # Camera Lock
             row = tools_box.row()
             row.prop(tools, "lock_camera", text="Lock Camera")
@@ -323,4 +344,136 @@ class BlessPanel(bpy.types.Panel):
         else:
             row = layout.row()
             row.label(text="No object selected!")
+
+
+class BlessLoadGameProfile(bpy.types.Operator):
+    """Load Game Profile"""
+    bl_idname = "object.load_game_profile"
+    bl_label = "Load Game Profile"
+
+    def load_textures(self, texture_paths):
+        for path in texture_paths:
+            try:
+                # Load the image
+                img = bpy.data.images.load(path, check_existing=True)
+                
+                # Mark as asset
+                img.asset_mark()
+                img.asset_generate_preview()
+                
+                # Set asset metadata
+                if not img.asset_data:
+                    continue
+                    
+                img.asset_data.catalog_id = "textures"
+                img.asset_data.description = f"Game texture: {os.path.basename(path)}"
+                
+            except Exception as e:
+                self.report({'WARNING'}, f"Failed to load texture {path}: {str(e)}")
+
+    def load_materials(self, material_paths):
+        for path in material_paths:
+            try:
+                # For Godot .tres files, we'll create a basic material
+                mat_name = os.path.splitext(os.path.basename(path))[0]
+                mat = bpy.data.materials.new(name=mat_name)
+                
+                # Mark as asset
+                mat.asset_mark()
+                mat.asset_generate_preview()
+                
+                # Set asset metadata
+                if not mat.asset_data:
+                    continue
+                    
+                mat.asset_data.catalog_id = "materials"
+                mat.asset_data.description = f"Game material: {mat_name}"
+                
+            except Exception as e:
+                self.report({'WARNING'}, f"Failed to load material {path}: {str(e)}")
+
+    def load_audio(self, music_paths, sfx_paths):
+        # Load music
+        for path in music_paths:
+            try:
+                sound = bpy.data.sounds.load(path, check_existing=True)
+                
+                # Mark as asset
+                sound.asset_mark()
+                sound.asset_generate_preview()
+                
+                # Set asset metadata
+                if not sound.asset_data:
+                    continue
+                    
+                sound.asset_data.catalog_id = "audio_music"
+                sound.asset_data.description = f"Game music: {os.path.basename(path)}"
+                
+            except Exception as e:
+                self.report({'WARNING'}, f"Failed to load music {path}: {str(e)}")
+
+        # Load SFX
+        for path in sfx_paths:
+            try:
+                sound = bpy.data.sounds.load(path, check_existing=True)
+                
+                # Mark as asset
+                sound.asset_mark()
+                sound.asset_generate_preview()
+                
+                # Set asset metadata
+                if not sound.asset_data:
+                    continue
+                    
+                sound.asset_data.catalog_id = "audio_sfx"
+                sound.asset_data.description = f"Game SFX: {os.path.basename(path)}"
+                
+            except Exception as e:
+                self.report({'WARNING'}, f"Failed to load SFX {path}: {str(e)}")
+
+    def execute(self, context):
+        tools = context.scene.bless_tools
+        profile_path = tools.profile_filepath
+        
+        if not profile_path:
+            self.report({'ERROR'}, "No game profile path specified")
+            return {'CANCELLED'}
+            
+        try:
+            # Convert the relative path to absolute if needed
+            if profile_path.startswith("//"):
+                profile_path = bpy.path.abspath(profile_path)
+            
+            with open(profile_path, 'r') as f:
+                profile_data = json.load(f)
+                
+            # Load assets into Asset Browser
+            self.load_textures(profile_data.get('textures', []))
+            self.load_materials(profile_data.get('materials', []))
+            self.load_audio(
+                profile_data.get('audio_music', []),
+                profile_data.get('audio_sfx', [])
+            )
+                
+            self.report({'INFO'}, "Game profile loaded successfully")
+            return {'FINISHED'}
+            
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to load game profile: {str(e)}")
+            return {'CANCELLED'}
+
+
+class BlessSelectGameProfile(bpy.types.Operator):
+    """Select Game Profile Path"""
+    bl_idname = "object.select_game_profile"
+    bl_label = "Select Game Profile"
+    
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+        
+    def execute(self, context):
+        tools = context.scene.bless_tools
+        tools.profile_filepath = self.filepath
+        return {'FINISHED'}
 
