@@ -371,24 +371,91 @@ class BlessLoadGameProfile(bpy.types.Operator):
             except Exception as e:
                 self.report({'WARNING'}, f"Failed to load texture {path}: {str(e)}")
 
+    def parse_color(self, color_str):
+        """Parse a Godot Color string into RGBA values"""
+        # Convert "Color(0.238422, 0.238422, 0.238422, 1)" to [0.238422, 0.238422, 0.238422, 1]
+        color_str = color_str.replace('Color(', '').replace(')', '')
+        return [float(x.strip()) for x in color_str.split(',')]
+
+    def parse_vector3(self, vec_str):
+        """Parse a Godot Vector3 string into XYZ values"""
+        # Convert "Vector3(0, 0, 0)" to [0, 0, 0]
+        vec_str = vec_str.replace('Vector3(', '').replace(')', '')
+        return [float(x.strip()) for x in vec_str.split(',')]
+
     def load_materials(self, material_paths):
         for path in material_paths:
             try:
-                # For Godot .tres files, we'll create a basic material
+                # Parse the .tres file
+                with open(path, 'r') as f:
+                    lines = f.readlines()
+                
+                # Create new material
                 mat_name = os.path.splitext(os.path.basename(path))[0]
                 mat = bpy.data.materials.new(name=mat_name)
+                mat.use_nodes = True
                 
+                # Get the node tree
+                nodes = mat.node_tree.nodes
+                links = mat.node_tree.links
+                
+                # Get the principled BSDF node (created by default)
+                principled = nodes.get("Principled BSDF")
+                
+                # Parse material properties
+                for line in lines:
+                    line = line.strip()
+                    
+                    # Handle albedo color
+                    if line.startswith('albedo_color'):
+                        color_value = line.split('=')[1].strip()
+                        color = self.parse_color(color_value)
+                        principled.inputs["Base Color"].default_value = color
+                    
+                    # Handle metallic
+                    elif line.startswith('metallic'):
+                        value = float(line.split('=')[1].strip())
+                        principled.inputs["Metallic"].default_value = value
+                    
+                    # Handle roughness
+                    elif line.startswith('roughness'):
+                        value = float(line.split('=')[1].strip())
+                        principled.inputs["Roughness"].default_value = value
+                    
+                    # Handle emission
+                    elif line.startswith('emission'):
+                        if 'emission_energy_multiplier' in line:
+                            value = float(line.split('=')[1].strip())
+                            principled.inputs["Emission Strength"].default_value = value
+                        elif line.startswith('emission ='):
+                            color_value = line.split('=')[1].strip()
+                            color = self.parse_color(color_value)
+                            principled.inputs["Emission"].default_value = color
+                    
+                    # Handle UV triplanar
+                    elif line.startswith('uv1_triplanar'):
+                        value = line.split('=')[1].strip()
+                        if value == 'true':
+                            # Create Texture Coordinate node
+                            tex_coord = nodes.new('ShaderNodeTexCoord')
+                            tex_coord.location = (principled.location.x - 600, principled.location.y)
+                            
+                            # Create Mapping node
+                            mapping = nodes.new('ShaderNodeMapping')
+                            mapping.location = (principled.location.x - 450, principled.location.y)
+                            
+                            # Link them together
+                            links.new(tex_coord.outputs["Generated"], mapping.inputs["Vector"])
+            
                 # Mark as asset
                 mat.asset_mark()
                 mat.asset_generate_preview()
                 
                 # Set asset metadata
-                if not mat.asset_data:
-                    continue
+                if mat.asset_data:
+                    mat.asset_data.catalog_id = "materials"
+                    mat.asset_data.description = f"Game material: {mat_name}"
                     
-                mat.asset_data.catalog_id = "materials"
-                mat.asset_data.description = f"Game material: {mat_name}"
-                
             except Exception as e:
                 self.report({'WARNING'}, f"Failed to load material {path}: {str(e)}")
 
