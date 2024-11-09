@@ -3,7 +3,7 @@ bl_info = {
     "author" : "michaeljared, aaronfranke, yankscally, valyarhal", 
     "description" : "",
     "blender" : (4, 2, 0),
-    "version" : (0, 1, 1),
+    "version" : (0, 1, 2),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
