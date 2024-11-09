@@ -211,7 +211,7 @@ class bless_glTF2Extension:
                                 collision_filter = build_collision_filter(blender_obj)
                                 if collision_filter:
                                     collision_filters.append(collision_filter)
-                                    physics_body_data["collisionFilter"] = len(collision_filters) - 1
+                                    physics_body_data["collider"]["collisionFilter"] = len(collision_filters) - 1
                                 
                                 body.extensions["OMI_physics_body"] = physics_body_data
                                 bodies.append(body)
@@ -262,11 +262,40 @@ class bless_glTF2Extension:
 
         # Add collision filters extension if we have any filters
         if collision_filters:
-            gltf_plan.extensions["OMI_physics_filter"] = self.Extension(
-                name="OMI_physics_filter",
-                extension={"collisionFilters": collision_filters},
-                required=False
-            )
+            # Debug print
+            bless_print("Original collision filters:")
+            for f in collision_filters:
+                bless_print(str(f))
+
+            # Deduplicate filters
+            unique_filters = []
+            seen = set()
+            
+            for filter_data in collision_filters:
+                if filter_data is None:
+                    continue
+                
+                # Convert dict to tuple for hashing
+                filter_tuple = tuple(sorted([
+                    ('collisionSystems', tuple(sorted(filter_data.get('collisionSystems', [])))),
+                    ('collideWithSystems', tuple(sorted(filter_data.get('collideWithSystems', []))))
+                ]))
+                
+                if filter_tuple not in seen:
+                    seen.add(filter_tuple)
+                    unique_filters.append(filter_data)
+
+            # Debug print
+            bless_print("Deduplicated collision filters:")
+            for f in unique_filters:
+                bless_print(str(f))
+
+            if unique_filters:
+                gltf_plan.extensions["OMI_physics_body"] = self.Extension(
+                    name="OMI_physics_body",
+                    extension={"collisionFilters": unique_filters},
+                    required=False
+                )
 
         # Add the audio extension data at the root level
         if hasattr(self, 'audio_emitters') and self.audio_emitters:
@@ -325,14 +354,29 @@ def build_collision_filter(obj):
     collision_systems = []
     collide_with_systems = []
     
-    # Convert enabled layers to system names (1-based indexing)
+    # Debug print
+    bless_print(f"Building collision filter for object: {obj.name}")
+    
+    # Get the layers that are enabled
     for i in range(1, 33):
-        if getattr(obj.collision_layers, f"layer_{i}"):
-            collision_systems.append(f"Layer{i}")
-        if getattr(obj.collision_mask, f"layer_{i}"):
-            collide_with_systems.append(f"Layer{i}")
+        layer_name = f"layer_{i}"
+        
+        # Debug prints
+        layer_enabled = getattr(obj.collision_layers, layer_name, False)
+        mask_enabled = getattr(obj.collision_mask, layer_name, False)
+        bless_print(f"Layer {i}: layer={layer_enabled}, mask={mask_enabled}")
+        
+        # Only add if explicitly True
+        if layer_enabled is True:  # Explicit True check
+            collision_systems.append(f"Layer {i}")
+        if mask_enabled is True:   # Explicit True check
+            collide_with_systems.append(f"Layer {i}")
 
-    # Only create filter if there are layers defined
+    # Debug print
+    bless_print(f"Collision systems: {collision_systems}")
+    bless_print(f"Collide with systems: {collide_with_systems}")
+
+    # Only create filter if there are actually enabled layers
     if collision_systems or collide_with_systems:
         filter_data = {}
         if collision_systems:
