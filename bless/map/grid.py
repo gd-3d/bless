@@ -29,8 +29,8 @@ class GridDoubleOperator(bpy.types.Operator):
     bl_label = "Double Unit Size"
 
     def execute(self, context):
-        unit_size = context.scene.unit_size
-        context.scene.unit_size = unit_size * 2
+        unit_size = context.window_manager.unit_size
+        context.window_manager.unit_size = unit_size * 2
         update_grid_scale(context, unit_size * 2)
         return {'FINISHED'}
 
@@ -40,8 +40,8 @@ class GridHalfOperator(bpy.types.Operator):
     bl_label = "Halve Unit Size"
 
     def execute(self, context):
-        unit_size = context.scene.unit_size
-        context.scene.unit_size = unit_size / 2
+        unit_size = context.window_manager.unit_size
+        context.window_manager.unit_size = unit_size / 2
         update_grid_scale(context, unit_size / 2)
         return {'FINISHED'}
 
@@ -49,7 +49,7 @@ class GridHalfOperator(bpy.types.Operator):
 # Setup snapping and far clipping
 def setup_snapping():
     bpy.context.scene.tool_settings.snap_elements = {'INCREMENT'}
-    #bpy.context.scene.tool_settings.use_snap_grid_absolute = False
+    # bpy.context.scene.tool_settings.use_snap_grid_absolute = False
 
 
 def setup_far_clip():

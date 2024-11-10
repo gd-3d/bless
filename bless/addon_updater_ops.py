@@ -21,13 +21,12 @@
 Implements draw calls, popups, and operators that use the addon_updater.
 """
 
+from bpy.app.handlers import persistent
+import bpy
+import traceback
+import os
 update_path_fix = None
 
-import os
-import traceback
-
-import bpy
-from bpy.app.handlers import persistent
 
 # Safely import the updater.
 # Prevents popups for users with invalid python installs e.g. missing libraries
@@ -79,6 +78,8 @@ updater.addon = "bless"
 # -----------------------------------------------------------------------------
 # Blender version utils
 # -----------------------------------------------------------------------------
+
+
 def make_annotations(cls):
     """Add annotation attribute to fields to avoid Blender 2.8+ warnings"""
     if not hasattr(bpy.app, "version") or bpy.app.version < (2, 80):
@@ -1386,7 +1387,7 @@ def register(bl_info):
     # Needs to be within the same folder as the addon itself
     # Need to supply a full, absolute path to folder
     from pathlib import Path
-    updater._updater_path = str( Path.absolute( Path(update_path_fix[0]) ) )
+    updater._updater_path = str(Path.absolute(Path(update_path_fix[0])))
     # set path of updater folder, by default:
     # 			/addons/{__package__}/{__package__}_updater
 
