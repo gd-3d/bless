@@ -2,42 +2,42 @@ import bpy
 import os
 import json
 
-## hooks found and implemented by michaeljared from this original gist:
-## https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
+# hooks found and implemented by michaeljared from this original gist:
+# https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
 
 
-## https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
+# https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
 class OMIPhysicsShape(bpy.types.PropertyGroup):
     # possibly needed for internal for gd3d
     is_collision: bpy.props.BoolProperty(default=False)  # type: ignore
-    index: bpy.props.IntProperty(default=0, description="index of the physics shape") # type: ignore
+    index: bpy.props.IntProperty(default=0, description="index of the physics shape")  # type: ignore
     shape_types: bpy.props.EnumProperty(
         name="",
         description="collider shape types",
         default="convex",
         items=[
             ("box", "Box", "", 1),
-            ("sphere", "Sphere", "", 1<<1),
-            ("capsule", "Capsule", "", 1<<2),
-            ("cylinder", "Cylinder", "", 1<<3),
-            ("convex", "Convex", "", 1<<4),
-            ("trimesh", "Trimesh", "", 1<<5)
-            ])  # type: ignore
-    size: bpy.props.FloatVectorProperty(subtype="XYZ_LENGTH", description="size of the shape in meters", default=[1.0, 1.0, 1.0]) # type: ignore
-    radius: bpy.props.FloatProperty(subtype="DISTANCE", description="radius of the shape in meters", default=0.5) # type: ignore 
-    height: bpy.props.FloatProperty(subtype="DISTANCE", description="height of the shape in meters", default=2.0) # type: ignore
+            ("sphere", "Sphere", "", 1 << 1),
+            ("capsule", "Capsule", "", 1 << 2),
+            ("cylinder", "Cylinder", "", 1 << 3),
+            ("convex", "Convex", "", 1 << 4),
+            ("trimesh", "Trimesh", "", 1 << 5)
+        ])  # type: ignore
+    size: bpy.props.FloatVectorProperty(subtype="XYZ_LENGTH", description="size of the shape in meters", default=[1.0, 1.0, 1.0])  # type: ignore
+    radius: bpy.props.FloatProperty(subtype="DISTANCE", description="radius of the shape in meters", default=0.5)  # type: ignore
+    height: bpy.props.FloatProperty(subtype="DISTANCE", description="height of the shape in meters", default=2.0)  # type: ignore
     # The index of the glTF mesh in the document to use as a mesh shape.
-    mesh: bpy.props.IntProperty(default=-1) # type: ignore
-    
+    mesh: bpy.props.IntProperty(default=-1)  # type: ignore
 
-## https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_body
+
+# https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_body
 class OMIPhysicsBody(bpy.types.PropertyGroup):
-    shape_index: bpy.props.IntProperty(default=-1) # type: ignore
+    shape_index: bpy.props.IntProperty(default=-1)  # type: ignore
     # https://github.com/omigroup/gltf-extensions/blob/main/extensions/2.0/OMI_physics_body/README.motion.md
     is_motion: bpy.props.BoolProperty(default=False)  # type: ignore
     # https://github.com/omigroup/gltf-extensions/blob/main/extensions/2.0/OMI_physics_body/README.trigger.md
     is_trigger: bpy.props.BoolProperty(default=False)  # type: ignore
-    #https://github.com/omigroup/gltf-extensions/blob/main/extensions/2.0/OMI_physics_body/README.collider.md
+    # https://github.com/omigroup/gltf-extensions/blob/main/extensions/2.0/OMI_physics_body/README.collider.md
     is_collision: bpy.props.BoolProperty(default=False)  # type: ignore
 
     motion_types: bpy.props.EnumProperty(
@@ -46,16 +46,16 @@ class OMIPhysicsBody(bpy.types.PropertyGroup):
         default="static",
         items=[
             ("static", "Static", "", 1),
-            ("dynamic", "Dynamic", "", 1<<1),
-            ("kinematic", "Kinematic", "", 1<<2)
+            ("dynamic", "Dynamic", "", 1 << 1),
+            ("kinematic", "Kinematic", "", 1 << 2)
         ])  # type: ignore
     mass: bpy.props.FloatProperty(default=1.0)  # type: ignore
-    linear_velocity: bpy.props.FloatVectorProperty(subtype="VELOCITY", default=[0.0, 0.0, 0.0]) # type: ignore 
-    angular_velocity: bpy.props.FloatVectorProperty(subtype="VELOCITY", default=[0.0, 0.0, 0.0]) # type: ignore 
-    center_of_mass: bpy.props.FloatVectorProperty(default=[0.0, 0.0, 0.0]) # type: ignore
+    linear_velocity: bpy.props.FloatVectorProperty(subtype="VELOCITY", default=[0.0, 0.0, 0.0])  # type: ignore
+    angular_velocity: bpy.props.FloatVectorProperty(subtype="VELOCITY", default=[0.0, 0.0, 0.0])  # type: ignore
+    center_of_mass: bpy.props.FloatVectorProperty(default=[0.0, 0.0, 0.0])  # type: ignore
 
 
-## Default collision type for new objects.
+# Default collision type for new objects.
 class BlessDefaultCollisionType(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
         name="Collision Type",
@@ -63,9 +63,9 @@ class BlessDefaultCollisionType(bpy.types.PropertyGroup):
         default="trimesh",
         items=[
             ("trimesh", "Trimesh", "", 1),
-            ("convex", "Convex", "", 1<<1),
-            ("custom", "Custom", "", 1<<2),
-            ("none", "None", "", 1<<3),
+            ("convex", "Convex", "", 1 << 1),
+            ("custom", "Custom", "", 1 << 2),
+            ("none", "None", "", 1 << 3),
         ])  # type: ignore
 
 
@@ -76,13 +76,13 @@ class BlessCollisionTypes(bpy.types.PropertyGroup):
         default="trimesh",
         items=[
             ("trimesh", "Trimesh", "", 1),
-            ("convex", "Convex", "", 1<<1),
-            ("custom", "Custom", "", 1<<2),
-            ("none", "None", "", 1<<3),
+            ("convex", "Convex", "", 1 << 1),
+            ("custom", "Custom", "", 1 << 2),
+            ("none", "None", "", 1 << 3),
         ])  # type: ignore
 
 
-## TODO, does this need to have so many lines? could be a factoryfunction to make each prop.
+# TODO, does this need to have so many lines? could be a factoryfunction to make each prop.
 ##
 
 class BlessCollisionLayers(bpy.types.PropertyGroup):
@@ -119,6 +119,7 @@ class BlessCollisionLayers(bpy.types.PropertyGroup):
     layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
 
+
 class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
     layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
     layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
@@ -154,8 +155,7 @@ class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
 
 
-
-## TODO rework this as an operator to call from the panel rather than ins
+# TODO rework this as an operator to call from the panel rather than ins
 
 class BlessApplyCollisions(bpy.types.Operator):
     """Apply Props"""
@@ -167,14 +167,14 @@ class BlessApplyCollisions(bpy.types.Operator):
         if not isinstance(context.selected_objects, list):
             self.report({'ERROR'}, "No objects selected or selection is invalid.")
             return {'CANCELLED'}
-        
+
         collision_type = context.object.collision_types.collision_types
-        tools = context.scene.bless_tools
+        tools = context.window_manager.bless_tools
 
         for obj in context.selected_objects:
             # set attribute, not custom property
             obj.collision_types.collision_types = collision_type
-            
+
             # Set the visual feedback
             obj.display_type = 'SOLID'
             obj.show_wire = True  # Optional: show wireframe for better visibility
@@ -185,33 +185,35 @@ class BlessApplyCollisions(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
 class BlessTools(bpy.types.PropertyGroup):
-    lock_camera: bpy.props.BoolProperty(default=False) # type: ignore
+    lock_camera: bpy.props.BoolProperty(default=False)  # type: ignore
     profile_filepath: bpy.props.StringProperty(
         name="Game Profile Path",
         description="Path to the game profile configuration",
         default="",
         subtype='FILE_PATH'
-    ) # type: ignore
+    )  # type: ignore
     trimesh_color: bpy.props.FloatVectorProperty(
         name="Trimesh Color",
         subtype='COLOR',
-        default=(0.1, 0.8, 0.1, 1), # green
+        default=(0.1, 0.8, 0.1, 1),  # green
         min=0.0, max=1.0,
         size=4
-    ) # type: ignore
+    )  # type: ignore
     convex_color: bpy.props.FloatVectorProperty(
         name="Convex Color",
         subtype='COLOR',
-        default=(0.1, 0.1, 0.8, 1), # blue
+        default=(0.1, 0.1, 0.8, 1),  # blue
         min=0.0, max=1.0,
         size=4
-    ) # type: ignore
+    )  # type: ignore
     filter_glob: bpy.props.StringProperty(
         default="*.json",  # Change this to match your profile file type
         options={'HIDDEN'},
         maxlen=255,
-    )#type: ignore
+    )  # type: ignore
+
 
 class BlessPanel(bpy.types.Panel):
     bl_label = "Bless"
@@ -225,44 +227,40 @@ class BlessPanel(bpy.types.Panel):
         collision_layers = context.object.collision_layers
         collision_mask = context.object.collision_mask
         layout = self.layout
-        tools = context.scene.bless_tools
-
-
-
+        tools = context.window_manager.bless_tools
 
         ### GRID ###
         grid_box = layout.box()
         row = grid_box.row()
         row.label(text="Grid")
         row = grid_box.row()
-        row.prop(context.scene, "unit_size", text="Unit Size (m)")
+        row.prop(context.window_manager, "unit_size", text="Unit Size (m)")
         row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
         row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
 
+        # TODO, make this next part safer, and add a check for the object type.
+        # TODO check what the object collision type enum is, and use that to determine the operator to use etc
+        # FIXME something in this code is makign the GUI flicker. Probably constantly checking stuff.
 
-        ## TODO, make this next part safer, and add a check for the object type.
-        ## TODO check what the object collision type enum is, and use that to determine the operator to use etc
-        ## FIXME something in this code is makign the GUI flicker. Probably constantly checking stuff.  
-
-        ## TODO only show Apply (Batch) Collision button if there are MULTIPLE objects selected.
-        ## TODO add a check to see if the object is a mesh, and if not, don't show the collision type options.
-        ## TODO Put Layers and Mask options INSIDE the collision box on the panel.
+        # TODO only show Apply (Batch) Collision button if there are MULTIPLE objects selected.
+        # TODO add a check to see if the object is a mesh, and if not, don't show the collision type options.
+        # TODO Put Layers and Mask options INSIDE the collision box on the panel.
 
         if context.object is not None:
-            
+
             ### COLLISION ###
             collision_box = layout.box()
             row = collision_box.row()
             row.label(text="Collision")
-            
+
             row = collision_box.row()
             row.prop(collision_types, "collision_types", text="")
             row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
-            
+
             # Get collision type from the object's attribute
             collision_data = collision_types.collision_types
-            #print(f"Collision data: {collision_data}, Type: {type(collision_data)}")
-            
+            # print(f"Collision data: {collision_data}, Type: {type(collision_data)}")
+
             collision_box.alignment = "CENTER"
             if collision_data:
                 collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
@@ -271,7 +269,7 @@ class BlessPanel(bpy.types.Panel):
                     custom_collision_box = collision_box.box()
                     body_properties = context.scene.body_properties
                     shape_properties = context.scene.shape_properties
-                    
+
                     indented_layout = custom_collision_box.column()
                     indented_layout.label(text=f"CUSTOM COLLISION NOT SUPPORTED IN THIS VERSION", icon="ERROR")
 
@@ -306,25 +304,24 @@ class BlessPanel(bpy.types.Panel):
                             index = (main_row_index * 16) + (block_index * 4) + button_index
                             row.prop(collision_mask, f"layer_{index + 1}", text=str(index + 1), toggle=True)
 
-
             ### TOOLS ###
             tools_box = layout.box()
             row = tools_box.row()
             row.label(text="Tools")
-            
+
             # Game Profile Path with file selector
             profile_box = tools_box.box()
             row = profile_box.row()
             row.label(text="Game Profile:")
-            
+
             row = profile_box.row(align=True)
             row.prop(tools, "profile_filepath", text="")
             row.operator("object.load_game_profile", text="Load Profile", icon='IMPORT')
-            
+
             # Camera Lock
             row = tools_box.row()
             row.prop(tools, "lock_camera", text="Lock Camera")
-            if tools["lock_camera"] == True:
+            if (hasattr(tools, "lock_camera")) and getattr(tools, "lock_camera") == True:
                 bpy.context.space_data.lock_object = bpy.data.objects[context.object.name]
             else:
                 bpy.context.space_data.lock_object = None
@@ -337,9 +334,6 @@ class BlessPanel(bpy.types.Panel):
             row.prop(tools, "trimesh_color", text="Trimesh")
             row = colors_box.row()
             row.prop(tools, "convex_color", text="Convex")
-
-
-
 
         else:
             row = layout.row()
@@ -356,18 +350,18 @@ class BlessLoadGameProfile(bpy.types.Operator):
             try:
                 # Load the image
                 img = bpy.data.images.load(path, check_existing=True)
-                
+
                 # Mark as asset
                 img.asset_mark()
                 img.asset_generate_preview()
-                
+
                 # Set asset metadata
                 if not img.asset_data:
                     continue
-                    
+
                 img.asset_data.catalog_id = "textures"
                 img.asset_data.description = f"Game texture: {os.path.basename(path)}"
-                
+
             except Exception as e:
                 self.report({'WARNING'}, f"Failed to load texture {path}: {str(e)}")
 
@@ -389,39 +383,39 @@ class BlessLoadGameProfile(bpy.types.Operator):
                 # Parse the .tres file
                 with open(path, 'r') as f:
                     lines = f.readlines()
-                
+
                 # Create new material
                 mat_name = os.path.splitext(os.path.basename(path))[0]
                 mat = bpy.data.materials.new(name=mat_name)
                 mat.use_nodes = True
-                
+
                 # Get the node tree
                 nodes = mat.node_tree.nodes
                 links = mat.node_tree.links
-                
+
                 # Get the principled BSDF node (created by default)
                 principled = nodes.get("Principled BSDF")
-                
+
                 # Parse material properties
                 for line in lines:
                     line = line.strip()
-                    
+
                     # Handle albedo color
                     if line.startswith('albedo_color'):
                         color_value = line.split('=')[1].strip()
                         color = self.parse_color(color_value)
                         principled.inputs["Base Color"].default_value = color
-                    
+
                     # Handle metallic
                     elif line.startswith('metallic'):
                         value = float(line.split('=')[1].strip())
                         principled.inputs["Metallic"].default_value = value
-                    
+
                     # Handle roughness
                     elif line.startswith('roughness'):
                         value = float(line.split('=')[1].strip())
                         principled.inputs["Roughness"].default_value = value
-                    
+
                     # Handle emission
                     elif line.startswith('emission'):
                         if 'emission_energy_multiplier' in line:
@@ -431,7 +425,7 @@ class BlessLoadGameProfile(bpy.types.Operator):
                             color_value = line.split('=')[1].strip()
                             color = self.parse_color(color_value)
                             principled.inputs["Emission"].default_value = color
-                    
+
                     # Handle UV triplanar
                     elif line.startswith('uv1_triplanar'):
                         value = line.split('=')[1].strip()
@@ -439,23 +433,23 @@ class BlessLoadGameProfile(bpy.types.Operator):
                             # Create Texture Coordinate node
                             tex_coord = nodes.new('ShaderNodeTexCoord')
                             tex_coord.location = (principled.location.x - 600, principled.location.y)
-                            
+
                             # Create Mapping node
                             mapping = nodes.new('ShaderNodeMapping')
                             mapping.location = (principled.location.x - 450, principled.location.y)
-                            
+
                             # Link them together
                             links.new(tex_coord.outputs["Generated"], mapping.inputs["Vector"])
-            
+
                 # Mark as asset
                 mat.asset_mark()
                 mat.asset_generate_preview()
-                
+
                 # Set asset metadata
                 if mat.asset_data:
                     mat.asset_data.catalog_id = "materials"
                     mat.asset_data.description = f"Game material: {mat_name}"
-                    
+
             except Exception as e:
                 self.report({'WARNING'}, f"Failed to load material {path}: {str(e)}")
 
@@ -464,18 +458,18 @@ class BlessLoadGameProfile(bpy.types.Operator):
         for path in music_paths:
             try:
                 sound = bpy.data.sounds.load(path, check_existing=True)
-                
+
                 # Mark as asset
                 sound.asset_mark()
                 sound.asset_generate_preview()
-                
+
                 # Set asset metadata
                 if not sound.asset_data:
                     continue
-                    
+
                 sound.asset_data.catalog_id = "audio_music"
                 sound.asset_data.description = f"Game music: {os.path.basename(path)}"
-                
+
             except Exception as e:
                 self.report({'WARNING'}, f"Failed to load music {path}: {str(e)}")
 
@@ -483,37 +477,37 @@ class BlessLoadGameProfile(bpy.types.Operator):
         for path in sfx_paths:
             try:
                 sound = bpy.data.sounds.load(path, check_existing=True)
-                
+
                 # Mark as asset
                 sound.asset_mark()
                 sound.asset_generate_preview()
-                
+
                 # Set asset metadata
                 if not sound.asset_data:
                     continue
-                    
+
                 sound.asset_data.catalog_id = "audio_sfx"
                 sound.asset_data.description = f"Game SFX: {os.path.basename(path)}"
-                
+
             except Exception as e:
                 self.report({'WARNING'}, f"Failed to load SFX {path}: {str(e)}")
 
     def execute(self, context):
-        tools = context.scene.bless_tools
+        tools = context.window_manager.bless_tools
         profile_path = tools.profile_filepath
-        
+
         if not profile_path:
             self.report({'ERROR'}, "No game profile path specified")
             return {'CANCELLED'}
-            
+
         try:
             # Convert the relative path to absolute if needed
             if profile_path.startswith("//"):
                 profile_path = bpy.path.abspath(profile_path)
-            
+
             with open(profile_path, 'r') as f:
                 profile_data = json.load(f)
-                
+
             # Load assets into Asset Browser
             self.load_textures(profile_data.get('textures', []))
             self.load_materials(profile_data.get('materials', []))
@@ -521,10 +515,10 @@ class BlessLoadGameProfile(bpy.types.Operator):
                 profile_data.get('audio_music', []),
                 profile_data.get('audio_sfx', [])
             )
-                
+
             self.report({'INFO'}, "Game profile loaded successfully")
             return {'FINISHED'}
-            
+
         except Exception as e:
             self.report({'ERROR'}, f"Failed to load game profile: {str(e)}")
             return {'CANCELLED'}
@@ -534,13 +528,12 @@ class BlessSelectGameProfile(bpy.types.Operator):
     """Select Game Profile Path"""
     bl_idname = "object.select_game_profile"
     bl_label = "Select Game Profile"
-    
+
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-        
+
     def execute(self, context):
-        tools = context.scene.bless_tools
+        tools = context.window_manager.bless_tools
         tools.profile_filepath = self.filepath
         return {'FINISHED'}
-

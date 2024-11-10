@@ -1,21 +1,21 @@
 
 
-## this script is to contain code for a singular "brush", which is basically a single object in blender
-## probably going to be a bunch of operators in here
-## also UX for adding stairs, arches, columns... other geonodes tools and modifiers
+# this script is to contain code for a singular "brush", which is basically a single object in blender
+# probably going to be a bunch of operators in here
+# also UX for adding stairs, arches, columns... other geonodes tools and modifiers
 # autoconvexing.
 # patches??? [https://quark.sourceforge.io/infobase/maped.curves.html]
 # if this script gets large then maybe it will be better to have some files
-## brushes could be contained in a map collection. see map.py
+# brushes could be contained in a map collection. see map.py
 
-## draws cubes but not very good.
+# draws cubes but not very good.
 import bpy
 import mathutils
 from bpy_extras.view3d_utils import location_3d_to_region_2d, region_2d_to_location_3d
 
 
-## TODO !!!
-## archive this script, using only 1 panel moving forward.
+# TODO !!!
+# archive this script, using only 1 panel moving forward.
 
 
 # class MapPanel(bpy.types.Panel):
@@ -35,8 +35,8 @@ from bpy_extras.view3d_utils import location_3d_to_region_2d, region_2d_to_locat
 #         row = layout.row()
 #         row.operator("object.brush_mode")
 
-## broken...
-## TODO
+# broken...
+# TODO
 class BrushMode(bpy.types.Operator):
     bl_idname = "object.brush_mode"
     bl_label = "Brush Mode"
@@ -72,6 +72,7 @@ class BrushMode(bpy.types.Operator):
             return {'FINISHED'}
         else:
             return {'RUNNING_MODAL'}
+
     def invoke(self, context, event):
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
@@ -85,27 +86,6 @@ class BrushMode(bpy.types.Operator):
             for obj in objects:
                 bpy.ops.transform.translate('INVOKE_DEFAULT', constraint_axis=(True, True, False))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def draw_brush(self, context):
         bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0.5, 0.5, 0.5), scale=(1, 1, 1))
         obj = context.active_object
@@ -118,7 +98,7 @@ class BrushMode(bpy.types.Operator):
         if len(selected_objects) < 1:
             self.report({'WARNING'}, "No objects selected")
             return {'CANCELLED'}
-        
+
         center = [0.0, 0.0, 0.0]
         for obj in selected_objects:
             center[0] += obj.location[0]
@@ -145,14 +125,14 @@ class BrushMode(bpy.types.Operator):
             bpy.ops.transform.translate('INVOKE_DEFAULT', constraint_axis=(False, False, True))
             context.tool_settings.mesh_select_mode = (False, False, True)
             bpy.ops.mesh.select_all(action='SELECT')
-            unit_size = context.scene.unit_settings.scale_length
+            unit_size = context.window_manager.unit_settings.scale_length
             bpy.ops.uv.cube_project(cube_size=unit_size)
             bpy.ops.mesh.select_all(action='DESELECT')
 
     def center_origin(self, context):
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='SELECT')
-        unit_size = context.scene.unit_settings.scale_length
+        unit_size = context.window_manager.unit_settings.scale_length
         bpy.ops.uv.cube_project(cube_size=unit_size)
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
