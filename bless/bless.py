@@ -157,42 +157,29 @@ class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
 
 # TODO rework this as an operator to call from the panel rather than ins
 
-class BlessApplyCollisions(bpy.types.Operator):
-    """Apply Props"""
-    bl_idname = "object.gd3d_apply_collisions"
-    bl_label = "Apply Multiple Collisions"
-    bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
-        if not isinstance(context.selected_objects, list):
-            self.report({'ERROR'}, "No objects selected or selection is invalid.")
-            return {'CANCELLED'}
-
-        collision_type = context.object.collision_types.collision_types
-        tools = context.window_manager.bless_tools
-
-        for obj in context.selected_objects:
-            # set attribute, not custom property
-            obj.collision_types.collision_types = collision_type
-
-            # Set the visual feedback
-            obj.display_type = 'SOLID'
-            obj.show_wire = True  # Optional: show wireframe for better visibility
-            if collision_type == "trimesh":
-                obj.color = tools.trimesh_color
-            elif collision_type == "convex":
-                obj.color = tools.convex_color
-
-        return {'FINISHED'}
-
+def update_camera_lock(self, context):
+    bpy.ops.view3d.bless_camera_lock()
 
 class BlessTools(bpy.types.PropertyGroup):
-    lock_camera: bpy.props.BoolProperty(default=False)  # type: ignore
+    lock_camera: bpy.props.BoolProperty(
+        default=False,
+        update=update_camera_lock
+    )  # type: ignore
     profile_filepath: bpy.props.StringProperty(
         name="Game Profile Path",
         description="Path to the game profile configuration",
         default="",
         subtype='FILE_PATH'
+    )  # type: ignore
+    origin_type: bpy.props.EnumProperty(
+        name="Origin Type",
+        description="Origin type",
+        default="BOUNDS",
+        items=[("BOUNDS", "Bounds", "", 1), 
+               ("BOTTOM", "Bottom", "", 2), 
+               ("CENTER", "Center", "", 3),
+               ("TOP", "Top", "", 4)]
     )  # type: ignore
     trimesh_color: bpy.props.FloatVectorProperty(
         name="Trimesh Color",
@@ -223,121 +210,93 @@ class BlessPanel(bpy.types.Panel):
     bl_category = 'Bless'
 
     def draw(self, context):
-        collision_types = context.object.collision_types
-        collision_layers = context.object.collision_layers
-        collision_mask = context.object.collision_mask
         layout = self.layout
         tools = context.window_manager.bless_tools
 
         ### GRID ###
         grid_box = layout.box()
-        row = grid_box.row()
-        row.label(text="Grid")
+        grid_box.label(text="Grid")
         row = grid_box.row()
         row.prop(context.window_manager, "unit_size", text="Unit Size (m)")
         row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
         row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
 
-        # TODO, make this next part safer, and add a check for the object type.
-        # TODO check what the object collision type enum is, and use that to determine the operator to use etc
-        # FIXME something in this code is makign the GUI flicker. Probably constantly checking stuff.
+        # Early return if no object is selected
+        if not context.object:
+            layout.label(text="No object selected!")
+            return
 
-        # TODO only show Apply (Batch) Collision button if there are MULTIPLE objects selected.
-        # TODO add a check to see if the object is a mesh, and if not, don't show the collision type options.
-        # TODO Put Layers and Mask options INSIDE the collision box on the panel.
+        collision_types = context.object.collision_types
+        collision_data = collision_types.collision_types
 
-        if context.object is not None:
+        ### COLLISION ###
+        collision_box = layout.box()
+        collision_box.label(text="Collision")
+        
+        row = collision_box.row()
+        row.prop(collision_types, "collision_types", text="")
+        row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
 
-            ### COLLISION ###
-            collision_box = layout.box()
-            row = collision_box.row()
-            row.label(text="Collision")
+        if collision_data:
+            collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
+            
+            # Only show collision layers and mask if collision is set and not "none"
+            if collision_data != "none":
+                self.draw_collision_layers(context, collision_box)
+                self.draw_collision_mask(context, collision_box)
 
-            row = collision_box.row()
-            row.prop(collision_types, "collision_types", text="")
-            row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
+        ### TOOLS ###
+        self.draw_tools_section(context, layout)
 
-            # Get collision type from the object's attribute
-            collision_data = collision_types.collision_types
-            # print(f"Collision data: {collision_data}, Type: {type(collision_data)}")
+    def draw_collision_layers(self, context, parent_box):
+        collision_layers = context.object.collision_layers
+        box = parent_box.box()
+        box.label(text="Collision Layers")
+        
+        for row_idx in range(2):
+            row = box.row()
+            for block in range(4):
+                col = row.column()
+                sub_row = col.row(align=True)
+                for btn in range(4):
+                    idx = (row_idx * 16) + (block * 4) + btn
+                    sub_row.prop(collision_layers, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
 
-            collision_box.alignment = "CENTER"
-            if collision_data:
-                collision_box.label(text=f"Selected object has {str(collision_data).upper()} collision.", icon="ERROR")
-                # Only show custom collision settings if collision type is "custom"
-                if collision_data == "custom":
-                    custom_collision_box = collision_box.box()
-                    body_properties = context.scene.body_properties
-                    shape_properties = context.scene.shape_properties
+    def draw_collision_mask(self, context, parent_box):
+        collision_mask = context.object.collision_mask
+        box = parent_box.box()
+        box.label(text="Collision Mask")
+        
+        for row_idx in range(2):
+            row = box.row()
+            for block in range(4):
+                col = row.column()
+                sub_row = col.row(align=True)
+                for btn in range(4):
+                    idx = (row_idx * 16) + (block * 4) + btn
+                    sub_row.prop(collision_mask, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
 
-                    indented_layout = custom_collision_box.column()
-                    indented_layout.label(text=f"CUSTOM COLLISION NOT SUPPORTED IN THIS VERSION", icon="ERROR")
+    def draw_tools_section(self, context, layout):
+        tools = context.window_manager.bless_tools
+        tools_box = layout.box()
+        tools_box.label(text="Tools")
 
-            else:
-                collision_box.label(text="No collision data available.")
-
-            ### COLLISION LAYERS ###
-            if collision_data and collision_data != "none":
-                collision_layer_box = collision_box.box()
-                row = collision_layer_box.row()
-                row.label(text="Collision Layers")
-                # Arrange buttons in two main rows of 16 buttons (4 blocks of 4 buttons per row)
-                for main_row_index in range(2):  # Two main rows
-                    main_row = collision_layer_box.row()
-                    for block_index in range(4):
-                        col = main_row.column()
-                        row = col.row(align=True)
-                        for button_index in range(4):
-                            index = (main_row_index * 16) + (block_index * 4) + button_index
-                            row.prop(collision_layers, f"layer_{index + 1}", text=str(index + 1), toggle=True)
-
-            ### COLLISION MASK ###
-                collision_mask_box = collision_box.box()
-                row = collision_mask_box.row()
-                row.label(text="Collision Mask")
-                for main_row_index in range(2):  # Two main rows
-                    main_row = collision_mask_box.row()
-                    for block_index in range(4):
-                        col = main_row.column()
-                        row = col.row(align=True)
-                        for button_index in range(4):
-                            index = (main_row_index * 16) + (block_index * 4) + button_index
-                            row.prop(collision_mask, f"layer_{index + 1}", text=str(index + 1), toggle=True)
-
-            ### TOOLS ###
-            tools_box = layout.box()
-            row = tools_box.row()
-            row.label(text="Tools")
-
-            # Game Profile Path with file selector
-            profile_box = tools_box.box()
-            row = profile_box.row()
-            row.label(text="Game Profile:")
-
-            row = profile_box.row(align=True)
-            row.prop(tools, "profile_filepath", text="")
-            row.operator("object.load_game_profile", text="Load Profile", icon='IMPORT')
-
-            # Camera Lock
-            row = tools_box.row()
-            row.prop(tools, "lock_camera", text="Lock Camera")
-            if (hasattr(tools, "lock_camera")) and getattr(tools, "lock_camera") == True:
-                bpy.context.space_data.lock_object = bpy.data.objects[context.object.name]
-            else:
-                bpy.context.space_data.lock_object = None
-
-            # Color Settings
-            colors_box = tools_box.box()
-            row = colors_box.row()
-            row.label(text="Colors:")
-            row = colors_box.row()
-            row.prop(tools, "trimesh_color", text="Trimesh")
-            row = colors_box.row()
-            row.prop(tools, "convex_color", text="Convex")
-
-        else:
-            row = layout.row()
-            row.label(text="No object selected!")
+        # Profile settings
+        profile_box = tools_box.box()
+        profile_box.label(text="Game Profile:")
+        row = profile_box.row(align=True)
+        row.prop(tools, "profile_filepath", text="")
+        row.operator("object.load_game_profile", text="Load Profile", icon='IMPORT')
+        # Camera lock - Move the actual locking logic to a separate operator
+        row = tools_box.row()
+        row.prop(tools, "lock_camera", text="Lock Camera")
+        row.prop(tools, "origin_type", text="Origin")
+        row.operator("object.autoorigin", text="Auto Origin", icon="MESH_DATA")
+        # Colors
+        colors_box = tools_box.box()
+        colors_box.label(text="Colors:")
+        colors_box.prop(tools, "trimesh_color", text="Trimesh")
+        colors_box.prop(tools, "convex_color", text="Convex")
 
 
 class BlessLoadGameProfile(bpy.types.Operator):
@@ -536,4 +495,33 @@ class BlessSelectGameProfile(bpy.types.Operator):
     def execute(self, context):
         tools = context.window_manager.bless_tools
         tools.profile_filepath = self.filepath
+        return {'FINISHED'}
+
+
+class BlessApplyCollisions(bpy.types.Operator):
+    """Apply Props"""
+    bl_idname = "object.gd3d_apply_collisions"
+    bl_label = "Apply Multiple Collisions"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        if not isinstance(context.selected_objects, list):
+            self.report({'ERROR'}, "No objects selected or selection is invalid.")
+            return {'CANCELLED'}
+
+        collision_type = context.object.collision_types.collision_types
+        tools = context.window_manager.bless_tools
+
+        for obj in context.selected_objects:
+            # set attribute, not custom property
+            obj.collision_types.collision_types = collision_type
+
+            # Set the visual feedback
+            obj.display_type = 'SOLID'
+            obj.show_wire = True  # Optional: show wireframe for better visibility
+            if collision_type == "trimesh":
+                obj.color = tools.trimesh_color
+            elif collision_type == "convex":
+                obj.color = tools.convex_color
+
         return {'FINISHED'}

@@ -54,7 +54,7 @@ def bless_print(message, header=False):
     else:
         print(f"[BLESS] {message}")
 
-class bless_glTF2Extension:
+class BlessExport:
 
 
 
