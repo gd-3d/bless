@@ -55,7 +55,7 @@ bl_info = {
     "name": "bless",
     "author": "michaeljared, aaronfranke, yankscally, valyarhal", # gd-3d developers
     "description": "",
-    "version": (0, 1, 2),
+    "version": (0, 1, 3),
     "blender": (4, 2, 0),
     "location": "",
     "warning": "",
