@@ -7,6 +7,81 @@ import json
 
 ## TODO: move all the physics related code out of this file.
 
+# TODO, does this need to have so many lines? could be a factoryfunction to make each prop.
+##
+
+class BlessCollisionLayers(bpy.types.PropertyGroup):
+    layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
+    layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
+    layer_3: bpy.props.BoolProperty(name="Layer 3")  # type: ignore
+    layer_4: bpy.props.BoolProperty(name="Layer 4")  # type: ignore
+    layer_5: bpy.props.BoolProperty(name="Layer 5")  # type: ignore
+    layer_6: bpy.props.BoolProperty(name="Layer 6")  # type: ignore
+    layer_7: bpy.props.BoolProperty(name="Layer 7")  # type: ignore
+    layer_8: bpy.props.BoolProperty(name="Layer 8")  # type: ignore
+    layer_9: bpy.props.BoolProperty(name="Layer 9")  # type: ignore
+    layer_10: bpy.props.BoolProperty(name="Layer 10")  # type: ignore
+    layer_11: bpy.props.BoolProperty(name="Layer 11")  # type: ignore
+    layer_12: bpy.props.BoolProperty(name="Layer 12")  # type: ignore
+    layer_13: bpy.props.BoolProperty(name="Layer 13")  # type: ignore
+    layer_14: bpy.props.BoolProperty(name="Layer 14")  # type: ignore
+    layer_15: bpy.props.BoolProperty(name="Layer 15")  # type: ignore
+    layer_16: bpy.props.BoolProperty(name="Layer 16")  # type: ignore
+    layer_17: bpy.props.BoolProperty(name="Layer 17")  # type: ignore
+    layer_18: bpy.props.BoolProperty(name="Layer 18")  # type: ignore
+    layer_19: bpy.props.BoolProperty(name="Layer 19")  # type: ignore
+    layer_20: bpy.props.BoolProperty(name="Layer 20")  # type: ignore
+    layer_21: bpy.props.BoolProperty(name="Layer 21")  # type: ignore
+    layer_22: bpy.props.BoolProperty(name="Layer 22")  # type: ignore
+    layer_23: bpy.props.BoolProperty(name="Layer 23")  # type: ignore
+    layer_24: bpy.props.BoolProperty(name="Layer 24")  # type: ignore
+    layer_25: bpy.props.BoolProperty(name="Layer 25")  # type: ignore
+    layer_26: bpy.props.BoolProperty(name="Layer 26")  # type: ignore
+    layer_27: bpy.props.BoolProperty(name="Layer 27")  # type: ignore
+    layer_28: bpy.props.BoolProperty(name="Layer 28")  # type: ignore
+    layer_29: bpy.props.BoolProperty(name="Layer 29")  # type: ignore
+    layer_30: bpy.props.BoolProperty(name="Layer 30")  # type: ignore
+    layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
+    layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
+
+
+class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
+    layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
+    layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
+    layer_3: bpy.props.BoolProperty(name="Layer 3")  # type: ignore
+    layer_4: bpy.props.BoolProperty(name="Layer 4")  # type: ignore
+    layer_5: bpy.props.BoolProperty(name="Layer 5")  # type: ignore
+    layer_6: bpy.props.BoolProperty(name="Layer 6")  # type: ignore
+    layer_7: bpy.props.BoolProperty(name="Layer 7")  # type: ignore
+    layer_8: bpy.props.BoolProperty(name="Layer 8")  # type: ignore
+    layer_9: bpy.props.BoolProperty(name="Layer 9")  # type: ignore
+    layer_10: bpy.props.BoolProperty(name="Layer 10")  # type: ignore
+    layer_11: bpy.props.BoolProperty(name="Layer 11")  # type: ignore
+    layer_12: bpy.props.BoolProperty(name="Layer 12")  # type: ignore
+    layer_13: bpy.props.BoolProperty(name="Layer 13")  # type: ignore
+    layer_14: bpy.props.BoolProperty(name="Layer 14")  # type: ignore
+    layer_15: bpy.props.BoolProperty(name="Layer 15")  # type: ignore
+    layer_16: bpy.props.BoolProperty(name="Layer 16")  # type: ignore
+    layer_17: bpy.props.BoolProperty(name="Layer 17")  # type: ignore
+    layer_18: bpy.props.BoolProperty(name="Layer 18")  # type: ignore
+    layer_19: bpy.props.BoolProperty(name="Layer 19")  # type: ignore
+    layer_20: bpy.props.BoolProperty(name="Layer 20")  # type: ignore
+    layer_21: bpy.props.BoolProperty(name="Layer 21")  # type: ignore
+    layer_22: bpy.props.BoolProperty(name="Layer 22")  # type: ignore
+    layer_23: bpy.props.BoolProperty(name="Layer 23")  # type: ignore
+    layer_24: bpy.props.BoolProperty(name="Layer 24")  # type: ignore
+    layer_25: bpy.props.BoolProperty(name="Layer 25")  # type: ignore
+    layer_26: bpy.props.BoolProperty(name="Layer 26")  # type: ignore
+    layer_27: bpy.props.BoolProperty(name="Layer 27")  # type: ignore
+    layer_28: bpy.props.BoolProperty(name="Layer 28")  # type: ignore
+    layer_29: bpy.props.BoolProperty(name="Layer 29")  # type: ignore
+    layer_30: bpy.props.BoolProperty(name="Layer 30")  # type: ignore
+    layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
+    layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
+
+# TODO rework this as an operator to call from the panel rather than ins
+
+
 
 
 # https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
