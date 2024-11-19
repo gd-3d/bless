@@ -205,6 +205,153 @@ class BlessTools(bpy.types.PropertyGroup):
     )  # type: ignore
 
 
+class BlessClassProperties(bpy.types.PropertyGroup):
+    """Base class for dynamic properties"""
+    pass
+
+def get_profile_classes(self, context):
+    """Get classes from game profile for enum"""
+    # Always start with None as the first option
+    items = [("NONE", "None", "No Godot class assigned")]
+    tools = context.window_manager.bless_tools
+    
+    try:
+        if tools.profile_filepath:
+            with open(tools.profile_filepath, 'r') as f:
+                profile_data = json.load(f)
+                for class_name in profile_data.get("classes", {}):
+                    items.append((class_name.upper(), class_name, f"Godot {class_name} class"))
+    except Exception as e:
+        print(f"Error loading profile classes: {e}")
+    
+    return items
+
+class BlessClassFactory(bpy.types.Operator):
+    """Create dynamic properties from game profile"""
+    bl_idname = "object.create_dynamic_class"
+    bl_label = "Create Dynamic Class"
+
+    def create_dynamic_class(self, class_name, properties):
+        # Create a new type dynamically
+        new_class = type(
+            f"Bless{class_name}Properties",
+            (BlessClassProperties,),
+            {
+                "__annotations__": {},
+                "bl_idname": f"bless.{class_name.lower()}_properties",
+                "bl_label": class_name
+            }
+        )
+
+        # Add properties to the class
+        for prop in properties:
+            prop_name = prop["name"]
+            prop_type = prop["type"]
+            prop_hint = prop.get("hint", "")
+            
+            # Map Godot types to Blender property types
+            if prop_type == "Vector3":
+                new_class.__annotations__[prop_name] = bpy.props.FloatVectorProperty(
+                    name=prop_name,
+                    size=3
+                )
+            elif prop_type == "float":
+                new_class.__annotations__[prop_name] = bpy.props.FloatProperty(
+                    name=prop_name
+                )
+            elif prop_type == "int":
+                # Check if this is an enum
+                if prop_hint:
+                    # Create enum items from hint
+                    enum_items = []
+                    for i, item in enumerate(prop_hint.split(",")):
+                        enum_items.append((str(i), item.strip(), "", i))
+                    new_class.__annotations__[prop_name] = bpy.props.EnumProperty(
+                        name=prop_name,
+                        items=enum_items
+                    )
+                else:
+                    new_class.__annotations__[prop_name] = bpy.props.IntProperty(
+                        name=prop_name
+                    )
+            elif prop_type == "bool":
+                new_class.__annotations__[prop_name] = bpy.props.BoolProperty(
+                    name=prop_name
+                )
+            elif prop_type == "String":
+                new_class.__annotations__[prop_name] = bpy.props.StringProperty(
+                    name=prop_name
+                )
+            elif prop_type == "Object":
+                # For object references that are inherited from Node3D
+                if prop_hint:
+                    new_class.__annotations__[prop_name] = bpy.props.PointerProperty(
+                        name=prop_name,
+                        type=bpy.types.Object,
+                        description=f"Reference to a {prop_hint} object"
+                    )
+                else:
+                    new_class.__annotations__[prop_name] = bpy.props.PointerProperty(
+                        name=prop_name,
+                        type=bpy.types.Object
+                    )
+
+        return new_class
+
+    def execute(self, context):
+        try:
+            # Load the game profile
+            tools = context.window_manager.bless_tools
+            with open(tools.profile_filepath, 'r') as f:
+                profile_data = json.load(f)
+
+            # Create dynamic classes for each class in the profile
+            for class_name, class_data in profile_data["classes"].items():
+                if class_data["properties"]:
+                    # Create the dynamic class
+                    dynamic_class = self.create_dynamic_class(class_name, class_data["properties"])
+                    
+                    # Register the class
+                    bpy.utils.register_class(dynamic_class)
+                    
+                    # Add a property group to Object
+                    setattr(bpy.types.Object, f"bless_{class_name.lower()}_props", 
+                           bpy.props.PointerProperty(type=dynamic_class))
+
+            # Remove old bless_class if it exists
+            if hasattr(bpy.types.Object, "bless_class"):
+                delattr(bpy.types.Object, "bless_class")
+
+            # Create items list with None as first option
+            items = [("NONE", "None", "No Godot class assigned")]
+            for class_name in profile_data["classes"].keys():
+                items.append((class_name.upper(), class_name, f"Godot {class_name} class"))
+
+            # Add class selection enum to Object with None as default
+            bpy.types.Object.bless_class = bpy.props.EnumProperty(
+                name="Godot Class",
+                description="Select Godot class for this object",
+                items=items,
+                default="NONE"
+            )
+
+            self.report({'INFO'}, "Dynamic classes created successfully")
+            return {'FINISHED'}
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to create dynamic classes: {str(e)}")
+            return {'CANCELLED'}
+
+class BlessLoadGameProfile(bpy.types.Operator):
+    """Load Game Profile"""
+    bl_idname = "object.load_game_profile"
+    bl_label = "Load Game Profile"
+    
+    def execute(self, context):
+        # Create dynamic classes when profile is loaded
+        bpy.ops.object.create_dynamic_class()
+        return {'FINISHED'}
+
+
 class BlessPanel(bpy.types.Panel):
     bl_label = "Bless"
     bl_idname = "VIEW3D_PT_object_panel"
@@ -222,11 +369,11 @@ class BlessPanel(bpy.types.Panel):
     
     # Grid subsections
     bpy.types.WindowManager.bless_show_grid_snap = bpy.props.BoolProperty(default=False)
-    bpy.types.WindowManager.bless_show_grid_display = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_grid_grid = bpy.props.BoolProperty(default=False)
     
     # View subsections
     bpy.types.WindowManager.bless_show_view_camera = bpy.props.BoolProperty(default=False)
-    bpy.types.WindowManager.bless_show_view_display = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_view_grid = bpy.props.BoolProperty(default=False)
     
     # Collision subsections
     bpy.types.WindowManager.bless_show_collision_layers = bpy.props.BoolProperty(default=False)
@@ -253,16 +400,6 @@ class BlessPanel(bpy.types.Panel):
         wm = context.window_manager
         tools = wm.bless_tools
 
-        # GRID
-        box = layout.box()
-        row = box.row()
-        row.prop(wm, "bless_show_grid", text="Grid", icon='TRIA_DOWN' if wm.bless_show_grid else 'TRIA_RIGHT', emboss=False)
-        if wm.bless_show_grid:
-            row = box.row()
-            row.prop(context.window_manager, "unit_size", text="Unit Size (m)")
-            row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
-            row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
-
         # VIEW
         box = layout.box()
         row = box.row()
@@ -277,9 +414,14 @@ class BlessPanel(bpy.types.Panel):
 
             sub_box = box.box()
             row = sub_box.row()
-            row.prop(wm, "bless_show_view_display", text="Display", icon='TRIA_DOWN' if wm.bless_show_view_display else 'TRIA_RIGHT', emboss=False)
-            if wm.bless_show_view_display:
-                # Add display options here
+            row.prop(wm, "bless_show_view_grid", text="Grid", icon='TRIA_DOWN' if wm.bless_show_view_grid else 'TRIA_RIGHT', emboss=False)
+            if wm.bless_show_view_grid:
+                # Grid options
+                row = sub_box.row()
+                row.prop(context.window_manager, "unit_size", text="Unit Size (m)")
+                row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
+                row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
+                # Add grid options here
                 pass
 
         # Early return if no object is selected
@@ -368,6 +510,21 @@ class BlessPanel(bpy.types.Panel):
         # INFO BOX
         info_box = layout.box()
         info_box.label(text="Information", icon="INFO")
+        
+        # Object class information
+        obj = context.active_object
+        if obj:
+            info_box.prop(obj, "bless_class")
+            if obj.bless_class != "NONE":
+                sub_box = info_box.box()
+                sub_box.label(text=f"{obj.bless_class} Properties")
+                props = getattr(obj, f"bless_{obj.bless_class.lower()}_props", None)
+                if props:
+                    for prop in props.bl_rna.properties:
+                        if not prop.is_hidden:
+                            sub_box.prop(props, prop.identifier)
+
+        # Collision information
         if collision_data:
             info_box.label(text=f"Selected object has {str(collision_data).upper()} collision.")
 
@@ -421,7 +578,7 @@ class BlessApplyCollisions(bpy.types.Operator):
             obj.collision_types.collision_types = collision_type
 
             # Set the visual feedback
-            obj.display_type = 'SOLID'
+            obj.grid_type = 'SOLID'
             obj.show_wire = True  # Optional: show wireframe for better visibility
             if collision_type == "trimesh":
                 obj.color = tools.trimesh_color
@@ -429,3 +586,47 @@ class BlessApplyCollisions(bpy.types.Operator):
                 obj.color = tools.convex_color
 
         return {'FINISHED'}
+
+def register():
+    bpy.utils.register_class(BlessCollisionLayers)
+    bpy.utils.register_class(BlessCollisionMaskLayers)
+    bpy.utils.register_class(OMIPhysicsShape)
+    bpy.utils.register_class(OMIPhysicsBody)
+    bpy.utils.register_class(BlessDefaultCollisionType)
+    bpy.utils.register_class(BlessCollisionTypes)
+    bpy.utils.register_class(BlessTools)
+    bpy.utils.register_class(BlessClassProperties)
+    bpy.utils.register_class(BlessClassFactory)
+    bpy.utils.register_class(BlessLoadGameProfile)
+    bpy.utils.register_class(BlessPanel)
+    bpy.utils.register_class(BlessApplyCollisions)
+
+    bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=BlessTools)
+    bpy.types.Object.collision_layers = bpy.props.PointerProperty(type=BlessCollisionLayers)
+    bpy.types.Object.collision_mask = bpy.props.PointerProperty(type=BlessCollisionMaskLayers)
+    bpy.types.Object.collision_types = bpy.props.PointerProperty(type=BlessCollisionTypes)
+    bpy.types.Object.default_collision_type = bpy.props.PointerProperty(type=BlessDefaultCollisionType)
+    bpy.types.Object.physics_shape = bpy.props.PointerProperty(type=OMIPhysicsShape)
+    bpy.types.Object.physics_body = bpy.props.PointerProperty(type=OMIPhysicsBody)
+
+def unregister():
+    bpy.utils.unregister_class(BlessCollisionLayers)
+    bpy.utils.unregister_class(BlessCollisionMaskLayers)
+    bpy.utils.unregister_class(OMIPhysicsShape)
+    bpy.utils.unregister_class(OMIPhysicsBody)
+    bpy.utils.unregister_class(BlessDefaultCollisionType)
+    bpy.utils.unregister_class(BlessCollisionTypes)
+    bpy.utils.unregister_class(BlessTools)
+    bpy.utils.unregister_class(BlessClassProperties)
+    bpy.utils.unregister_class(BlessClassFactory)
+    bpy.utils.unregister_class(BlessLoadGameProfile)
+    bpy.utils.unregister_class(BlessPanel)
+    bpy.utils.unregister_class(BlessApplyCollisions)
+
+    del bpy.types.WindowManager.bless_tools
+    del bpy.types.Object.collision_layers
+    del bpy.types.Object.collision_mask
+    del bpy.types.Object.collision_types
+    del bpy.types.Object.default_collision_type
+    del bpy.types.Object.physics_shape
+    del bpy.types.Object.physics_body
