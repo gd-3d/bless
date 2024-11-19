@@ -157,7 +157,6 @@ class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
     layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
 
-
 # TODO rework this as an operator to call from the panel rather than ins
 
 
@@ -213,12 +212,12 @@ class BlessPanel(bpy.types.Panel):
     bl_category = 'Bless'
 
     # Main sections
-    bpy.types.WindowManager.bless_show_grid = bpy.props.BoolProperty(default=True)
-    bpy.types.WindowManager.bless_show_view = bpy.props.BoolProperty(default=True)
-    bpy.types.WindowManager.bless_show_collision = bpy.props.BoolProperty(default=True)
-    bpy.types.WindowManager.bless_show_tools = bpy.props.BoolProperty(default=True)
-    bpy.types.WindowManager.bless_show_settings = bpy.props.BoolProperty(default=True)
-    bpy.types.WindowManager.bless_show_export = bpy.props.BoolProperty(default=True)
+    bpy.types.WindowManager.bless_show_grid = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_view = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_collision = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_tools = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_settings = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_export = bpy.props.BoolProperty(default=False)
     
     # Grid subsections
     bpy.types.WindowManager.bless_show_grid_snap = bpy.props.BoolProperty(default=False)
@@ -400,203 +399,6 @@ class BlessPanel(bpy.types.Panel):
                     sub_row.prop(collision_mask, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
 
 
-class BlessLoadGameProfile(bpy.types.Operator):
-    """Load Game Profile"""
-    bl_idname = "object.load_game_profile"
-    bl_label = "Load Game Profile"
-
-    def load_textures(self, texture_paths):
-        for path in texture_paths:
-            try:
-                # Load the image
-                img = bpy.data.images.load(path, check_existing=True)
-
-                # Mark as asset
-                img.asset_mark()
-                img.asset_generate_preview()
-
-                # Set asset metadata
-                if not img.asset_data:
-                    continue
-
-                img.asset_data.catalog_id = "textures"
-                img.asset_data.description = f"Game texture: {os.path.basename(path)}"
-
-            except Exception as e:
-                self.report({'WARNING'}, f"Failed to load texture {path}: {str(e)}")
-
-    def parse_color(self, color_str):
-        """Parse a Godot Color string into RGBA values"""
-        # Convert "Color(0.238422, 0.238422, 0.238422, 1)" to [0.238422, 0.238422, 0.238422, 1]
-        color_str = color_str.replace('Color(', '').replace(')', '')
-        return [float(x.strip()) for x in color_str.split(',')]
-
-    def parse_vector3(self, vec_str):
-        """Parse a Godot Vector3 string into XYZ values"""
-        # Convert "Vector3(0, 0, 0)" to [0, 0, 0]
-        vec_str = vec_str.replace('Vector3(', '').replace(')', '')
-        return [float(x.strip()) for x in vec_str.split(',')]
-
-    def load_materials(self, material_paths):
-        for path in material_paths:
-            try:
-                # Parse the .tres file
-                with open(path, 'r') as f:
-                    lines = f.readlines()
-
-                # Create new material
-                mat_name = os.path.splitext(os.path.basename(path))[0]
-                mat = bpy.data.materials.new(name=mat_name)
-                mat.use_nodes = True
-
-                # Get the node tree
-                nodes = mat.node_tree.nodes
-                links = mat.node_tree.links
-
-                # Get the principled BSDF node (created by default)
-                principled = nodes.get("Principled BSDF")
-
-                # Parse material properties
-                for line in lines:
-                    line = line.strip()
-
-                    # Handle albedo color
-                    if line.startswith('albedo_color'):
-                        color_value = line.split('=')[1].strip()
-                        color = self.parse_color(color_value)
-                        principled.inputs["Base Color"].default_value = color
-
-                    # Handle metallic
-                    elif line.startswith('metallic'):
-                        value = float(line.split('=')[1].strip())
-                        principled.inputs["Metallic"].default_value = value
-
-                    # Handle roughness
-                    elif line.startswith('roughness'):
-                        value = float(line.split('=')[1].strip())
-                        principled.inputs["Roughness"].default_value = value
-
-                    # Handle emission
-                    elif line.startswith('emission'):
-                        if 'emission_energy_multiplier' in line:
-                            value = float(line.split('=')[1].strip())
-                            principled.inputs["Emission Strength"].default_value = value
-                        elif line.startswith('emission ='):
-                            color_value = line.split('=')[1].strip()
-                            color = self.parse_color(color_value)
-                            principled.inputs["Emission"].default_value = color
-
-                    # Handle UV triplanar
-                    elif line.startswith('uv1_triplanar'):
-                        value = line.split('=')[1].strip()
-                        if value == 'true':
-                            # Create Texture Coordinate node
-                            tex_coord = nodes.new('ShaderNodeTexCoord')
-                            tex_coord.location = (principled.location.x - 600, principled.location.y)
-
-                            # Create Mapping node
-                            mapping = nodes.new('ShaderNodeMapping')
-                            mapping.location = (principled.location.x - 450, principled.location.y)
-
-                            # Link them together
-                            links.new(tex_coord.outputs["Generated"], mapping.inputs["Vector"])
-
-                # Mark as asset
-                mat.asset_mark()
-                mat.asset_generate_preview()
-
-                # Set asset metadata
-                if mat.asset_data:
-                    mat.asset_data.catalog_id = "materials"
-                    mat.asset_data.description = f"Game material: {mat_name}"
-
-            except Exception as e:
-                self.report({'WARNING'}, f"Failed to load material {path}: {str(e)}")
-
-    def load_audio(self, music_paths, sfx_paths):
-        # Load music
-        for path in music_paths:
-            try:
-                sound = bpy.data.sounds.load(path, check_existing=True)
-
-                # Mark as asset
-                sound.asset_mark()
-                sound.asset_generate_preview()
-
-                # Set asset metadata
-                if not sound.asset_data:
-                    continue
-
-                sound.asset_data.catalog_id = "audio_music"
-                sound.asset_data.description = f"Game music: {os.path.basename(path)}"
-
-            except Exception as e:
-                self.report({'WARNING'}, f"Failed to load music {path}: {str(e)}")
-
-        # Load SFX
-        for path in sfx_paths:
-            try:
-                sound = bpy.data.sounds.load(path, check_existing=True)
-
-                # Mark as asset
-                sound.asset_mark()
-                sound.asset_generate_preview()
-
-                # Set asset metadata
-                if not sound.asset_data:
-                    continue
-
-                sound.asset_data.catalog_id = "audio_sfx"
-                sound.asset_data.description = f"Game SFX: {os.path.basename(path)}"
-
-            except Exception as e:
-                self.report({'WARNING'}, f"Failed to load SFX {path}: {str(e)}")
-
-    def execute(self, context):
-        tools = context.window_manager.bless_tools
-        profile_path = tools.profile_filepath
-
-        if not profile_path:
-            self.report({'ERROR'}, "No game profile path specified")
-            return {'CANCELLED'}
-
-        try:
-            # Convert the relative path to absolute if needed
-            if profile_path.startswith("//"):
-                profile_path = bpy.path.abspath(profile_path)
-
-            with open(profile_path, 'r') as f:
-                profile_data = json.load(f)
-
-            # Load assets into Asset Browser
-            self.load_textures(profile_data.get('textures', []))
-            self.load_materials(profile_data.get('materials', []))
-            self.load_audio(
-                profile_data.get('audio_music', []),
-                profile_data.get('audio_sfx', [])
-            )
-
-            self.report({'INFO'}, "Game profile loaded successfully")
-            return {'FINISHED'}
-
-        except Exception as e:
-            self.report({'ERROR'}, f"Failed to load game profile: {str(e)}")
-            return {'CANCELLED'}
-
-
-class BlessSelectGameProfile(bpy.types.Operator):
-    """Select Game Profile Path"""
-    bl_idname = "object.select_game_profile"
-    bl_label = "Select Game Profile"
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-    def execute(self, context):
-        tools = context.window_manager.bless_tools
-        tools.profile_filepath = self.filepath
-        return {'FINISHED'}
 
 
 class BlessApplyCollisions(bpy.types.Operator):
@@ -626,3 +428,33 @@ class BlessApplyCollisions(bpy.types.Operator):
                 obj.color = tools.convex_color
 
         return {'FINISHED'}
+
+
+class BlessObjectPanel(bpy.types.Panel):
+    """Object Properties Panel"""
+    bl_idname = "VIEW3D_PT_bless_object"
+    bl_label = "Bless Object"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Bless'
+    
+    def draw(self, context):
+        layout = self.layout
+        obj = context.active_object
+        
+        if obj:
+            # Draw class selector
+            layout.prop(obj, "bless_class")
+            
+            # If a class is selected, draw its properties
+            if obj.bless_class != "NONE":
+                box = layout.box()
+                box.label(text=f"{obj.bless_class} Properties")
+                
+                # Get the property group for the selected class
+                props = getattr(obj, f"bless_{obj.bless_class.lower()}_props", None)
+                if props:
+                    # Draw all properties
+                    for prop in props.bl_rna.properties:
+                        if not prop.is_hidden:
+                            box.prop(props, prop.identifier)
