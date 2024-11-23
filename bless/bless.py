@@ -384,6 +384,7 @@ class BlessPanel(bpy.types.Panel):
     bpy.types.WindowManager.bless_show_tools_profile = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_tools_origin = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_tools_transform = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_show_tools_greybox = bpy.props.BoolProperty(default=False)
     
     # Settings subsections
     bpy.types.WindowManager.bless_show_settings_colors = bpy.props.BoolProperty(default=False)
@@ -405,14 +406,14 @@ class BlessPanel(bpy.types.Panel):
         row = box.row()
         row.prop(wm, "bless_show_view", text="View", icon='TRIA_DOWN' if wm.bless_show_view else 'TRIA_RIGHT', emboss=False)
         if wm.bless_show_view:
-            sub_box = box.box()
+            sub_box = layout.box()
             row = sub_box.row()
             row.prop(wm, "bless_show_view_camera", text="Camera", icon='TRIA_DOWN' if wm.bless_show_view_camera else 'TRIA_RIGHT', emboss=False)
             if wm.bless_show_view_camera:
                 row = sub_box.row()
                 row.prop(tools, "lock_camera", text="Lock Camera")
 
-            sub_box = box.box()
+            sub_box = layout.box()
             row = sub_box.row()
             row.prop(wm, "bless_show_view_grid", text="Grid", icon='TRIA_DOWN' if wm.bless_show_view_grid else 'TRIA_RIGHT', emboss=False)
             if wm.bless_show_view_grid:
@@ -465,6 +466,17 @@ class BlessPanel(bpy.types.Panel):
         row = box.row()
         row.prop(wm, "bless_show_tools", text="Tools", icon='TRIA_DOWN' if wm.bless_show_tools else 'TRIA_RIGHT', emboss=False)
         if wm.bless_show_tools:
+            # Greybox Tools
+            sub_box = box.box()
+            row = sub_box.row()
+            row.prop(wm, "bless_show_tools_greybox", text="Greybox", 
+                    icon='TRIA_DOWN' if wm.bless_show_tools_greybox else 'TRIA_RIGHT', emboss=False)
+            if wm.bless_show_tools_greybox:
+                col = sub_box.column(align=True)
+                col.operator("bless.greybox_transform", text="Transform", icon="ORIENTATION_GLOBAL")
+                col.operator("bless.greybox_extrude", text="Extrude", icon="ORIENTATION_NORMAL")
+                col.operator("bless.greybox_snap", text="Snap to Grid", icon="SNAP_GRID")
+
             # Profile
             sub_box = box.box()
             row = sub_box.row()
@@ -586,47 +598,3 @@ class BlessApplyCollisions(bpy.types.Operator):
                 obj.color = tools.convex_color
 
         return {'FINISHED'}
-
-def register():
-    bpy.utils.register_class(BlessCollisionLayers)
-    bpy.utils.register_class(BlessCollisionMaskLayers)
-    bpy.utils.register_class(OMIPhysicsShape)
-    bpy.utils.register_class(OMIPhysicsBody)
-    bpy.utils.register_class(BlessDefaultCollisionType)
-    bpy.utils.register_class(BlessCollisionTypes)
-    bpy.utils.register_class(BlessTools)
-    bpy.utils.register_class(BlessClassProperties)
-    bpy.utils.register_class(BlessClassFactory)
-    bpy.utils.register_class(BlessLoadGameProfile)
-    bpy.utils.register_class(BlessPanel)
-    bpy.utils.register_class(BlessApplyCollisions)
-
-    bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=BlessTools)
-    bpy.types.Object.collision_layers = bpy.props.PointerProperty(type=BlessCollisionLayers)
-    bpy.types.Object.collision_mask = bpy.props.PointerProperty(type=BlessCollisionMaskLayers)
-    bpy.types.Object.collision_types = bpy.props.PointerProperty(type=BlessCollisionTypes)
-    bpy.types.Object.default_collision_type = bpy.props.PointerProperty(type=BlessDefaultCollisionType)
-    bpy.types.Object.physics_shape = bpy.props.PointerProperty(type=OMIPhysicsShape)
-    bpy.types.Object.physics_body = bpy.props.PointerProperty(type=OMIPhysicsBody)
-
-def unregister():
-    bpy.utils.unregister_class(BlessCollisionLayers)
-    bpy.utils.unregister_class(BlessCollisionMaskLayers)
-    bpy.utils.unregister_class(OMIPhysicsShape)
-    bpy.utils.unregister_class(OMIPhysicsBody)
-    bpy.utils.unregister_class(BlessDefaultCollisionType)
-    bpy.utils.unregister_class(BlessCollisionTypes)
-    bpy.utils.unregister_class(BlessTools)
-    bpy.utils.unregister_class(BlessClassProperties)
-    bpy.utils.unregister_class(BlessClassFactory)
-    bpy.utils.unregister_class(BlessLoadGameProfile)
-    bpy.utils.unregister_class(BlessPanel)
-    bpy.utils.unregister_class(BlessApplyCollisions)
-
-    del bpy.types.WindowManager.bless_tools
-    del bpy.types.Object.collision_layers
-    del bpy.types.Object.collision_mask
-    del bpy.types.Object.collision_types
-    del bpy.types.Object.default_collision_type
-    del bpy.types.Object.physics_shape
-    del bpy.types.Object.physics_body
