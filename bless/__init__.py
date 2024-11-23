@@ -1,4 +1,3 @@
-
 """
 Bless code style:
 
@@ -38,8 +37,8 @@ Directory catalog: (made on 11/13/24 - v0.1.2)
 bless.py
     contains the panel.
 
-"""
 
+"""
 
 # module loader
 import importlib 
@@ -88,6 +87,14 @@ def register_properties():
     bpy.types.Object.collision_layers = bpy.props.PointerProperty(type=bless.BlessCollisionLayers)
     bpy.types.Object.collision_mask = bpy.props.PointerProperty(type=bless.BlessCollisionMaskLayers)
 
+    # Add default bless_class property
+    bpy.types.Object.bless_class = bpy.props.EnumProperty(
+        name="Godot Class",
+        description="Select Godot class for this object",
+        items=[("NONE", "None", "No Godot class assigned")],
+        default="NONE"
+    )
+
     # note[valy] this should not be saved on scene rather window_manager as window manager is session dependant and will persist until blender is closed,
     # while scene will end up duplicating for each blender scene the settings and will lead to settings missmatch
     bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=bless.BlessTools)
@@ -100,6 +107,7 @@ def unregister_properties():
     del bpy.types.Object.collision_types
     del bpy.types.Object.collision_layers
     del bpy.types.Object.collision_mask
+    del bpy.types.Object.bless_class
 
     del bpy.types.WindowManager.bless_tools#
     del bpy.types.WindowManager.unit_size

@@ -1,6 +1,8 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
+import bmesh
+from bpy_extras import view3d_utils
 
 class GreyboxTransform(bpy.types.Operator):
     """Transform object in Trenchbroom style"""
@@ -12,52 +14,6 @@ class GreyboxTransform(bpy.types.Operator):
     is_active: BoolProperty(default=False)
     alt_pressed: BoolProperty(default=False)
     
-    def modal(self, context, event):
-        if not self.is_active:
-            return {'CANCELLED'}
-
-        if event.type == 'ESC':
-            self.is_active = False
-            return {'CANCELLED'}
-
-        if event.type == 'LEFT_ALT':
-            self.alt_pressed = event.value == 'PRESS'
-
-        if context.mode == 'OBJECT':
-            # Object mode transformations
-            if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
-                if context.active_object:
-                    # Set appropriate transform orientation
-                    if self.alt_pressed:
-                        # Z-axis only movement
-                        context.scene.transform_orientation_slots[0].type = 'GLOBAL'
-                        bpy.ops.transform.translate('INVOKE_DEFAULT', constraint_axis=(False, False, True))
-                    else:
-                        # XY plane movement
-                        context.scene.transform_orientation_slots[0].type = 'GLOBAL'
-                        bpy.ops.transform.translate('INVOKE_DEFAULT', constraint_axis=(True, True, False))
-                    
-        elif context.mode == 'EDIT_MESH':
-            # Edit mode transformations
-            if self.alt_pressed and event.type == 'E' and event.value == 'PRESS':
-                # Extrude along face normal
-                bpy.ops.mesh.extrude_region_move('INVOKE_DEFAULT')
-                context.scene.transform_orientation_slots[0].type = 'NORMAL'
-                bpy.ops.transform.translate('INVOKE_DEFAULT', constraint_axis=(False, False, True))
-
-        return {'RUNNING_MODAL'}
-
-    def invoke(self, context, event):
-        if context.space_data.type == 'VIEW_3D':
-            self.is_active = True
-            context.window_manager.modal_handler_add(self)
-            return {'RUNNING_MODAL'}
-        else:
-            return {'CANCELLED'}
-
-    def execute(self, context):
-        return {'FINISHED'}
-
 class GreyboxExtrude(bpy.types.Operator):
     """Extrude faces in Trenchbroom style"""
     bl_idname = "bless.greybox_extrude"
@@ -66,7 +22,17 @@ class GreyboxExtrude(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode == 'EDIT_MESH'  # Only available in Edit mode
+        return context.active_object is not None and context.active_object.type == 'MESH'
+
+    def invoke(self, context, event):
+        # if object mode:
+        if context.mode == 'OBJECT':
+            if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
+                bpy.data.scenes["Scene"].transform_orientation_slots[0].type = 'NORMAL'
+                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "mirror":False})
+                bpy.ops.object.mode_set(mode='OBJECT')
+        return {'FINISHED'}
 
     def execute(self, context):
         return {'FINISHED'}

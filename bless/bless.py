@@ -2,14 +2,6 @@ import bpy
 import os
 import json
 
-# hooks found and implemented by michaeljared from this original gist:
-# https://gist.github.com/bikemurt/0c36561a29527b98220230282ab11181
-
-## TODO: move all the physics related code out of this file.
-
-# TODO, does this need to have so many lines? could be a factoryfunction to make each prop.
-##
-
 class BlessCollisionLayers(bpy.types.PropertyGroup):
     layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
     layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
@@ -43,7 +35,6 @@ class BlessCollisionLayers(bpy.types.PropertyGroup):
     layer_30: bpy.props.BoolProperty(name="Layer 30")  # type: ignore
     layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
-
 
 class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
     layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
@@ -79,11 +70,6 @@ class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
     layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
 
-# TODO rework this as an operator to call from the panel rather than ins
-
-
-
-
 # https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
 class OMIPhysicsShape(bpy.types.PropertyGroup):
     # possibly needed for internal for gd3d
@@ -106,7 +92,6 @@ class OMIPhysicsShape(bpy.types.PropertyGroup):
     height: bpy.props.FloatProperty(subtype="DISTANCE", description="height of the shape in meters", default=2.0)  # type: ignore
     # The index of the glTF mesh in the document to use as a mesh shape.
     mesh: bpy.props.IntProperty(default=-1)  # type: ignore
-
 
 # https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_body
 class OMIPhysicsBody(bpy.types.PropertyGroup):
@@ -132,7 +117,6 @@ class OMIPhysicsBody(bpy.types.PropertyGroup):
     angular_velocity: bpy.props.FloatVectorProperty(subtype="VELOCITY", default=[0.0, 0.0, 0.0])  # type: ignore
     center_of_mass: bpy.props.FloatVectorProperty(default=[0.0, 0.0, 0.0])  # type: ignore
 
-
 # Default collision type for new objects.
 class BlessDefaultCollisionType(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
@@ -146,7 +130,6 @@ class BlessDefaultCollisionType(bpy.types.PropertyGroup):
             ("none", "None", "", 1 << 3),
         ])  # type: ignore
 
-
 class BlessCollisionTypes(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
         name="Collision Type",
@@ -158,7 +141,6 @@ class BlessCollisionTypes(bpy.types.PropertyGroup):
             ("custom", "Custom", "", 1 << 2),
             ("none", "None", "", 1 << 3),
         ])  # type: ignore
-
 
 # TODO rework this as an operator to call
 def update_camera_lock(self, context):
@@ -203,7 +185,6 @@ class BlessTools(bpy.types.PropertyGroup):
         options={'HIDDEN'},
         maxlen=255,
     )  # type: ignore
-
 
 class BlessClassProperties(bpy.types.PropertyGroup):
     """Base class for dynamic properties"""
@@ -350,7 +331,6 @@ class BlessLoadGameProfile(bpy.types.Operator):
         # Create dynamic classes when profile is loaded
         bpy.ops.object.create_dynamic_class()
         return {'FINISHED'}
-
 
 class BlessPanel(bpy.types.Panel):
     bl_label = "Bless"
@@ -567,9 +547,6 @@ class BlessPanel(bpy.types.Panel):
                 for btn in range(4):
                     idx = (row_idx * 16) + (block * 4) + btn
                     sub_row.prop(collision_mask, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
-
-
-
 
 class BlessApplyCollisions(bpy.types.Operator):
     """Apply Props"""
