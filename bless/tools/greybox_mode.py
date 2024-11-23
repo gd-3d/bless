@@ -58,32 +58,45 @@ def draw_dimensions(context, start, end):
     blf.size(font_id, 20.0)
     blf.draw(font_id, f"Size: {dims[0]:.1f} x {dims[1]:.1f} x {dims[2]:.1f}")
 
-def mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point):
-    """Convert mouse position to 3D point on plane"""
-    view_vector = view3d_utils.region_2d_to_vector_3d(
-        context.region, 
-        context.space_data.region_3d, 
-        mouse_pos
-    )
-    ray_origin = view3d_utils.region_2d_to_origin_3d(
-        context.region,
-        context.space_data.region_3d,
-        mouse_pos
-    )
-    
-    denominator = view_vector.dot(plane_normal)
-    if abs(denominator) > 0:
+def intersect_line_plane(ray_origin, ray_target, plane_point, plane_normal):
+    """Find intersection point of a line and a plane"""
+    ray_direction = ray_target - ray_origin
+    denominator = plane_normal.dot(ray_direction)
+    if denominator > 0:
         t = (plane_point - ray_origin).dot(plane_normal) / denominator
-        return ray_origin + t * view_vector
+        return ray_origin + t * ray_direction
     return None
 
+def mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point):
+    """Convert mouse position to 3D point, considering surface intersection"""
+    region = context.region
+    region_3d = context.space_data.region_3d
+    
+    # Get the ray from the viewport to the mouse
+    view_vector = view3d_utils.region_2d_to_vector_3d(region, region_3d, mouse_pos)
+    ray_origin = view3d_utils.region_2d_to_origin_3d(region, region_3d, mouse_pos)
+    
+    # Try to find surface intersection first
+    result, location, normal, index, obj, matrix = context.scene.ray_cast(
+        context.view_layer.depsgraph,
+        ray_origin,
+        view_vector
+    )
+    
+    if result:
+        # Found a surface point, return it
+        return location
+    
+    # If no surface hit, intersect with XY plane at Z=0
+    return intersect_line_plane(ray_origin, ray_origin + view_vector, Vector((0, 0, 0)), Vector((0, 0, 1)))
+
 def snap_to_grid(point, grid_size):
-    """Snap a point to the grid"""
-    return Vector((
-        round(point.x / grid_size) * grid_size,
-        round(point.y / grid_size) * grid_size,
-        round(point.z / grid_size) * grid_size
-    ))
+    """Snap a point to the nearest grid point"""
+    # Round each component to nearest grid unit
+    x = round(point.x / grid_size) * grid_size
+    y = round(point.y / grid_size) * grid_size
+    z = round(point.z / grid_size) * grid_size
+    return Vector((x, y, z))
 
 def create_cuboid_mesh(start, end, name="Cuboid"):
     """Create a cuboid mesh between two points"""
@@ -139,56 +152,86 @@ def draw_callback_px(self, context):
         gpu.state.blend_set('NONE')
 
 class GreyboxDraw(bpy.types.Operator):
-    """Draw a cuboid: Click and drag for base rectangle, then drag up/down for height"""
+    """Draw a cuboid: Click and drag for base rectangle, hold Alt and move mouse up/down for height"""
     bl_idname = "bless.greybox_draw"
     bl_label = "Draw Greybox Cuboid"
     bl_options = {'REGISTER', 'UNDO'}
 
     def modal(self, context, event):
         context.area.tag_redraw()
+        
+        # Track Alt key state
+        if event.type in {'LEFT_ALT', 'RIGHT_ALT'}:
+            if event.value == 'PRESS':
+                self.is_alt_pressed = True
+                # Store current mouse position for height reference
+                self.height_reference = (event.mouse_region_x, event.mouse_region_y)
+            elif event.value == 'RELEASE':
+                self.is_alt_pressed = False
+            return {'RUNNING_MODAL'}
 
         if event.type == 'MOUSEMOVE':
             mouse_pos = (event.mouse_region_x, event.mouse_region_y)
-            plane_normal = Vector((0, 0, 1)) if not self.height_mode else Vector((0, 1, 0))
-            plane_point = Vector((0, 0, 0)) if len(self.points) == 0 else Vector(self.points[0])
             
-            point = mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point)
-            if point:
+            if self.is_alt_pressed and len(self.points) > 0:
+                # Alt is pressed - adjust height based on vertical mouse movement
+                if not hasattr(self, 'height_reference'):
+                    self.height_reference = mouse_pos
+                
+                # Calculate height change based on vertical mouse movement
+                delta_y = mouse_pos[1] - self.height_reference[1]
                 grid_size = context.scene.unit_settings.scale_length
-                snapped_point = snap_to_grid(point, grid_size)
-
-                if self.height_mode:
-                    # In height mode: keep base rectangle XY, only update Z
-                    self.current_point = Vector((
-                        self.base_point.x,
-                        self.base_point.y,
-                        snapped_point.z
-                    ))
-                else:
-                    # Drawing base rectangle
+                height_change = round(delta_y * grid_size / 20) * grid_size  # Adjust sensitivity here
+                
+                # Update height while maintaining minimum
+                new_height = max(
+                    self.points[0].z + grid_size,  # Minimum height
+                    self.base_height + height_change  # Current height + change
+                )
+                
+                # Update current point with new height
+                self.current_point = Vector((
+                    self.current_point.x,
+                    self.current_point.y,
+                    new_height
+                ))
+            else:
+                # Normal drawing - use horizontal plane
+                plane_normal = Vector((0, 0, 1))
+                plane_point = self.points[0] if len(self.points) > 0 else Vector((0, 0, 0))
+                
+                point = mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point)
+                if point:
+                    grid_size = context.scene.unit_settings.scale_length
+                    snapped_point = snap_to_grid(point, grid_size)
+                    
+                    # Update XY position while maintaining current height
                     self.current_point = Vector((
                         snapped_point.x,
                         snapped_point.y,
-                        self.points[0].z if len(self.points) > 0 else snapped_point.z
+                        self.current_point.z if len(self.points) > 0 else snapped_point.z
                     ))
-                self.is_drawing = True
+            
+            self.is_drawing = True
+            return {'RUNNING_MODAL'}
 
         elif event.type == 'LEFTMOUSE':
             if event.value == 'PRESS':
                 if len(self.points) == 0:
-                    # First click - start drawing base rectangle
-                    self.points.append(self.current_point)
-                    self.is_drawing = True
-                    return {'RUNNING_MODAL'}
-                    
-                elif len(self.points) == 1 and not self.height_mode:
-                    # Second click - finish base rectangle, enter height mode
-                    self.base_point = self.current_point.copy()
-                    self.height_mode = True
-                    return {'RUNNING_MODAL'}
-                    
+                    # First click - start drawing
+                    mouse_pos = (event.mouse_region_x, event.mouse_region_y)
+                    point = mouse_to_3d_point(context, mouse_pos, Vector((0, 0, 1)), Vector((0, 0, 0)))
+                    if point:
+                        grid_size = context.scene.unit_settings.scale_length
+                        snapped_point = snap_to_grid(point, grid_size)
+                        self.points.append(snapped_point)
+                        self.current_point = snapped_point.copy()
+                        # Set initial height one grid unit above base
+                        self.current_point.z += grid_size
+                        self.base_height = self.current_point.z  # Store base height for Alt adjustments
+                        self.is_drawing = True
                 else:
-                    # Final click - create the cuboid
+                    # Second click - create the cuboid
                     obj = create_cuboid_mesh(self.points[0], self.current_point)
                     bpy.context.view_layer.objects.active = obj
                     obj.select_set(True)
@@ -206,9 +249,9 @@ class GreyboxDraw(bpy.types.Operator):
             # Initialize variables
             self.points = []
             self.current_point = Vector((0, 0, 0))
-            self.base_point = None
             self.is_drawing = False
-            self.height_mode = False
+            self.is_alt_pressed = False
+            self.base_height = 0
             
             # Add the drawing callback
             args = (self, context)
