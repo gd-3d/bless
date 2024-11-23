@@ -148,6 +148,13 @@ def create_cuboid_mesh(start, end, name="Cuboid"):
     bm.to_mesh(mesh)
     bm.free()
     
+    # Select the new object and make it active
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    
+    # Set origin to center of mass
+    bpy.ops.object.autoorigin()
+    
     return obj
 
 def draw_callback_px(self, context):
@@ -170,6 +177,8 @@ def draw_face_highlight(context, vertices, color=(0.2, 0.6, 1.0, 0.3)):
     if len(vertices) < 3:
         return
         
+    print(f"Drawing face with {len(vertices)} vertices")
+        
     # Convert vertices to screen space
     screen_verts = []
     for v in vertices:
@@ -180,20 +189,12 @@ def draw_face_highlight(context, vertices, color=(0.2, 0.6, 1.0, 0.3)):
         )
         if screen_co:
             screen_verts.append(screen_co)
+            print(f"Screen vert: {screen_co}")
     
     if len(screen_verts) >= 3:
+        print("Drawing face highlight")
         shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         gpu.state.blend_set('ALPHA')
-        gpu.state.depth_test_set('NONE')  # Disable depth testing
-        
-        # Draw face outline first
-        gpu.state.line_width_set(2.0)
-        outline_verts = screen_verts + [screen_verts[0]]  # Close the loop
-        batch = batch_for_shader(shader, 'LINE_STRIP', {
-            "pos": outline_verts
-        })
-        shader.uniform_float("color", (color[0], color[1], color[2], 0.8))
-        batch.draw(shader)
         
         # Draw face fill
         batch = batch_for_shader(shader, 'TRIS', {
@@ -202,18 +203,33 @@ def draw_face_highlight(context, vertices, color=(0.2, 0.6, 1.0, 0.3)):
         shader.uniform_float("color", color)
         batch.draw(shader)
         
+        # Draw face outline
+        gpu.state.line_width_set(2.0)
+        outline_verts = screen_verts + [screen_verts[0]]  # Close the loop
+        batch = batch_for_shader(shader, 'LINE_STRIP', {
+            "pos": outline_verts
+        })
+        shader.uniform_float("color", (color[0], color[1], color[2], 0.8))
+        batch.draw(shader)
+        
         # Restore defaults
         gpu.state.line_width_set(1.0)
         gpu.state.blend_set('NONE')
-        gpu.state.depth_test_set('LESS_EQUAL')  # Restore default depth testing
 
 def get_face_under_mouse(context, mouse_pos):
     """Get face and its vertices under mouse cursor"""
+    if not context.active_object or context.active_object.type != 'MESH':
+        return None, []
+    
+    print(f"Mouse pos: {mouse_pos}")
+    
     # Get the ray from the viewport to the mouse
     region = context.region
     region_3d = context.space_data.region_3d
     view_vector = view3d_utils.region_2d_to_vector_3d(region, region_3d, mouse_pos)
     ray_origin = view3d_utils.region_2d_to_origin_3d(region, region_3d, mouse_pos)
+    
+    print(f"Ray origin: {ray_origin}, vector: {view_vector}")
     
     # Ray cast in world space
     result, location, normal, index, obj, matrix = context.scene.ray_cast(
@@ -222,10 +238,13 @@ def get_face_under_mouse(context, mouse_pos):
         view_vector
     )
     
+    print(f"Ray hit: {result}, obj: {obj}, index: {index}")
+    
     hit_face = None
     hit_vertices = []
     
-    if result and obj.type == 'MESH':  # Check any mesh object, not just active
+    if result and obj == context.active_object:
+        print("Hit active object")
         # Get mesh data
         mesh = obj.data
         bm = bmesh.new()
@@ -236,10 +255,11 @@ def get_face_under_mouse(context, mouse_pos):
         hit_face = bm.faces[index]
         # Get world space vertices
         hit_vertices = [matrix @ v.co for v in hit_face.verts]
+        print(f"Found face with {len(hit_vertices)} vertices")
         
         bm.free()
     
-    return hit_face, hit_vertices, obj  # Also return the hit object
+    return hit_face, hit_vertices
 
 class GreyboxDraw(bpy.types.Operator):
     """Draw a cuboid: Click and drag for base rectangle, hold Alt and move mouse up/down for height"""
@@ -363,19 +383,17 @@ class GreyboxFaceTransform(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return len([obj for obj in context.visible_objects if obj.type == 'MESH']) > 0
+        return context.active_object is not None and context.active_object.type == 'MESH'
 
     def modal(self, context, event):
         context.area.tag_redraw()
         
         if event.type == 'MOUSEMOVE':
             # Update highlighted face
-            self.hit_face, self.hit_vertices, self.hit_object = get_face_under_mouse(
+            self.hit_face, self.hit_vertices = get_face_under_mouse(
                 context, 
                 (event.mouse_region_x, event.mouse_region_y)
             )
-            if self.hit_object:
-                context.view_layer.objects.active = self.hit_object
             return {'RUNNING_MODAL'}
             
         elif event.type == 'LEFTMOUSE':
@@ -385,6 +403,7 @@ class GreyboxFaceTransform(bpy.types.Operator):
                     pass
             
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            print("Removing draw handler")
             try:
                 bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             except ValueError:
@@ -395,16 +414,21 @@ class GreyboxFaceTransform(bpy.types.Operator):
 
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
+            print("Starting face transform operator")
             # Initialize variables
             self.hit_face = None
             self.hit_vertices = []
-            self.hit_object = None
+            
+            # Make sure we're in object mode
+            if context.mode != 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
             
             # Add the drawing callback
             args = (self, context)
             self._handle = bpy.types.SpaceView3D.draw_handler_add(
                 self.draw_callback_px, args, 'WINDOW', 'POST_PIXEL'
             )
+            print("Added draw handler")
             
             context.window_manager.modal_handler_add(self)
             return {'RUNNING_MODAL'}
@@ -416,6 +440,7 @@ class GreyboxFaceTransform(bpy.types.Operator):
     def draw_callback_px(self, context, _region=None):
         """Draw callback for face highlighting"""
         if self.hit_vertices:
+            print("Drawing callback")
             draw_face_highlight(context, self.hit_vertices)
 
 class GreyboxTransform(bpy.types.Operator):
