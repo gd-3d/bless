@@ -453,6 +453,7 @@ class BlessPanel(bpy.types.Panel):
                     icon='TRIA_DOWN' if wm.bless_show_tools_greybox else 'TRIA_RIGHT', emboss=False)
             if wm.bless_show_tools_greybox:
                 col = sub_box.column(align=True)
+                col.operator("bless.greybox_draw", text="Draw", icon="BRUSH_DATA")
                 col.operator("bless.greybox_transform", text="Transform", icon="ORIENTATION_GLOBAL")
                 col.operator("bless.greybox_extrude", text="Extrude", icon="ORIENTATION_NORMAL")
                 col.operator("bless.greybox_snap", text="Snap to Grid", icon="SNAP_GRID")
