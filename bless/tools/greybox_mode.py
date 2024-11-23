@@ -165,6 +165,82 @@ def draw_callback_px(self, context):
         gpu.state.line_width_set(1.0)
         gpu.state.blend_set('NONE')
 
+def draw_face_highlight(context, vertices, color=(0.2, 0.6, 1.0, 0.3)):
+    """Draw highlighted face overlay"""
+    if len(vertices) < 3:
+        return
+        
+    # Convert vertices to screen space
+    screen_verts = []
+    for v in vertices:
+        screen_co = view3d_utils.location_3d_to_region_2d(
+            context.region, 
+            context.space_data.region_3d,
+            v
+        )
+        if screen_co:
+            screen_verts.append(screen_co)
+    
+    if len(screen_verts) >= 3:
+        shader = gpu.shader.from_builtin('UNIFORM_COLOR')
+        gpu.state.blend_set('ALPHA')
+        gpu.state.depth_test_set('NONE')  # Disable depth testing
+        
+        # Draw face outline first
+        gpu.state.line_width_set(2.0)
+        outline_verts = screen_verts + [screen_verts[0]]  # Close the loop
+        batch = batch_for_shader(shader, 'LINE_STRIP', {
+            "pos": outline_verts
+        })
+        shader.uniform_float("color", (color[0], color[1], color[2], 0.8))
+        batch.draw(shader)
+        
+        # Draw face fill
+        batch = batch_for_shader(shader, 'TRIS', {
+            "pos": screen_verts[:3]  # Just use first 3 verts for triangle
+        })
+        shader.uniform_float("color", color)
+        batch.draw(shader)
+        
+        # Restore defaults
+        gpu.state.line_width_set(1.0)
+        gpu.state.blend_set('NONE')
+        gpu.state.depth_test_set('LESS_EQUAL')  # Restore default depth testing
+
+def get_face_under_mouse(context, mouse_pos):
+    """Get face and its vertices under mouse cursor"""
+    # Get the ray from the viewport to the mouse
+    region = context.region
+    region_3d = context.space_data.region_3d
+    view_vector = view3d_utils.region_2d_to_vector_3d(region, region_3d, mouse_pos)
+    ray_origin = view3d_utils.region_2d_to_origin_3d(region, region_3d, mouse_pos)
+    
+    # Ray cast in world space
+    result, location, normal, index, obj, matrix = context.scene.ray_cast(
+        context.view_layer.depsgraph,
+        ray_origin,
+        view_vector
+    )
+    
+    hit_face = None
+    hit_vertices = []
+    
+    if result and obj.type == 'MESH':  # Check any mesh object, not just active
+        # Get mesh data
+        mesh = obj.data
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        bm.faces.ensure_lookup_table()
+        
+        # Get face from hit index
+        hit_face = bm.faces[index]
+        # Get world space vertices
+        hit_vertices = [matrix @ v.co for v in hit_face.verts]
+        
+        bm.free()
+    
+    return hit_face, hit_vertices, obj  # Also return the hit object
+
 class GreyboxDraw(bpy.types.Operator):
     """Draw a cuboid: Click and drag for base rectangle, hold Alt and move mouse up/down for height"""
     bl_idname = "bless.greybox_draw"
@@ -279,6 +355,69 @@ class GreyboxDraw(bpy.types.Operator):
             self.report({'WARNING'}, "View3D not found, cannot run operator")
             return {'CANCELLED'}
 
+class GreyboxFaceTransform(bpy.types.Operator):
+    """Transform faces by clicking and dragging"""
+    bl_idname = "bless.greybox_extrude"
+    bl_label = "Greybox Face Transform"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return len([obj for obj in context.visible_objects if obj.type == 'MESH']) > 0
+
+    def modal(self, context, event):
+        context.area.tag_redraw()
+        
+        if event.type == 'MOUSEMOVE':
+            # Update highlighted face
+            self.hit_face, self.hit_vertices, self.hit_object = get_face_under_mouse(
+                context, 
+                (event.mouse_region_x, event.mouse_region_y)
+            )
+            if self.hit_object:
+                context.view_layer.objects.active = self.hit_object
+            return {'RUNNING_MODAL'}
+            
+        elif event.type == 'LEFTMOUSE':
+            if event.value == 'PRESS':
+                if self.hit_face:
+                    # TODO: Start face transformation
+                    pass
+            
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            try:
+                bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            except ValueError:
+                pass  # Handler might already be removed
+            return {'CANCELLED'}
+            
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        if context.area.type == 'VIEW_3D':
+            # Initialize variables
+            self.hit_face = None
+            self.hit_vertices = []
+            self.hit_object = None
+            
+            # Add the drawing callback
+            args = (self, context)
+            self._handle = bpy.types.SpaceView3D.draw_handler_add(
+                self.draw_callback_px, args, 'WINDOW', 'POST_PIXEL'
+            )
+            
+            context.window_manager.modal_handler_add(self)
+            return {'RUNNING_MODAL'}
+        else:
+            self.report({'WARNING'}, "View3D not found, cannot run operator")
+            return {'CANCELLED'}
+    
+    @staticmethod
+    def draw_callback_px(self, context, _region=None):
+        """Draw callback for face highlighting"""
+        if self.hit_vertices:
+            draw_face_highlight(context, self.hit_vertices)
+
 class GreyboxTransform(bpy.types.Operator):
     """Transform object in Trenchbroom style"""
     bl_idname = "bless.greybox_transform"
@@ -288,25 +427,6 @@ class GreyboxTransform(bpy.types.Operator):
     # Properties to track state
     is_active: BoolProperty(default=False)
     alt_pressed: BoolProperty(default=False)
-
-class GreyboxExtrude(bpy.types.Operator):
-    """Extrude faces in Trenchbroom style"""
-    bl_idname = "bless.greybox_extrude"
-    bl_label = "Greybox Extrude"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None and context.active_object.type == 'MESH'
-
-    def invoke(self, context, event):
-        if context.mode == 'OBJECT':
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.extrude_region_move()
-        return {'FINISHED'}
-
-    def execute(self, context):
-        return {'FINISHED'}
 
 class GreyboxSnap(bpy.types.Operator):
     """Snap to grid in Trenchbroom style"""
