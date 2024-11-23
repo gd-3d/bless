@@ -125,15 +125,11 @@ def create_cuboid_mesh(start, end, name="Cuboid"):
 
 def draw_callback_px(self, context):
     """Main drawing callback"""
-    if len(self.points) >= 1:
+    if len(self.points) >= 1 and self.is_drawing:
         start = self.points[0]
-        if self.is_drawing:
-            end = self.current_point
-        elif len(self.points) > 1:
-            end = self.points[1]
-        else:
-            return
-
+        end = self.current_point
+        
+        # Create preview vertices
         vertices = get_cuboid_vertices(start, end)
         draw_wireframe(context, vertices)
         draw_dimensions(context, start, end)
@@ -143,33 +139,57 @@ def draw_callback_px(self, context):
         gpu.state.blend_set('NONE')
 
 class GreyboxDraw(bpy.types.Operator):
-    """Draw a cuboid by clicking and dragging, snapped to grid"""
+    """Draw a cuboid: Click and drag for base rectangle, then drag up/down for height"""
     bl_idname = "bless.greybox_draw"
     bl_label = "Draw Greybox Cuboid"
     bl_options = {'REGISTER', 'UNDO'}
 
     def modal(self, context, event):
         context.area.tag_redraw()
-        
+
         if event.type == 'MOUSEMOVE':
             mouse_pos = (event.mouse_region_x, event.mouse_region_y)
-            plane_normal = Vector((0, 0, 1))
+            plane_normal = Vector((0, 0, 1)) if not self.height_mode else Vector((0, 1, 0))
             plane_point = Vector((0, 0, 0)) if len(self.points) == 0 else Vector(self.points[0])
             
             point = mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point)
             if point:
                 grid_size = context.scene.unit_settings.scale_length
-                self.current_point = snap_to_grid(point, grid_size)
+                snapped_point = snap_to_grid(point, grid_size)
+
+                if self.height_mode:
+                    # In height mode: keep base rectangle XY, only update Z
+                    self.current_point = Vector((
+                        self.base_point.x,
+                        self.base_point.y,
+                        snapped_point.z
+                    ))
+                else:
+                    # Drawing base rectangle
+                    self.current_point = Vector((
+                        snapped_point.x,
+                        snapped_point.y,
+                        self.points[0].z if len(self.points) > 0 else snapped_point.z
+                    ))
                 self.is_drawing = True
-            
+
         elif event.type == 'LEFTMOUSE':
             if event.value == 'PRESS':
                 if len(self.points) == 0:
+                    # First click - start drawing base rectangle
                     self.points.append(self.current_point)
-                elif len(self.points) == 1:
-                    self.points.append(self.current_point)
-                    obj = create_cuboid_mesh(self.points[0], self.points[1])
-                    # Select the new object
+                    self.is_drawing = True
+                    return {'RUNNING_MODAL'}
+                    
+                elif len(self.points) == 1 and not self.height_mode:
+                    # Second click - finish base rectangle, enter height mode
+                    self.base_point = self.current_point.copy()
+                    self.height_mode = True
+                    return {'RUNNING_MODAL'}
+                    
+                else:
+                    # Final click - create the cuboid
+                    obj = create_cuboid_mesh(self.points[0], self.current_point)
                     bpy.context.view_layer.objects.active = obj
                     obj.select_set(True)
                     bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
@@ -186,7 +206,9 @@ class GreyboxDraw(bpy.types.Operator):
             # Initialize variables
             self.points = []
             self.current_point = Vector((0, 0, 0))
+            self.base_point = None
             self.is_drawing = False
+            self.height_mode = False
             
             # Add the drawing callback
             args = (self, context)
