@@ -67,8 +67,8 @@ def intersect_line_plane(ray_origin, ray_target, plane_point, plane_normal):
         return ray_origin + t * ray_direction
     return None
 
-def mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point):
-    """Convert mouse position to 3D point, considering surface intersection"""
+def mouse_to_3d_point(context, mouse_pos):
+    """Convert mouse position to 3D point on grid"""
     region = context.region
     region_3d = context.space_data.region_3d
     
@@ -87,8 +87,22 @@ def mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point):
         # Found a surface point, return it
         return location
     
-    # If no surface hit, intersect with XY plane at Z=0
-    return intersect_line_plane(ray_origin, ray_origin + view_vector, Vector((0, 0, 0)), Vector((0, 0, 1)))
+    # If no surface hit, intersect with XY plane at nearest grid height
+    grid_size = context.scene.unit_settings.scale_length
+    
+    # Use XY plane at Z=0 as default drawing plane
+    plane_normal = Vector((0, 0, 1))
+    plane_point = Vector((0, 0, 0))
+    
+    # Calculate intersection with plane
+    denominator = view_vector.dot(plane_normal)
+    if abs(denominator) > 1e-6:  # Check if not parallel
+        t = (plane_point - ray_origin).dot(plane_normal) / denominator
+        intersection = ray_origin + t * view_vector
+        return intersection
+        
+    # Fallback if view is parallel to XY plane
+    return Vector((ray_origin.x, ray_origin.y, 0))
 
 def snap_to_grid(point, grid_size):
     """Snap a point to the nearest grid point"""
@@ -185,9 +199,12 @@ class GreyboxDraw(bpy.types.Operator):
                 
                 # Update height while maintaining minimum
                 new_height = max(
-                    self.points[0].z + grid_size,  # Minimum height
+                    grid_size,  # Minimum height of one grid unit
                     self.base_height + height_change  # Current height + change
                 )
+                
+                # Snap height to grid
+                new_height = round(new_height / grid_size) * grid_size
                 
                 # Update current point with new height
                 self.current_point = Vector((
@@ -196,16 +213,13 @@ class GreyboxDraw(bpy.types.Operator):
                     new_height
                 ))
             else:
-                # Normal drawing - use horizontal plane
-                plane_normal = Vector((0, 0, 1))
-                plane_point = self.points[0] if len(self.points) > 0 else Vector((0, 0, 0))
-                
-                point = mouse_to_3d_point(context, mouse_pos, plane_normal, plane_point)
+                # Normal drawing - use grid plane
+                point = mouse_to_3d_point(context, mouse_pos)
                 if point:
                     grid_size = context.scene.unit_settings.scale_length
                     snapped_point = snap_to_grid(point, grid_size)
                     
-                    # Update XY position while maintaining current height
+                    # Update position while maintaining current height
                     self.current_point = Vector((
                         snapped_point.x,
                         snapped_point.y,
@@ -220,7 +234,7 @@ class GreyboxDraw(bpy.types.Operator):
                 if len(self.points) == 0:
                     # First click - start drawing
                     mouse_pos = (event.mouse_region_x, event.mouse_region_y)
-                    point = mouse_to_3d_point(context, mouse_pos, Vector((0, 0, 1)), Vector((0, 0, 0)))
+                    point = mouse_to_3d_point(context, mouse_pos)
                     if point:
                         grid_size = context.scene.unit_settings.scale_length
                         snapped_point = snap_to_grid(point, grid_size)
