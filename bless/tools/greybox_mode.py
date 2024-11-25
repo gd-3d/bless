@@ -376,9 +376,6 @@ class GreyboxDraw(bpy.types.Operator):
             self.report({'WARNING'}, "View3D not found, cannot run operator")
             return {'CANCELLED'}
 
-
-
-
 class GreyboxFaceTransform(bpy.types.Operator):
     """Transform faces by clicking and dragging"""
     bl_idname = "bless.greybox_extrude"
@@ -449,12 +446,6 @@ class GreyboxFaceTransform(bpy.types.Operator):
             
         return {'RUNNING_MODAL'}
 
-
-
-
-
-
-
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
             print("Starting face transform operator")
@@ -487,20 +478,115 @@ class GreyboxFaceTransform(bpy.types.Operator):
             draw_face_highlight(context, self.hit_vertices)
 
 class GreyboxTransform(bpy.types.Operator):
-    """Transform object in Trenchbroom style"""
+    """Transform object in Trenchbroom style: Move in XY plane, hold Alt for vertical movement"""
     bl_idname = "bless.greybox_transform"
     bl_label = "Greybox Transform"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # Properties to track state
-    is_active: BoolProperty(default=False)
-    alt_pressed: BoolProperty(default=False)
+    # Add property to track Alt state
+    is_alt_pressed: BoolProperty(default=False)
+    is_transforming: BoolProperty(default=False)
+
+    def modal(self, context, event):
+        if event.type in {'LEFT_ALT', 'RIGHT_ALT'}:
+            if event.value == 'PRESS':
+                self.is_alt_pressed = True
+                if self.is_transforming:
+                    # Switch to Z constraint
+                    bpy.ops.transform.translate('INVOKE_DEFAULT',
+                        constraint_axis=(False, False, True),
+                        orient_type='GLOBAL'
+                    )
+            elif event.value == 'RELEASE':
+                self.is_alt_pressed = False
+                if self.is_transforming:
+                    # Switch to XY constraint
+                    bpy.ops.transform.translate('INVOKE_DEFAULT',
+                        constraint_axis=(True, True, False),
+                        orient_type='GLOBAL'
+                    )
+            return {'RUNNING_MODAL'}
+
+        if event.type == 'LEFTMOUSE':
+            if event.value == 'PRESS':
+                self.is_transforming = True
+                constraint = (False, False, True) if self.is_alt_pressed else (True, True, False)
+                bpy.ops.transform.translate('INVOKE_DEFAULT',
+                    constraint_axis=constraint,
+                    orient_type='GLOBAL'
+                )
+            elif event.value == 'RELEASE':
+                self.is_transforming = False
+                return {'FINISHED'}
+            return {'RUNNING_MODAL'}
+        
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            self.is_transforming = False
+            return {'CANCELLED'}
+
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        if context.area.type == 'VIEW_3D':
+            self.is_alt_pressed = False
+            self.is_transforming = False
+            context.window_manager.modal_handler_add(self)
+            return {'RUNNING_MODAL'}
+        else:
+            self.report({'WARNING'}, "View3D not found, cannot run operator")
+            return {'CANCELLED'}
 
 class GreyboxSnap(bpy.types.Operator):
-    """Snap to grid in Trenchbroom style"""
+    """Snap vertices to grid"""
     bl_idname = "bless.greybox_snap"
     bl_label = "Greybox Snap"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        # Get grid size from scene settings
+        grid_size = context.scene.unit_settings.scale_length
+        
+        # Store original mode to restore later
+        original_mode = context.active_object.mode if context.active_object else 'OBJECT'
+        
+        # Process each selected object
+        for obj in context.selected_objects:
+            if obj.type != 'MESH':
+                continue
+                
+            # Make this the active object
+            context.view_layer.objects.active = obj
+            
+            # Get into edit mode to access mesh data
+            bpy.ops.object.mode_set(mode='EDIT')
+            
+            # Get BMesh
+            import bmesh
+            me = obj.data
+            bm = bmesh.from_edit_mesh(me)
+            
+            # Snap each vertex to grid
+            for vert in bm.verts:
+                # Convert to world space
+                world_co = obj.matrix_world @ vert.co
+                
+                # Snap to grid
+                world_co.x = round(world_co.x / grid_size) * grid_size
+                world_co.y = round(world_co.y / grid_size) * grid_size
+                world_co.z = round(world_co.z / grid_size) * grid_size
+                
+                # Convert back to local space
+                vert.co = obj.matrix_world.inverted() @ world_co
+            
+            # Update mesh
+            bmesh.update_edit_mesh(me)
+            
+            # Return to object mode
+            bpy.ops.object.mode_set(mode='OBJECT')
+        
+        # Restore original mode
+        if context.active_object:
+            bpy.ops.object.mode_set(mode=original_mode)
+        
+        self.report({'INFO'}, "Snapped vertices to grid")
         return {'FINISHED'}
