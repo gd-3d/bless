@@ -247,16 +247,17 @@ def get_face_under_mouse(context, mouse_pos):
         print("Hit active object")
         # Get mesh data
         mesh = obj.data
+        
+        # Store the face index instead of BMesh face
+        hit_face = index
+        
+        # Get world space vertices for highlighting
         bm = bmesh.new()
         bm.from_mesh(mesh)
         bm.faces.ensure_lookup_table()
-        
-        # Get face from hit index
-        hit_face = bm.faces[index]
-        # Get world space vertices
-        hit_vertices = [matrix @ v.co for v in hit_face.verts]
+        face = bm.faces[index]
+        hit_vertices = [matrix @ v.co for v in face.verts]
         print(f"Found face with {len(hit_vertices)} vertices")
-        
         bm.free()
     
     return hit_face, hit_vertices
@@ -375,6 +376,9 @@ class GreyboxDraw(bpy.types.Operator):
             self.report({'WARNING'}, "View3D not found, cannot run operator")
             return {'CANCELLED'}
 
+
+
+
 class GreyboxFaceTransform(bpy.types.Operator):
     """Transform faces by clicking and dragging"""
     bl_idname = "bless.greybox_extrude"
@@ -395,22 +399,61 @@ class GreyboxFaceTransform(bpy.types.Operator):
                 (event.mouse_region_x, event.mouse_region_y)
             )
             return {'RUNNING_MODAL'}
-            
+        
+        # If click, transform the single face under mouse cursor locked in the Z axis
         elif event.type == 'LEFTMOUSE':
-            if event.value == 'PRESS':
-                if self.hit_face:
-                    # TODO: Start face transformation
-                    pass
-            
+            if event.value == 'PRESS' and self.hit_face is not None:
+                try:
+                    print("Face clicked - starting transform")
+                    face_index = self.hit_face  # hit_face is now the index
+                    print(f"Got face index: {face_index}")
+                        
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    import bmesh
+                    me = context.active_object.data
+                    bm = bmesh.from_edit_mesh(me)
+                    bm.faces.ensure_lookup_table()
+                    print(f"Total faces in mesh: {len(bm.faces)}")
+                    
+                    # Deselect all faces
+                    for face in bm.faces:
+                        face.select = False
+                        
+                    # Only select if index is still valid
+                    if face_index < len(bm.faces):
+                        print(f"Selecting face {face_index}")
+                        bm.faces[face_index].select = True
+                        bmesh.update_edit_mesh(me)
+                        bpy.context.view_layer.update()  # Ensure view layer is updated
+                        bpy.ops.transform.translate('INVOKE_DEFAULT', 
+                        orient_type='NORMAL',
+                        constraint_axis=(False, False, True))
+                        print("Started transform operation")
+                    else:
+                        print(f"Face index {face_index} is out of range")
+                except ReferenceError:
+                    # Face reference is no longer valid, skip this operation
+                    return {'RUNNING_MODAL'}
+                except Exception as e:
+                    print(f"Error in face transform: {str(e)}")
+                    return {'RUNNING_MODAL'}
+            elif event.value == 'RELEASE':
+                bpy.ops.object.mode_set(mode='OBJECT')
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
             print("Removing draw handler")
             try:
                 bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             except ValueError:
-                pass  # Handler might already be removed
+                pass
             return {'CANCELLED'}
             
         return {'RUNNING_MODAL'}
+
+
+
+
+
+
 
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
