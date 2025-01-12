@@ -1,59 +1,30 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
-
-
-"""
-See documentation for usage
-https://github.com/CGCookie/blender-addon-updater
-"""
-
-__version__ = "1.1.1"
 
 import errno
-import traceback
-import platform
-import ssl
-import urllib.request
-import urllib
-import os
-import json
-import zipfile
-import shutil
-import threading
 import fnmatch
+import json
+import os
+import platform
+import shutil
+import ssl
+import threading
+import traceback
+import urllib
+import urllib.request
+import zipfile
 from datetime import datetime, timedelta
 
-# Blender imports, used in limited cases.
-import bpy
 import addon_utils
-
-# -----------------------------------------------------------------------------
-# The main class
-# -----------------------------------------------------------------------------
+import bpy
 
 
-class SingletonUpdater:
+class AddonUpdaterEngine:
     """Addon updater service class.
 
     This is the singleton class to instance once and then reference where
     needed throughout the addon. It implements all the interfaces for running
     updates.
     """
+
     def __init__(self):
 
         self._engine = GithubEngine()
@@ -1624,45 +1595,6 @@ class SingletonUpdater:
         self._error_msg = None
 
 
-# -----------------------------------------------------------------------------
-# Updater Engines
-# -----------------------------------------------------------------------------
-
-
-class BitbucketEngine:
-    """Integration to Bitbucket API for git-formatted repositories"""
-
-    def __init__(self):
-        self.api_url = 'https://api.bitbucket.org'
-        self.token = None
-        self.name = "bitbucket"
-
-    def form_repo_url(self, updater):
-        return "{}/2.0/repositories/{}/{}".format(
-            self.api_url, updater.user, updater.repo)
-
-    def form_tags_url(self, updater):
-        return self.form_repo_url(updater) + "/refs/tags?sort=-name"
-
-    def form_branch_url(self, branch, updater):
-        return self.get_zip_url(branch, updater)
-
-    def get_zip_url(self, name, updater):
-        return "https://bitbucket.org/{user}/{repo}/get/{name}.zip".format(
-            user=updater.user,
-            repo=updater.repo,
-            name=name)
-
-    def parse_tags(self, response, updater):
-        if response is None:
-            return list()
-        return [
-            {
-                "name": tag["name"],
-                "zipball_url": self.get_zip_url(tag["name"], updater)
-            } for tag in response["values"]]
-
-
 class GithubEngine:
     """Integration to Github API"""
 
@@ -1736,9 +1668,35 @@ class GitlabEngine:
             } for tag in response]
 
 
-# -----------------------------------------------------------------------------
-# The module-shared class instance,
-# should be what's imported to other files
-# -----------------------------------------------------------------------------
+class BitbucketEngine:
+    """Integration to Bitbucket API for git-formatted repositories"""
 
-Updater = SingletonUpdater()
+    def __init__(self):
+        self.api_url = 'https://api.bitbucket.org'
+        self.token = None
+        self.name = "bitbucket"
+
+    def form_repo_url(self, updater):
+        return "{}/2.0/repositories/{}/{}".format(
+            self.api_url, updater.user, updater.repo)
+
+    def form_tags_url(self, updater):
+        return self.form_repo_url(updater) + "/refs/tags?sort=-name"
+
+    def form_branch_url(self, branch, updater):
+        return self.get_zip_url(branch, updater)
+
+    def get_zip_url(self, name, updater):
+        return "https://bitbucket.org/{user}/{repo}/get/{name}.zip".format(
+            user=updater.user,
+            repo=updater.repo,
+            name=name)
+
+    def parse_tags(self, response, updater):
+        if response is None:
+            return list()
+        return [
+            {
+                "name": tag["name"],
+                "zipball_url": self.get_zip_url(tag["name"], updater)
+            } for tag in response["values"]]

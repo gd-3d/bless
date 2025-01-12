@@ -21,11 +21,11 @@ Directory catalog: (made on 11/13/24 - v0.1.2)
     lock_view.py
 
 /gltf/ - exporting and importing glTF with game related extensions
-    
+
     gltf_export.py
     gltf_import.py
     TODO:batch_export.py
-    
+
 /physics/
     ! TODO: move all physics related code here
     physics_body.py
@@ -33,37 +33,39 @@ Directory catalog: (made on 11/13/24 - v0.1.2)
     collision_types.py
     collision_layers.py
     collision_mask.py
-    
+
 bless.py
     contains the panel.
 
 
 """
 
-# module loader
-import importlib 
-from .addon.alx_module_manager import (
-    Alx_Module_Loader
-)
+import importlib
 
-
-from .addon import bless_keymap_utils
-from .addon import addon_updater_ops
 import bpy
+
+from . import bless
+from . import bless_keymap_utils
+from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
+from .modules.Alx_Module_Manager import Alx_Module_Manager
+from .gltf import gltf_export
+from .tools import grid
+
 bl_info = {
     "name": "bless",
-    "author": "michaeljared, aaronfranke, yankscally, valyarhal", # gd-3d developers
+    "author": "michaeljared, aaronfranke, yankscally, valyarhal",  # gd-3d developers
     "description": "",
     "version": (0, 1, 3),
     "blender": (4, 2, 0),
     "location": "",
     "warning": "",
-    "category": "Generic"
+    "category": "Generic",
+    "doc_url": "https://github.com/gd-3d/bless/wiki",
+    "tracker_url": "https://github.com/gd-3d/bless/issues",
 }
 
 
-# allows a glTF2ExportUserExtension class to be defined outside __init__
-from .gltf import gltf_export
+# glTF2ExportUserExtension needs to be defined inside the __init__, this is a dummy class to allow the implementation to be outside the __init__
 class glTF2ExportUserExtension(gltf_export.BlessExport):
 
     def __init__(self):
@@ -77,8 +79,6 @@ class glTF2ExportUserExtension(gltf_export.BlessExport):
         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
-from . import bless
-from .tools import grid
 # import bless_preferences
 def register_properties():
     bpy.types.Object.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
@@ -109,28 +109,31 @@ def unregister_properties():
     del bpy.types.Object.collision_mask
     del bpy.types.Object.bless_class
 
-    del bpy.types.WindowManager.bless_tools#
+    del bpy.types.WindowManager.bless_tools
     del bpy.types.WindowManager.unit_size
 
 
 # module loader
-module_loader = Alx_Module_Loader()
-module_loader.developer_blacklist_file({"addon_updater", "addon_updater_ops"})
+module_loader = Alx_Module_Manager(__path__, globals())
+addon_updater = Alx_Addon_Updater(__path__[0], bl_info, "Github", "gd-3d", "bless", "https://github.com/gd-3d/bless/releases/")
 
 
 def register():
-    try:
-        addon_updater_ops.update_path_fix = __path__
-        addon_updater_ops.register(bl_info)
-    except: pass
+    module_loader.developer_register_modules(mute=True)
+    addon_updater.register_addon_updater(mute=True)
 
-    module_loader.developer_register_modules(__path__, globals())
     register_properties()
     bless_keymap_utils.bless_CreateKeymaps()
     bpy.context.preferences.use_preferences_save = True
 
 
 def unregister():
-    addon_updater_ops.unregister()
+    module_loader.developer_unregister_modules()
+    addon_updater.unregister_addon_updater()
+
     module_loader.developer_unregister_modules()
     unregister_properties()
+
+
+if __name__ == "__main__":
+    register()
