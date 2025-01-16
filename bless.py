@@ -2,6 +2,10 @@ import bpy
 import os
 import json
 
+
+
+
+
 class BlessCollisionLayers(bpy.types.PropertyGroup):
     layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
     layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
@@ -70,6 +74,15 @@ class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
     layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
     layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
 
+
+
+
+
+
+
+
+
+
 # https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
 class OMIPhysicsShape(bpy.types.PropertyGroup):
     # possibly needed for internal for gd3d
@@ -117,6 +130,18 @@ class OMIPhysicsBody(bpy.types.PropertyGroup):
     angular_velocity: bpy.props.FloatVectorProperty(subtype="VELOCITY", default=[0.0, 0.0, 0.0])  # type: ignore
     center_of_mass: bpy.props.FloatVectorProperty(default=[0.0, 0.0, 0.0])  # type: ignore
 
+
+
+
+
+
+
+
+
+
+
+
+
 # Default collision type for new objects.
 class BlessDefaultCollisionType(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
@@ -142,9 +167,26 @@ class BlessCollisionTypes(bpy.types.PropertyGroup):
             ("none", "None", "", 1 << 3),
         ])  # type: ignore
 
+
+
+
+
+
+
+
+
 # TODO rework this as an operator to call
 def update_camera_lock(self, context):
     bpy.ops.view3d.bless_camera_lock()
+
+
+
+
+
+
+
+
+
 
 class BlessTools(bpy.types.PropertyGroup):
     lock_camera: bpy.props.BoolProperty(
@@ -185,6 +227,14 @@ class BlessTools(bpy.types.PropertyGroup):
         options={'HIDDEN'},
         maxlen=255,
     )  # type: ignore
+
+
+
+
+
+
+
+
 
 class BlessClassProperties(bpy.types.PropertyGroup):
     """Base class for dynamic properties"""
@@ -279,6 +329,17 @@ class BlessClassFactory(bpy.types.Operator):
 
         return new_class
 
+
+
+
+
+
+
+    ###### READ GAME PROFILE ########
+    #################################
+
+
+
     def execute(self, context):
         try:
             # Load the game profile
@@ -296,31 +357,159 @@ class BlessClassFactory(bpy.types.Operator):
                     bpy.utils.register_class(dynamic_class)
                     
                     # Add a property group to Object
-                    setattr(bpy.types.Object, f"bless_{class_name.lower()}_props", 
+                    setattr(bpy.types.Object, f"godot_class_{class_name.lower()}_props", 
                            bpy.props.PointerProperty(type=dynamic_class))
 
-            # Remove old bless_class if it exists
-            if hasattr(bpy.types.Object, "bless_class"):
-                delattr(bpy.types.Object, "bless_class")
+            # Remove old godot_class if it exists
+            if hasattr(bpy.types.Object, "godot_class"):
+                delattr(bpy.types.Object, "godot_class")
 
             # Create items list with None as first option
             items = [("NONE", "None", "No Godot class assigned")]
             for class_name in profile_data["classes"].keys():
-                items.append((class_name.upper(), class_name, f"Godot {class_name} class"))
+                items.append((class_name, class_name, f"Godot {class_name} class"))
 
             # Add class selection enum to Object with None as default
-            bpy.types.Object.bless_class = bpy.props.EnumProperty(
+            bpy.types.Object.godot_class = bpy.props.EnumProperty(
                 name="Godot Class",
                 description="Select Godot class for this object",
                 items=items,
                 default="NONE"
             )
+            
+
+
+            all_textures = []
+            # read materials from the JSON profile
+            for texture_path in profile_data["textures"]:
+                all_textures.append(texture_path)
+
+            create_materials_from_textures(all_textures, standard_texture_channels)
+
+
 
             self.report({'INFO'}, "Dynamic classes created successfully")
             return {'FINISHED'}
         except Exception as e:
             self.report({'ERROR'}, f"Failed to create dynamic classes: {str(e)}")
             return {'CANCELLED'}
+
+
+
+
+
+
+
+
+
+
+
+
+standard_texture_channels = {
+    # Common PBR material texture types
+    "albedo"        : ["albedo", "basecolor", "basecolour", "base", "color", "colour", "diffuse", "diff", "c", "d", "col", "alb", "dif"],
+    "normal"        : ["normal", "normalgl", "local", "norm", "nor", "nor_gl", "nor_dx", "n"], # NOTE: "normaldx" removed for now.
+    "roughness"     : ["roughness", "rough", "rgh", "r"],
+    "metallic"      : ["metallic", "metalness", "met", "m"],
+    "ao"            : ["ao", "ambientocclusion", "ambient", "occlusion", "a", "o"],
+    "emission"      : ["emission", "emissive", "glow", "luma", "g"],
+    "height"        : ["height", "displacement", "disp", "h", "z"],
+
+    # Combined maps
+    "orm"           : ["orm", "arm"], 
+
+    # Less common maps
+    "rim"           : ["rim"],
+    "clearcoat"     : ["clearcoat"],
+    "anisotropy"    : ["anisotropy", "aniso", "flowmap", "flow"],
+    "subsurface"    : ["subsurface", "subsurf", "scattering", "scatter", "sss"],
+    "transmission"  : ["transmittance", "transmission", "transmissive"],
+    "backlight"     : ["backlighting", "backlight"],
+    "refraction"    : ["refraction", "refract"],
+    "detail"        : ["detail"]
+}
+
+
+
+
+def create_materials_from_textures(texture_paths, standard_texture_channels):
+    # Group textures by their common prefix
+    material_groups = {}
+    for texture_path in texture_paths:
+        # Extract the common prefix
+        prefix = "_".join(os.path.basename(texture_path).split("_")[:-1])
+        if prefix not in material_groups:
+            material_groups[prefix] = []
+        material_groups[prefix].append(texture_path)
+
+    # Create materials for each group
+    for prefix, textures in material_groups.items():
+        # Create a new material
+        material = bpy.data.materials.new(name=prefix)
+        material.use_nodes = True
+        nodes = material.node_tree.nodes
+        links = material.node_tree.links
+
+        # Clear existing nodes
+        for node in nodes:
+            nodes.remove(node)
+
+        # Add Principled BSDF and Material Output nodes
+        output_node = nodes.new(type='ShaderNodeOutputMaterial')
+        output_node.location = (400, 0)
+        bsdf_node = nodes.new(type='ShaderNodeBsdfPrincipled')
+        bsdf_node.location = (0, 0)
+        links.new(bsdf_node.outputs["BSDF"], output_node.inputs["Surface"])
+
+        BASE_X = -400
+        BASE_Y = 0
+        Y_OFFSET = -300  # Space between nodes vertically
+        X_OFFSET = 350  # Space between nodes horizontally
+        NODE_POSITIONS = {}  # Keep track of positions for each channel type
+
+        for texture_path in textures:
+            # Determine the channel type
+            channel = os.path.basename(texture_path).split("_")[-1].split(".")[0].lower()
+            for channel_type, aliases in standard_texture_channels.items():
+                if channel in aliases:
+                    if channel_type not in {"albedo", "metallic", "roughness", "normal", "emission"}:
+                        # Skip unsupported channel types
+                        continue
+
+                    # Add image texture node
+                    img_node = nodes.new(type='ShaderNodeTexImage')
+                    img_node.name = channel_type
+                    # Set location based on channel type
+                    if channel_type not in NODE_POSITIONS:
+                        NODE_POSITIONS[channel_type] = BASE_Y
+                        BASE_Y += Y_OFFSET
+                    img_node.location = (BASE_X, NODE_POSITIONS[channel_type])
+
+                    img_node.image = bpy.data.images.load(texture_path)
+
+                    # Horizontal offset for additional nodes
+                    current_x = BASE_X + X_OFFSET
+
+                    # Connect to the appropriate input on the BSDF node
+                    if channel_type == "albedo":
+                        links.new(img_node.outputs["Color"], bsdf_node.inputs["Base Color"])
+                    
+                    elif channel_type == "metallic":
+                        links.new(img_node.outputs["Color"], bsdf_node.inputs["Metallic"])
+
+                    elif channel_type == "roughness":
+                        links.new(img_node.outputs["Color"], bsdf_node.inputs["Roughness"])
+                    
+                    elif channel_type == "normal":
+                        normal_map_node = nodes.new(type='ShaderNodeNormalMap')
+                        normal_map_node.location = (current_x, NODE_POSITIONS[channel_type])
+                        links.new(img_node.outputs["Color"], normal_map_node.inputs["Color"])
+                        links.new(normal_map_node.outputs["Normal"], bsdf_node.inputs["Normal"])
+                    
+                    elif channel_type == "emission":
+                        links.new(img_node.outputs["Color"], bsdf_node.inputs["Emission"])
+                    
+                    break
 
 class BlessLoadGameProfile(bpy.types.Operator):
     """Load Game Profile"""
@@ -331,6 +520,30 @@ class BlessLoadGameProfile(bpy.types.Operator):
         # Create dynamic classes when profile is loaded
         bpy.ops.object.create_dynamic_class()
         return {'FINISHED'}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class BlessPanel(bpy.types.Panel):
     bl_label = "Bless"
@@ -507,11 +720,11 @@ class BlessPanel(bpy.types.Panel):
         # Object class information
         obj = context.active_object
         if obj:
-            info_box.prop(obj, "bless_class")
-            if obj.bless_class != "NONE":
+            info_box.prop(obj, "godot_class")
+            if obj.godot_class != "NONE":
                 sub_box = info_box.box()
-                sub_box.label(text=f"{obj.bless_class} Properties")
-                props = getattr(obj, f"bless_{obj.bless_class.lower()}_props", None)
+                sub_box.label(text=f"{obj.godot_class} Properties")
+                props = getattr(obj, f"godot_class_{obj.godot_class.lower()}_props", None)
                 if props:
                     for prop in props.bl_rna.properties:
                         if not prop.is_hidden:
@@ -548,6 +761,37 @@ class BlessPanel(bpy.types.Panel):
                 for btn in range(4):
                     idx = (row_idx * 16) + (block * 4) + btn
                     sub_row.prop(collision_mask, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class BlessApplyCollisions(bpy.types.Operator):
     """Apply Props"""

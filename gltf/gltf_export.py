@@ -2,46 +2,35 @@ import copy
 import bpy
 
 #### constants
-gltf_light_factor = 680
-
-
-
-
+GLTF_LIGHT_FACTOR = 680
 
 ###### EXTENSIONS #######
-#extensions are used by bless for collisions and base class objects/nodes.
+
+# extensions are used by bless for collisions and base class objects/nodes.
 core_extensions =       [
                         "KHR_node_visibility", # Hidden nodes
                         "GODOT_node_lock", # Locked nodes
                         "KHR_audio_emitter", # AudioStreamPlayer3D
                         #"EXT_mesh_gpu_instancing", # MultiMeshInstance3D
                         #"KHR_xmp_json_ld", # Metadata
+                        #OMI_environment_sky # WorldEnvironment sky resource.
                         ]
 
 physics_extensions =    [
                         "OMI_physics_body", # PhysicsBody3D
                         "OMI_physics_shape", # CollisionShape3D
                         #OMI_physics_joint, # Joint3D
-                        "OMI_physics_filter", # PhysicsFilter3D
                         ]
 
 # optional extensions WILL BE included with bless and can be used as installable presets. (TODO)
 bless_extensions =     [
-                        "OMI_seat", # Seat3D
-                        "OMI_spawn_point", # SpawnPoint3D
-                        "OMI_vehicle", # Vehicle3D (NOT body?)
+                        #"OMI_seat", # Seat3D
+                        #"OMI_spawn_point", # SpawnPoint3D
+                        #"OMI_vehicle", # Vehicle3D (NOT body?)
                         ] 
 
-
-
-#TODO find a way to "install" these automagically from outside the file.
-# glTF extensions library / package manager...
+# TODO: allow user extensions. One day.
 user_extensions = []
-
-
-
-node_tree = {}
-materials = {}
 
 ###### EXPORT #######
 
@@ -54,23 +43,43 @@ def bless_print(message, header=False):
     else:
         print(f"[BLESS] {message}")
 
+# go up a folder and import bless
+from .. import bless
+
 class BlessExport:
-
-
-
-
     def __init__(self):
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension #type:ignore
         self.Extension = Extension
-
-
-
-
 
     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
         if gltf2_object.extensions is None:
             gltf2_object.extensions = {}
         
+        if hasattr(blender_object, "godot_class"):
+            # Get the class name directly from the object
+            class_name = blender_object["class"] if "class" in blender_object else blender_object.godot_class
+            
+            # Format the class data properly
+            class_data = {
+                "type": class_name,
+                "properties": {}
+            }
+            
+            # Add class-specific properties
+            props_name = f"godot_class_{class_name.lower()}_props"
+            if hasattr(blender_object, props_name):
+                props = getattr(blender_object, props_name)
+                for prop_name in props.__annotations__:
+                    prop_value = getattr(props, prop_name)
+                    # Handle object references
+                    if isinstance(prop_value, bpy.types.Object):
+                        # Store the object name for now, we'll convert to node index later
+                        class_data["properties"][prop_name] = {"$ref": prop_value.name}
+                    else:
+                        class_data["properties"][prop_name] = prop_value
+            
+            gltf2_object.extras = {"class": class_data}
+
         if hasattr(blender_object, "type"):
             bless_print(f"Object type: [{blender_object.type}]")
             node_tree[blender_object.name] = {}
@@ -134,22 +143,40 @@ class BlessExport:
             node_tree[blender_object.name] = {}
             node_tree[blender_object.name]["type"] = "collection"
 
-    
-
-
-
-
-
-
-
-
-
-
-
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         if gltf_plan.extensions is None:
             gltf_plan.extensions = {}
+
+        # First pass: Build a map of object names to node indices
+        node_map = {}
+        for i, node in enumerate(gltf_plan.nodes):
+            if hasattr(node, "name"):
+                node_map[node.name] = i
+
+        # Second pass: Update object references to use node indices
+        for node in gltf_plan.nodes:
+            if hasattr(node, "extras") and isinstance(node.extras, dict):
+                class_data = node.extras.get("class", {})
+                if "properties" in class_data:
+                    for prop_name, prop_value in class_data["properties"].items():
+                        if isinstance(prop_value, dict) and "$ref" in prop_value:
+                            # Convert object name reference to node index
+                            ref_name = prop_value["$ref"]
+                            if ref_name in node_map:
+                                class_data["properties"][prop_name] = node_map[ref_name]
+                            else:
+                                print(f"Warning: Referenced object {ref_name} not found in scene")
+                                class_data["properties"][prop_name] = -1
+
+        # Clean up extras in all nodes
+        for node in gltf_plan.nodes:
+            if hasattr(node, "extras") and isinstance(node.extras, dict):
+                if "class" in node.extras:
+                    class_data = node.extras["class"]
+                    node.extras = {"class": class_data}
+                else:
+                    node.extras = {}
 
         # Add core extensions to extensionsUsed
         gltf_plan.extensions_used += core_extensions
@@ -189,6 +216,7 @@ class BlessExport:
                                 shape = build_shape_dictionary("convex", node.mesh)
                                 generate_body_node = True
                             elif collision_type == "none":
+                                print("no collision type, skipping.")
                                 continue
                             else:
                                 print("custom collision type, skipping.")
@@ -197,6 +225,7 @@ class BlessExport:
                             if shape is not None:
                                 shapes.append(shape)
                             
+
                             if generate_body_node:
                                 body = copy.deepcopy(node)
                                 body.name = f"{node.name}Body"
@@ -233,9 +262,19 @@ class BlessExport:
                         else:
                             new_node.children.append(child_index)
                 
-                # Make the original node a child of the new node
+                # Make the original mesh node a child of the new body node
                 new_node.children.append(i)
                 node.children = []  # Remove children from the original node
+                
+                # format the extras with correct data
+            
+
+                if "godot_class" in new_node.extras:
+                    # we need to return the name, but we only get an enum.
+                    print(new_node.extras["godot_class"])
+
+                node.extras = {}
+
             elif node_tree.get(node.name, {}).get("type") == "collection":
                 # Handle collections
                 if node.children:
@@ -260,7 +299,7 @@ class BlessExport:
             required=False
         )
 
-        # Add collision filters extension if we have any filters
+        # Add collision filters extension, if we have any filters
         if collision_filters:
             # Debug print
             bless_print("Original collision filters:")
@@ -315,8 +354,6 @@ class BlessExport:
         bless_print("Gather extensions finished", header=True)
 
 
-
-
 def build_body_dictionary(type, mass=None, linear_velocity=None, angular_velocity=None, center_of_mass=None, shape_index=None):
     body_data = {"type": type}
 
@@ -365,7 +402,7 @@ def build_collision_filter(obj):
         layer_enabled = getattr(obj.collision_layers, layer_name, False)
         mask_enabled = getattr(obj.collision_mask, layer_name, False)
         bless_print(f"Layer {i}: layer={layer_enabled}, mask={mask_enabled}")
-        
+
         # Only add if explicitly True
         if layer_enabled is True:  # Explicit True check
             collision_systems.append(f"Layer {i}")

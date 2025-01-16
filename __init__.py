@@ -49,7 +49,7 @@ from . import bless_keymap_utils
 from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
 from .gltf import gltf_export
-from .tools import grid
+from .core import grid
 
 bl_info = {
     "name": "bless",
