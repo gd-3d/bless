@@ -1,89 +1,33 @@
-import bpy
-import os
 import json
+import os
+
+import bpy
 
 
+class BLESS_ObjectCollisionSettings(bpy.types.PropertyGroup):
+    collision_types: bpy.props.EnumProperty(
+        name="Collision Type",
+        description="Static level geometry.",
+        default="trimesh",
+        items=[
+            ("trimesh", "Trimesh", "", 1),
+            ("convex", "Convex", "", 1 << 1),
+            ("custom", "Custom", "", 1 << 2),
+            ("none", "None", "", 1 << 3),
+        ])  # type: ignore
 
+    def DYNAMIC_ENUM_bless_collision_layers(self, context) -> list:
+        return [(f"LAYER_{n}", f"Layer {n}", "") for n in range(32)]
+    collision_layers = bpy.props.EnumProperty(name="Collision Layers", options={"ENUM_FLAG"}, items=DYNAMIC_ENUM_bless_collision_layers)  # type:ignore
 
-
-class BlessCollisionLayers(bpy.types.PropertyGroup):
-    layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
-    layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
-    layer_3: bpy.props.BoolProperty(name="Layer 3")  # type: ignore
-    layer_4: bpy.props.BoolProperty(name="Layer 4")  # type: ignore
-    layer_5: bpy.props.BoolProperty(name="Layer 5")  # type: ignore
-    layer_6: bpy.props.BoolProperty(name="Layer 6")  # type: ignore
-    layer_7: bpy.props.BoolProperty(name="Layer 7")  # type: ignore
-    layer_8: bpy.props.BoolProperty(name="Layer 8")  # type: ignore
-    layer_9: bpy.props.BoolProperty(name="Layer 9")  # type: ignore
-    layer_10: bpy.props.BoolProperty(name="Layer 10")  # type: ignore
-    layer_11: bpy.props.BoolProperty(name="Layer 11")  # type: ignore
-    layer_12: bpy.props.BoolProperty(name="Layer 12")  # type: ignore
-    layer_13: bpy.props.BoolProperty(name="Layer 13")  # type: ignore
-    layer_14: bpy.props.BoolProperty(name="Layer 14")  # type: ignore
-    layer_15: bpy.props.BoolProperty(name="Layer 15")  # type: ignore
-    layer_16: bpy.props.BoolProperty(name="Layer 16")  # type: ignore
-    layer_17: bpy.props.BoolProperty(name="Layer 17")  # type: ignore
-    layer_18: bpy.props.BoolProperty(name="Layer 18")  # type: ignore
-    layer_19: bpy.props.BoolProperty(name="Layer 19")  # type: ignore
-    layer_20: bpy.props.BoolProperty(name="Layer 20")  # type: ignore
-    layer_21: bpy.props.BoolProperty(name="Layer 21")  # type: ignore
-    layer_22: bpy.props.BoolProperty(name="Layer 22")  # type: ignore
-    layer_23: bpy.props.BoolProperty(name="Layer 23")  # type: ignore
-    layer_24: bpy.props.BoolProperty(name="Layer 24")  # type: ignore
-    layer_25: bpy.props.BoolProperty(name="Layer 25")  # type: ignore
-    layer_26: bpy.props.BoolProperty(name="Layer 26")  # type: ignore
-    layer_27: bpy.props.BoolProperty(name="Layer 27")  # type: ignore
-    layer_28: bpy.props.BoolProperty(name="Layer 28")  # type: ignore
-    layer_29: bpy.props.BoolProperty(name="Layer 29")  # type: ignore
-    layer_30: bpy.props.BoolProperty(name="Layer 30")  # type: ignore
-    layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
-    layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
-
-class BlessCollisionMaskLayers(bpy.types.PropertyGroup):
-    layer_1: bpy.props.BoolProperty(name="Layer 1", default=True)  # type: ignore
-    layer_2: bpy.props.BoolProperty(name="Layer 2")  # type: ignore
-    layer_3: bpy.props.BoolProperty(name="Layer 3")  # type: ignore
-    layer_4: bpy.props.BoolProperty(name="Layer 4")  # type: ignore
-    layer_5: bpy.props.BoolProperty(name="Layer 5")  # type: ignore
-    layer_6: bpy.props.BoolProperty(name="Layer 6")  # type: ignore
-    layer_7: bpy.props.BoolProperty(name="Layer 7")  # type: ignore
-    layer_8: bpy.props.BoolProperty(name="Layer 8")  # type: ignore
-    layer_9: bpy.props.BoolProperty(name="Layer 9")  # type: ignore
-    layer_10: bpy.props.BoolProperty(name="Layer 10")  # type: ignore
-    layer_11: bpy.props.BoolProperty(name="Layer 11")  # type: ignore
-    layer_12: bpy.props.BoolProperty(name="Layer 12")  # type: ignore
-    layer_13: bpy.props.BoolProperty(name="Layer 13")  # type: ignore
-    layer_14: bpy.props.BoolProperty(name="Layer 14")  # type: ignore
-    layer_15: bpy.props.BoolProperty(name="Layer 15")  # type: ignore
-    layer_16: bpy.props.BoolProperty(name="Layer 16")  # type: ignore
-    layer_17: bpy.props.BoolProperty(name="Layer 17")  # type: ignore
-    layer_18: bpy.props.BoolProperty(name="Layer 18")  # type: ignore
-    layer_19: bpy.props.BoolProperty(name="Layer 19")  # type: ignore
-    layer_20: bpy.props.BoolProperty(name="Layer 20")  # type: ignore
-    layer_21: bpy.props.BoolProperty(name="Layer 21")  # type: ignore
-    layer_22: bpy.props.BoolProperty(name="Layer 22")  # type: ignore
-    layer_23: bpy.props.BoolProperty(name="Layer 23")  # type: ignore
-    layer_24: bpy.props.BoolProperty(name="Layer 24")  # type: ignore
-    layer_25: bpy.props.BoolProperty(name="Layer 25")  # type: ignore
-    layer_26: bpy.props.BoolProperty(name="Layer 26")  # type: ignore
-    layer_27: bpy.props.BoolProperty(name="Layer 27")  # type: ignore
-    layer_28: bpy.props.BoolProperty(name="Layer 28")  # type: ignore
-    layer_29: bpy.props.BoolProperty(name="Layer 29")  # type: ignore
-    layer_30: bpy.props.BoolProperty(name="Layer 30")  # type: ignore
-    layer_31: bpy.props.BoolProperty(name="Layer 31")  # type: ignore
-    layer_32: bpy.props.BoolProperty(name="Layer 32")  # type: ignore
-
-
-
-
-
-
-
-
+    def DYNAMIC_ENUM_bless_collision_mask_layers(self, context) -> list:
+        return [(f"LAYER_{n}", f"Layer {n}", "") for n in range(32)]
+    collision_mask_layers: bpy.props.EnumProperty(name="Collision Mask Layers", options={"ENUM_FLAG"}, items=DYNAMIC_ENUM_bless_collision_mask_layers)  # type:ignore
 
 
 # https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
+
+
 class OMIPhysicsShape(bpy.types.PropertyGroup):
     # possibly needed for internal for gd3d
     is_collision: bpy.props.BoolProperty(default=False)  # type: ignore
@@ -107,6 +51,8 @@ class OMIPhysicsShape(bpy.types.PropertyGroup):
     mesh: bpy.props.IntProperty(default=-1)  # type: ignore
 
 # https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_body
+
+
 class OMIPhysicsBody(bpy.types.PropertyGroup):
     shape_index: bpy.props.IntProperty(default=-1)  # type: ignore
     # https://github.com/omigroup/gltf-extensions/blob/main/extensions/2.0/OMI_physics_body/README.motion.md
@@ -131,17 +77,6 @@ class OMIPhysicsBody(bpy.types.PropertyGroup):
     center_of_mass: bpy.props.FloatVectorProperty(default=[0.0, 0.0, 0.0])  # type: ignore
 
 
-
-
-
-
-
-
-
-
-
-
-
 # Default collision type for new objects.
 class BlessDefaultCollisionType(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
@@ -155,37 +90,10 @@ class BlessDefaultCollisionType(bpy.types.PropertyGroup):
             ("none", "None", "", 1 << 3),
         ])  # type: ignore
 
-class BlessCollisionTypes(bpy.types.PropertyGroup):
-    collision_types: bpy.props.EnumProperty(
-        name="Collision Type",
-        description="Static level geometry.",
-        default="trimesh",
-        items=[
-            ("trimesh", "Trimesh", "", 1),
-            ("convex", "Convex", "", 1 << 1),
-            ("custom", "Custom", "", 1 << 2),
-            ("none", "None", "", 1 << 3),
-        ])  # type: ignore
-
-
-
-
-
-
-
-
 
 # TODO rework this as an operator to call
 def update_camera_lock(self, context):
     bpy.ops.view3d.bless_camera_lock()
-
-
-
-
-
-
-
-
 
 
 class BlessTools(bpy.types.PropertyGroup):
@@ -203,8 +111,8 @@ class BlessTools(bpy.types.PropertyGroup):
         name="Origin Type",
         description="Origin type",
         default="BOUNDS",
-        items=[("BOUNDS", "Bounds", "", 1), 
-               ("BOTTOM", "Bottom", "", 2), 
+        items=[("BOUNDS", "Bounds", "", 1),
+               ("BOTTOM", "Bottom", "", 2),
                ("CENTER", "Center", "", 3),
                ("TOP", "Top", "", 4)]
     )  # type: ignore
@@ -229,23 +137,17 @@ class BlessTools(bpy.types.PropertyGroup):
     )  # type: ignore
 
 
-
-
-
-
-
-
-
 class BlessClassProperties(bpy.types.PropertyGroup):
     """Base class for dynamic properties"""
     pass
+
 
 def get_profile_classes(self, context):
     """Get classes from game profile for enum"""
     # Always start with None as the first option
     items = [("NONE", "None", "No Godot class assigned")]
     tools = context.window_manager.bless_tools
-    
+
     try:
         if tools.profile_filepath:
             with open(tools.profile_filepath, 'r') as f:
@@ -254,8 +156,9 @@ def get_profile_classes(self, context):
                     items.append((class_name.upper(), class_name, f"Godot {class_name} class"))
     except Exception as e:
         print(f"Error loading profile classes: {e}")
-    
+
     return items
+
 
 class BlessClassFactory(bpy.types.Operator):
     """Create dynamic properties from game profile"""
@@ -279,7 +182,7 @@ class BlessClassFactory(bpy.types.Operator):
             prop_name = prop["name"]
             prop_type = prop["type"]
             prop_hint = prop.get("hint", "")
-            
+
             # Map Godot types to Blender property types
             if prop_type == "Vector3":
                 new_class.__annotations__[prop_name] = bpy.props.FloatVectorProperty(
@@ -329,16 +232,8 @@ class BlessClassFactory(bpy.types.Operator):
 
         return new_class
 
-
-
-
-
-
-
     ###### READ GAME PROFILE ########
     #################################
-
-
 
     def execute(self, context):
         try:
@@ -352,13 +247,13 @@ class BlessClassFactory(bpy.types.Operator):
                 if class_data["properties"]:
                     # Create the dynamic class
                     dynamic_class = self.create_dynamic_class(class_name, class_data["properties"])
-                    
+
                     # Register the class
                     bpy.utils.register_class(dynamic_class)
-                    
+
                     # Add a property group to Object
-                    setattr(bpy.types.Object, f"godot_class_{class_name.lower()}_props", 
-                           bpy.props.PointerProperty(type=dynamic_class))
+                    setattr(bpy.types.Object, f"godot_class_{class_name.lower()}_props",
+                            bpy.props.PointerProperty(type=dynamic_class))
 
             # Remove old godot_class if it exists
             if hasattr(bpy.types.Object, "godot_class"):
@@ -376,8 +271,6 @@ class BlessClassFactory(bpy.types.Operator):
                 items=items,
                 default="NONE"
             )
-            
-
 
             all_textures = []
             # read materials from the JSON profile
@@ -386,8 +279,6 @@ class BlessClassFactory(bpy.types.Operator):
 
             create_materials_from_textures(all_textures, standard_texture_channels)
 
-
-
             self.report({'INFO'}, "Dynamic classes created successfully")
             return {'FINISHED'}
         except Exception as e:
@@ -395,41 +286,29 @@ class BlessClassFactory(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-
-
-
-
-
-
-
-
-
-
 standard_texture_channels = {
     # Common PBR material texture types
-    "albedo"        : ["albedo", "basecolor", "basecolour", "base", "color", "colour", "diffuse", "diff", "c", "d", "col", "alb", "dif"],
-    "normal"        : ["normal", "normalgl", "local", "norm", "nor", "nor_gl", "nor_dx", "n"], # NOTE: "normaldx" removed for now.
-    "roughness"     : ["roughness", "rough", "rgh", "r"],
-    "metallic"      : ["metallic", "metalness", "met", "m"],
-    "ao"            : ["ao", "ambientocclusion", "ambient", "occlusion", "a", "o"],
-    "emission"      : ["emission", "emissive", "glow", "luma", "g"],
-    "height"        : ["height", "displacement", "disp", "h", "z"],
+    "albedo": ["albedo", "basecolor", "basecolour", "base", "color", "colour", "diffuse", "diff", "c", "d", "col", "alb", "dif"],
+    "normal": ["normal", "normalgl", "local", "norm", "nor", "nor_gl", "nor_dx", "n"],  # NOTE: "normaldx" removed for now.
+    "roughness": ["roughness", "rough", "rgh", "r"],
+    "metallic": ["metallic", "metalness", "met", "m"],
+    "ao": ["ao", "ambientocclusion", "ambient", "occlusion", "a", "o"],
+    "emission": ["emission", "emissive", "glow", "luma", "g"],
+    "height": ["height", "displacement", "disp", "h", "z"],
 
     # Combined maps
-    "orm"           : ["orm", "arm"], 
+    "orm": ["orm", "arm"],
 
     # Less common maps
-    "rim"           : ["rim"],
-    "clearcoat"     : ["clearcoat"],
-    "anisotropy"    : ["anisotropy", "aniso", "flowmap", "flow"],
-    "subsurface"    : ["subsurface", "subsurf", "scattering", "scatter", "sss"],
-    "transmission"  : ["transmittance", "transmission", "transmissive"],
-    "backlight"     : ["backlighting", "backlight"],
-    "refraction"    : ["refraction", "refract"],
-    "detail"        : ["detail"]
+    "rim": ["rim"],
+    "clearcoat": ["clearcoat"],
+    "anisotropy": ["anisotropy", "aniso", "flowmap", "flow"],
+    "subsurface": ["subsurface", "subsurf", "scattering", "scatter", "sss"],
+    "transmission": ["transmittance", "transmission", "transmissive"],
+    "backlight": ["backlighting", "backlight"],
+    "refraction": ["refraction", "refract"],
+    "detail": ["detail"]
 }
-
-
 
 
 def create_materials_from_textures(texture_paths, standard_texture_channels):
@@ -493,56 +372,34 @@ def create_materials_from_textures(texture_paths, standard_texture_channels):
                     # Connect to the appropriate input on the BSDF node
                     if channel_type == "albedo":
                         links.new(img_node.outputs["Color"], bsdf_node.inputs["Base Color"])
-                    
+
                     elif channel_type == "metallic":
                         links.new(img_node.outputs["Color"], bsdf_node.inputs["Metallic"])
 
                     elif channel_type == "roughness":
                         links.new(img_node.outputs["Color"], bsdf_node.inputs["Roughness"])
-                    
+
                     elif channel_type == "normal":
                         normal_map_node = nodes.new(type='ShaderNodeNormalMap')
                         normal_map_node.location = (current_x, NODE_POSITIONS[channel_type])
                         links.new(img_node.outputs["Color"], normal_map_node.inputs["Color"])
                         links.new(normal_map_node.outputs["Normal"], bsdf_node.inputs["Normal"])
-                    
+
                     elif channel_type == "emission":
                         links.new(img_node.outputs["Color"], bsdf_node.inputs["Emission"])
-                    
+
                     break
+
 
 class BlessLoadGameProfile(bpy.types.Operator):
     """Load Game Profile"""
     bl_idname = "object.load_game_profile"
     bl_label = "Load Game Profile"
-    
+
     def execute(self, context):
         # Create dynamic classes when profile is loaded
         bpy.ops.object.create_dynamic_class()
         return {'FINISHED'}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class BlessPanel(bpy.types.Panel):
@@ -559,31 +416,31 @@ class BlessPanel(bpy.types.Panel):
     bpy.types.WindowManager.bless_show_tools = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_settings = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_export = bpy.props.BoolProperty(default=False)
-    
+
     # Grid subsections
     bpy.types.WindowManager.bless_show_grid_snap = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_grid_grid = bpy.props.BoolProperty(default=False)
-    
+
     # View subsections
     bpy.types.WindowManager.bless_show_view_camera = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_view_grid = bpy.props.BoolProperty(default=False)
-    
+
     # Collision subsections
     bpy.types.WindowManager.bless_show_collision_layers = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_collision_mask = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_collision_shapes = bpy.props.BoolProperty(default=False)
-    
+
     # Tools subsections
     bpy.types.WindowManager.bless_show_tools_profile = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_tools_origin = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_tools_transform = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_tools_greybox = bpy.props.BoolProperty(default=False)
-    
+
     # Settings subsections
     bpy.types.WindowManager.bless_show_settings_colors = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_settings_paths = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_settings_defaults = bpy.props.BoolProperty(default=False)
-    
+
     # Export subsections
     bpy.types.WindowManager.bless_show_export_gltf = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_export_collisions = bpy.props.BoolProperty(default=False)
@@ -623,8 +480,9 @@ class BlessPanel(bpy.types.Panel):
             layout.box().label(text="No object selected!", icon="INFO")
             return
 
-        collision_types = context.object.collision_types
-        collision_data = collision_types.collision_types
+        collision_settings = context.object.bless_object_collision_settings
+
+        collision_types = collision_settings.collision_types
 
         # COLLISION
         box = layout.box()
@@ -632,25 +490,25 @@ class BlessPanel(bpy.types.Panel):
         row.prop(wm, "bless_show_collision", text="Collision", icon='TRIA_DOWN' if wm.bless_show_collision else 'TRIA_RIGHT', emboss=False)
         if wm.bless_show_collision:
             row = box.row()
-            row.prop(collision_types, "collision_types", text="")
+            row.prop(collision_settings, "collision_types", text="")
             # Only show Apply Collision button when multiple objects are selected
             if len(context.selected_objects) > 1:
                 row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
 
-            if collision_data != "none":
+            if collision_types != "none":
                 # Collision Layers
                 sub_box = box.box()
                 row = sub_box.row()
-                row.prop(wm, "bless_show_collision_layers", text="Collision Layers", 
-                        icon='TRIA_DOWN' if wm.bless_show_collision_layers else 'TRIA_RIGHT', emboss=False)
+                row.prop(wm, "bless_show_collision_layers", text="Collision Layers",
+                         icon='TRIA_DOWN' if wm.bless_show_collision_layers else 'TRIA_RIGHT', emboss=False)
                 if wm.bless_show_collision_layers:
                     self.draw_collision_layers(context, sub_box)
 
                 # Collision Mask
                 sub_box = box.box()
                 row = sub_box.row()
-                row.prop(wm, "bless_show_collision_mask", text="Collision Mask", 
-                        icon='TRIA_DOWN' if wm.bless_show_collision_mask else 'TRIA_RIGHT', emboss=False)
+                row.prop(wm, "bless_show_collision_mask", text="Collision Mask",
+                         icon='TRIA_DOWN' if wm.bless_show_collision_mask else 'TRIA_RIGHT', emboss=False)
                 if wm.bless_show_collision_mask:
                     self.draw_collision_mask(context, sub_box)
 
@@ -662,8 +520,8 @@ class BlessPanel(bpy.types.Panel):
             # Greybox Tools
             sub_box = box.box()
             row = sub_box.row()
-            row.prop(wm, "bless_show_tools_greybox", text="Greybox", 
-                    icon='TRIA_DOWN' if wm.bless_show_tools_greybox else 'TRIA_RIGHT', emboss=False)
+            row.prop(wm, "bless_show_tools_greybox", text="Greybox",
+                     icon='TRIA_DOWN' if wm.bless_show_tools_greybox else 'TRIA_RIGHT', emboss=False)
             if wm.bless_show_tools_greybox:
                 col = sub_box.column(align=True)
                 col.operator("bless.greybox_draw", text="Draw", icon="BRUSH_DATA")
@@ -674,8 +532,8 @@ class BlessPanel(bpy.types.Panel):
             # Profile
             sub_box = box.box()
             row = sub_box.row()
-            row.prop(wm, "bless_show_tools_profile", text="Game Profile", 
-                    icon='TRIA_DOWN' if wm.bless_show_tools_profile else 'TRIA_RIGHT', emboss=False)
+            row.prop(wm, "bless_show_tools_profile", text="Game Profile",
+                     icon='TRIA_DOWN' if wm.bless_show_tools_profile else 'TRIA_RIGHT', emboss=False)
             if wm.bless_show_tools_profile:
                 row = sub_box.row(align=True)
                 row.prop(tools, "profile_filepath", text="")
@@ -684,8 +542,8 @@ class BlessPanel(bpy.types.Panel):
             # Origin
             sub_box = box.box()
             row = sub_box.row()
-            row.prop(wm, "bless_show_tools_origin", text="Origin", 
-                    icon='TRIA_DOWN' if wm.bless_show_tools_origin else 'TRIA_RIGHT', emboss=False)
+            row.prop(wm, "bless_show_tools_origin", text="Origin",
+                     icon='TRIA_DOWN' if wm.bless_show_tools_origin else 'TRIA_RIGHT', emboss=False)
             if wm.bless_show_tools_origin:
                 row = sub_box.row()
                 row.prop(tools, "origin_type", text="Type")
@@ -699,8 +557,8 @@ class BlessPanel(bpy.types.Panel):
             # Colors
             sub_box = box.box()
             row = sub_box.row()
-            row.prop(wm, "bless_show_settings_colors", text="Colors", 
-                    icon='TRIA_DOWN' if wm.bless_show_settings_colors else 'TRIA_RIGHT', emboss=False)
+            row.prop(wm, "bless_show_settings_colors", text="Colors",
+                     icon='TRIA_DOWN' if wm.bless_show_settings_colors else 'TRIA_RIGHT', emboss=False)
             if wm.bless_show_settings_colors:
                 sub_box.prop(tools, "trimesh_color", text="Trimesh")
                 sub_box.prop(tools, "convex_color", text="Convex")
@@ -716,10 +574,10 @@ class BlessPanel(bpy.types.Panel):
         # INFO BOX
         info_box = layout.box()
         info_box.label(text="Information", icon="INFO")
-        
+
         # Object class information
         obj = context.active_object
-        if obj:
+        if obj and hasattr(obj, "godot_class"):
             info_box.prop(obj, "godot_class")
             if obj.godot_class != "NONE":
                 sub_box = info_box.box()
@@ -731,66 +589,38 @@ class BlessPanel(bpy.types.Panel):
                             sub_box.prop(props, prop.identifier)
 
         # Collision information
-        if collision_data:
-            info_box.label(text=f"Selected object has {str(collision_data).upper()} collision.")
+        if collision_types:
+            info_box.label(text=f"Selected object has {str(collision_types).upper()} collision.")
 
     def draw_collision_layers(self, context, parent_box):
-        collision_layers = context.object.collision_layers
-        box = parent_box.box()
-        box.label(text="Collision Layers")
-        
-        for row_idx in range(2):
-            row = box.row()
-            for block in range(4):
-                col = row.column()
-                sub_row = col.row(align=True)
-                for btn in range(4):
-                    idx = (row_idx * 16) + (block * 4) + btn
-                    sub_row.prop(collision_layers, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
+        pass
+    #     collision_settings = context.object.bless_object_collision_settings
+    #     box = parent_box.box()
+    #     box.label(text="Collision Layers")
+
+    #     for row_idx in range(2):
+    #         row = box.row()
+    #         for block in range(4):
+    #             col = row.column()
+    #             sub_row = col.row(align=True)
+    #             for btn in range(4):
+    #                 idx = (row_idx * 16) + (block * 4) + btn
+    #                 sub_row.prop(collision_settings, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
 
     def draw_collision_mask(self, context, parent_box):
-        collision_mask = context.object.collision_mask
-        box = parent_box.box()
-        box.label(text="Collision Mask")
-        
-        for row_idx in range(2):
-            row = box.row()
-            for block in range(4):
-                col = row.column()
-                sub_row = col.row(align=True)
-                for btn in range(4):
-                    idx = (row_idx * 16) + (block * 4) + btn
-                    sub_row.prop(collision_mask, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
+        pass
+    #     collision_mask = context.object.collision_mask
+    #     box = parent_box.box()
+    #     box.label(text="Collision Mask")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #     for row_idx in range(2):
+    #         row = box.row()
+    #         for block in range(4):
+    #             col = row.column()
+    #             sub_row = col.row(align=True)
+    #             for btn in range(4):
+    #                 idx = (row_idx * 16) + (block * 4) + btn
+    #                 sub_row.prop(collision_mask, f"layer_{idx + 1}", text=str(idx + 1), toggle=True)
 
 
 class BlessApplyCollisions(bpy.types.Operator):

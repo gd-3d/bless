@@ -44,11 +44,10 @@ import importlib
 
 import bpy
 
-from . import bless
-from . import bless_keymap_utils
+from . import bless, bless_keymap_utils
+from .gltf import gltf_export
 from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
-from .gltf import gltf_export
 from .core import grid
 
 bl_info = {
@@ -83,9 +82,7 @@ class glTF2ExportUserExtension(gltf_export.BlessExport):
 def register_properties():
     bpy.types.Object.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
     bpy.types.Object.shape_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsShape)
-    bpy.types.Object.collision_types = bpy.props.PointerProperty(type=bless.BlessCollisionTypes)
-    bpy.types.Object.collision_layers = bpy.props.PointerProperty(type=bless.BlessCollisionLayers)
-    bpy.types.Object.collision_mask = bpy.props.PointerProperty(type=bless.BlessCollisionMaskLayers)
+    bpy.types.Object.bless_object_collision_settings = bpy.props.PointerProperty(type=bless.BLESS_ObjectCollisionSettings)
 
     # Add default bless_class property
     bpy.types.Object.bless_class = bpy.props.EnumProperty(
@@ -104,9 +101,9 @@ def register_properties():
 def unregister_properties():
     del bpy.types.Object.body_properties
     del bpy.types.Object.shape_properties
-    del bpy.types.Object.collision_types
-    del bpy.types.Object.collision_layers
-    del bpy.types.Object.collision_mask
+
+    del bpy.types.Object.bless_object_collision_settings
+
     del bpy.types.Object.bless_class
 
     del bpy.types.WindowManager.bless_tools
