@@ -45,10 +45,10 @@ import importlib
 import bpy
 
 from . import bless, bless_keymap_utils
+from .core import grid
 from .gltf import gltf_export
 from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
-from .core import grid
 
 bl_info = {
     "name": "bless",
@@ -68,7 +68,9 @@ bl_info = {
 class glTF2ExportUserExtension(gltf_export.BlessExport):
 
     def __init__(self):
-        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension  # type:ignore [available to blender not vscode and won't throw an error]
+        # [available to blender not vscode and won't throw an error]
+        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
+
         self.Extension = Extension
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
