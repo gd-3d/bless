@@ -1,16 +1,13 @@
 import os
 from contextlib import redirect_stdout
-from typing import Optional
-
-
 from inspect import getmembers, isclass
-from typing import Any
-
-from pathlib import Path
 from os import sep as os_separator
-
+from pathlib import Path
+from typing import Any, Optional
 
 import bpy
+
+from . import Alx_Module_Manager_Utils
 
 
 class Alx_Module_Manager():
@@ -90,13 +87,26 @@ class Alx_Module_Manager():
 
         return addon_files
 
+    def __flag_processor(self, cls):
+        if (hasattr(cls, "mm_flags")):
+            for flag in cls.mm_flags:
+                match flag:
+                    case Alx_Module_Manager_Utils.FLAG_DEPENDENCY:
+                        self.__recursive_dependency_resolver(cls, flag[1])
+
+        return
+
+    def __recursive_dependency_resolver(self, cls: str, dependency: set[str]):
+        pass
+
     def __gather_classes_from_files(self, addon_files: dict[str, Path] = None):
-        addon_classes: set[str] = set()
+        addon_classes: list[str] = list()
 
         for file_name in addon_files.keys():
-
             for addon_class in getmembers(eval(file_name, self.__init_globals), isclass):
-                addon_classes.add(addon_class[1])
+                if (hasattr(addon_class, "mm_flags")):
+                    self.__flag_processor(addon_class)
+                addon_classes.append(addon_class[1])
 
         return addon_classes
 
