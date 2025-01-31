@@ -2,9 +2,9 @@ FLAG_DEPENDENCY = "mm_flag_dependency"
 
 
 def tag(cls, flags: dict):
-    if (hasattr(cls, "mm_flags"), type(cls.mm_flags) == "dict"):
-        for flag in flags.items():
-            cls.mm_flags[flag[0]] = flag[1]
+    cls.mm_flags = dict()
+    for flag in flags.items():
+        cls.mm_flags[flag[0]] = flag[1]
 
 
 def define_dependency(*args):

@@ -17,7 +17,7 @@ class Alx_Module_Manager():
     __module_path: str = ""
     __module_folders: set[Path] = set()
     __module_files: dict[str, Path] = dict()
-    __module_classes: set[str] = set()
+    __module_classes: list[str] = list()
 
     __folder_blacklist: set[str] = set()
     __folder_blacklist.update({"__pycache__"})
@@ -87,27 +87,21 @@ class Alx_Module_Manager():
 
         return addon_files
 
-    def __flag_processor(self, cls):
-        if (hasattr(cls, "mm_flags")):
-            for flag in cls.mm_flags:
-                match flag:
-                    case Alx_Module_Manager_Utils.FLAG_DEPENDENCY:
-                        self.__recursive_dependency_resolver(cls, flag[1])
-
-        return
-
-    def __recursive_dependency_resolver(self, cls: str, dependency: set[str]):
-        pass
-
     def __gather_classes_from_files(self, addon_files: dict[str, Path] = None):
-        addon_classes: list[str] = list()
+        addon_classes: list[str] = list({cls[1] for file_name in addon_files.keys() for cls in getmembers(eval(file_name, self.__init_globals), isclass)})
 
-        for file_name in addon_files.keys():
-            for addon_class in getmembers(eval(file_name, self.__init_globals), isclass):
-                if (hasattr(addon_class, "mm_flags")):
-                    self.__flag_processor(addon_class)
-                addon_classes.append(addon_class[1])
-
+        for addon_class in addon_classes:
+            if (hasattr(addon_class, "mm_flags")):
+                for flag in addon_class.mm_flags:
+                    match flag:
+                        case Alx_Module_Manager_Utils.FLAG_DEPENDENCY:
+                            for dependency in flag[1]:
+                                dependency_index = addon_classes.index(dependency)
+                                addon_class_index = addon_classes.index(addon_class)
+                                if (dependency_index < addon_class_index):
+                                    dep = addon_classes.pop(dependency_index)
+                                    addon_classes.insert(addon_class_index, dep)
+        print(addon_classes)
         return addon_classes
 
     def __execute_locals_update(self, path: str, addon_files: dict[str, Path]):

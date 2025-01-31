@@ -21,6 +21,7 @@ class BLESS_View3d_ObjectDataSheet(bpy.types.Panel):
 
     def draw(self, context: bpy.types.Context):
         layout = self.layout
+        layout.label(text="AAAAAAAAA")
         if (context.object is not None) and (hasattr(context.object, "bless_object_collision_settings")):
             object_collision = context.object.bless_object_collision_settings
             layout.prop(object_collision, "collision_types")
