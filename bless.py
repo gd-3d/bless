@@ -16,13 +16,11 @@ class BLESS_ObjectCollisionSettings(bpy.types.PropertyGroup):
             ("none", "None", "", 1 << 3),
         ])  # type: ignore
 
-    def DYNAMIC_ENUM_bless_collision_layers(self, context) -> list:
-        return [(f"LAYER_{n}", f"Layer {n}", "") for n in range(32)]
-    collision_layers = bpy.props.EnumProperty(name="Collision Layers", options={"ENUM_FLAG"}, items=DYNAMIC_ENUM_bless_collision_layers)  # type:ignore
+    layers = [(f"LAYER_{n}", f"{n}", "") for n in range(32)]
+    collision_layers: bpy.props.EnumProperty(name="Collision Layers", options={"ENUM_FLAG"}, items=layers)  # type:ignore
 
-    def DYNAMIC_ENUM_bless_collision_mask_layers(self, context) -> list:
-        return [(f"LAYER_{n}", f"Layer {n}", "") for n in range(32)]
-    collision_mask_layers: bpy.props.EnumProperty(name="Collision Mask Layers", options={"ENUM_FLAG"}, items=DYNAMIC_ENUM_bless_collision_mask_layers)  # type:ignore
+    mask_layers = [(f"LAYER_{n}", f"{n}", "") for n in range(32)]
+    collision_mask_layers: bpy.props.EnumProperty(name="Collision Mask Layers", options={"ENUM_FLAG"}, items=mask_layers)  # type:ignore
 
 
 # https://github.com/omigroup/gltf-extensions/tree/main/extensions/2.0/OMI_physics_shape
@@ -425,8 +423,14 @@ class BlessPanel(bpy.types.Panel):
     bpy.types.WindowManager.bless_show_view_camera = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_view_grid = bpy.props.BoolProperty(default=False)
 
+    # Bless Object Data - subsection
+    bpy.types.WindowManager.bless_b_show_object_data = bpy.props.BoolProperty(default=False)
+
     # Collision subsections
-    bpy.types.WindowManager.bless_show_collision_layers = bpy.props.BoolProperty(default=False)
+    bpy.types.WindowManager.bless_b_show_collision_settings = bpy.props.BoolProperty(default=False)
+
+    # remove in favor of the above
+    bpy.types.WindowManager.b_bless_show_collision_layers = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_collision_mask = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_collision_shapes = bpy.props.BoolProperty(default=False)
 
@@ -499,9 +503,9 @@ class BlessPanel(bpy.types.Panel):
                 # Collision Layers
                 sub_box = box.box()
                 row = sub_box.row()
-                row.prop(wm, "bless_show_collision_layers", text="Collision Layers",
-                         icon='TRIA_DOWN' if wm.bless_show_collision_layers else 'TRIA_RIGHT', emboss=False)
-                if wm.bless_show_collision_layers:
+                row.prop(wm, "b_bless_show_collision_layers", text="Collision Layers",
+                         icon='TRIA_DOWN' if wm.b_bless_show_collision_layers else 'TRIA_RIGHT', emboss=False)
+                if wm.b_bless_show_collision_layers:
                     self.draw_collision_layers(context, sub_box)
 
                 # Collision Mask

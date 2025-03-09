@@ -49,10 +49,11 @@ from .core import grid
 from .gltf import gltf_export
 from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
+from .user_interface.BLESS_Object_Data_Layouts import UIPreset_ObjectDataSheet
 
 bl_info = {
     "name": "bless",
-    "author": "michaeljared, aaronfranke, yankscally, valyarhal",  # gd-3d developers
+    "author": "michaeljared, aaronfranke, yankscally, valeriearhal",  # gd-3d developers
     "description": "",
     "version": (0, 1, 3),
     "blender": (4, 2, 0),
@@ -94,8 +95,7 @@ def register_properties():
         default="NONE"
     )
 
-    # note[valy] this should not be saved on scene rather window_manager as window manager is session dependant and will persist until blender is closed,
-    # while scene will end up duplicating for each blender scene the settings and will lead to settings missmatch
+    # persistent-session bless properties
     bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=bless.BlessTools)
     bpy.types.WindowManager.unit_size = grid.unit_size
 
@@ -120,6 +120,9 @@ addon_updater = Alx_Addon_Updater(__path__[0], bl_info, "Github", "gd-3d", "bles
 def register():
     module_loader.developer_register_modules(mute=True)
     addon_updater.register_addon_updater(mute=True)
+
+    # object data sheet
+    bpy.types.OBJECT_PT_context_object.prepend(UIPreset_ObjectDataSheet)
 
     register_properties()
     bless_keymap_utils.bless_CreateKeymaps()
