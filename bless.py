@@ -426,12 +426,9 @@ class BlessPanel(bpy.types.Panel):
     # Bless Object Data - subsection
     bpy.types.WindowManager.bless_b_show_object_data = bpy.props.BoolProperty(default=False)
 
-    # Collision subsections
+    # Collision - subsections
     bpy.types.WindowManager.bless_b_show_collision_settings = bpy.props.BoolProperty(default=False)
 
-    # remove in favor of the above
-    bpy.types.WindowManager.b_bless_show_collision_layers = bpy.props.BoolProperty(default=False)
-    bpy.types.WindowManager.bless_show_collision_mask = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_collision_shapes = bpy.props.BoolProperty(default=False)
 
     # Tools subsections
@@ -487,34 +484,6 @@ class BlessPanel(bpy.types.Panel):
         collision_settings = context.object.bless_object_collision_settings
 
         collision_types = collision_settings.collision_types
-
-        # COLLISION
-        box = layout.box()
-        row = box.row()
-        row.prop(wm, "bless_show_collision", text="Collision", icon='TRIA_DOWN' if wm.bless_show_collision else 'TRIA_RIGHT', emboss=False)
-        if wm.bless_show_collision:
-            row = box.row()
-            row.prop(collision_settings, "collision_types", text="")
-            # Only show Apply Collision button when multiple objects are selected
-            if len(context.selected_objects) > 1:
-                row.operator("object.gd3d_apply_collisions", text="Apply Collision", icon="CUBE")
-
-            if collision_types != "none":
-                # Collision Layers
-                sub_box = box.box()
-                row = sub_box.row()
-                row.prop(wm, "b_bless_show_collision_layers", text="Collision Layers",
-                         icon='TRIA_DOWN' if wm.b_bless_show_collision_layers else 'TRIA_RIGHT', emboss=False)
-                if wm.b_bless_show_collision_layers:
-                    self.draw_collision_layers(context, sub_box)
-
-                # Collision Mask
-                sub_box = box.box()
-                row = sub_box.row()
-                row.prop(wm, "bless_show_collision_mask", text="Collision Mask",
-                         icon='TRIA_DOWN' if wm.bless_show_collision_mask else 'TRIA_RIGHT', emboss=False)
-                if wm.bless_show_collision_mask:
-                    self.draw_collision_mask(context, sub_box)
 
         # TOOLS
         box = layout.box()
