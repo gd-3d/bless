@@ -423,10 +423,11 @@ class BlessPanel(bpy.types.Panel):
     bpy.types.WindowManager.bless_show_view_camera = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_show_view_grid = bpy.props.BoolProperty(default=False)
 
-    # Bless Object Data - subsection
+    # Bless Properties - subsection
+    bpy.types.WindowManager.bless_b_show_tool_box = bpy.props.BoolProperty(default=False)
     bpy.types.WindowManager.bless_b_show_object_data = bpy.props.BoolProperty(default=False)
 
-    # Collision - subsections
+    # Collision Panel - subsections
     bpy.types.WindowManager.bless_b_show_collision_settings = bpy.props.BoolProperty(default=False)
 
     bpy.types.WindowManager.bless_show_collision_shapes = bpy.props.BoolProperty(default=False)
@@ -452,30 +453,6 @@ class BlessPanel(bpy.types.Panel):
         wm = context.window_manager
         tools = wm.bless_tools
 
-        # VIEW
-        box = layout.box()
-        row = box.row()
-        row.prop(wm, "bless_show_view", text="View", icon='TRIA_DOWN' if wm.bless_show_view else 'TRIA_RIGHT', emboss=False)
-        if wm.bless_show_view:
-            sub_box = layout.box()
-            row = sub_box.row()
-            row.prop(wm, "bless_show_view_camera", text="Camera", icon='TRIA_DOWN' if wm.bless_show_view_camera else 'TRIA_RIGHT', emboss=False)
-            if wm.bless_show_view_camera:
-                row = sub_box.row()
-                row.prop(tools, "lock_camera", text="Lock Camera")
-
-            sub_box = layout.box()
-            row = sub_box.row()
-            row.prop(wm, "bless_show_view_grid", text="Grid", icon='TRIA_DOWN' if wm.bless_show_view_grid else 'TRIA_RIGHT', emboss=False)
-            if wm.bless_show_view_grid:
-                # Grid options
-                row = sub_box.row()
-                row.prop(context.window_manager, "unit_size", text="Unit Size (m)")
-                row.operator("map_editor.double_unit_size", text="", icon="MESH_GRID")
-                row.operator("map_editor.halve_unit_size", text="", icon="SNAP_GRID")
-                # Add grid options here
-                pass
-
         # Early return if no object is selected
         if not context.object:
             layout.box().label(text="No object selected!", icon="INFO")
@@ -484,57 +461,6 @@ class BlessPanel(bpy.types.Panel):
         collision_settings = context.object.bless_object_collision_settings
 
         collision_types = collision_settings.collision_types
-
-        # TOOLS
-        box = layout.box()
-        row = box.row()
-        row.prop(wm, "bless_show_tools", text="Tools", icon='TRIA_DOWN' if wm.bless_show_tools else 'TRIA_RIGHT', emboss=False)
-        if wm.bless_show_tools:
-            # Greybox Tools
-            sub_box = box.box()
-            row = sub_box.row()
-            row.prop(wm, "bless_show_tools_greybox", text="Greybox",
-                     icon='TRIA_DOWN' if wm.bless_show_tools_greybox else 'TRIA_RIGHT', emboss=False)
-            if wm.bless_show_tools_greybox:
-                col = sub_box.column(align=True)
-                col.operator("bless.greybox_draw", text="Draw", icon="BRUSH_DATA")
-                col.operator("bless.greybox_transform", text="Transform", icon="ORIENTATION_GLOBAL")
-                col.operator("bless.greybox_extrude", text="Extrude", icon="ORIENTATION_NORMAL")
-                col.operator("bless.greybox_snap", text="Snap to Grid", icon="SNAP_GRID")
-
-            # Profile
-            sub_box = box.box()
-            row = sub_box.row()
-            row.prop(wm, "bless_show_tools_profile", text="Game Profile",
-                     icon='TRIA_DOWN' if wm.bless_show_tools_profile else 'TRIA_RIGHT', emboss=False)
-            if wm.bless_show_tools_profile:
-                row = sub_box.row(align=True)
-                row.prop(tools, "profile_filepath", text="")
-                row.operator("object.load_game_profile", text="Load Profile", icon='IMPORT')
-
-            # Origin
-            sub_box = box.box()
-            row = sub_box.row()
-            row.prop(wm, "bless_show_tools_origin", text="Origin",
-                     icon='TRIA_DOWN' if wm.bless_show_tools_origin else 'TRIA_RIGHT', emboss=False)
-            if wm.bless_show_tools_origin:
-                row = sub_box.row()
-                row.prop(tools, "origin_type", text="Type")
-                row.operator("object.autoorigin", text="Auto Origin", icon="MESH_DATA")
-
-        # SETTINGS
-        box = layout.box()
-        row = box.row()
-        row.prop(wm, "bless_show_settings", text="Settings", icon='TRIA_DOWN' if wm.bless_show_settings else 'TRIA_RIGHT', emboss=False)
-        if wm.bless_show_settings:
-            # Colors
-            sub_box = box.box()
-            row = sub_box.row()
-            row.prop(wm, "bless_show_settings_colors", text="Colors",
-                     icon='TRIA_DOWN' if wm.bless_show_settings_colors else 'TRIA_RIGHT', emboss=False)
-            if wm.bless_show_settings_colors:
-                sub_box.prop(tools, "trimesh_color", text="Trimesh")
-                sub_box.prop(tools, "convex_color", text="Convex")
 
         # EXPORT
         box = layout.box()

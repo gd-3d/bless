@@ -49,7 +49,9 @@ from .core import grid
 from .gltf import gltf_export
 from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
-from .user_interface.BLESS_Object_Data_Layouts import UIPreset_ObjectDataSheet
+from .user_interface import BLESS_Object_Data_Layouts
+from .user_interface.BLESS_Object_Data_Layouts import (
+    GLOBAL_NAME_VAR, UIPreset_ObjectDataSheet, UIPreset_ToolBox)
 
 bl_info = {
     "name": "bless",
@@ -121,7 +123,7 @@ def register():
     module_loader.developer_register_modules(mute=True)
     addon_updater.register_addon_updater(mute=True)
 
-    # object data sheet
+    bpy.types.VIEW3D_PT_active_tool_duplicate.prepend(UIPreset_ToolBox)
     bpy.types.OBJECT_PT_context_object.prepend(UIPreset_ObjectDataSheet)
 
     register_properties()
