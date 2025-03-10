@@ -135,6 +135,9 @@ def unregister():
     module_loader.developer_unregister_modules()
     addon_updater.unregister_addon_updater()
 
+    bpy.types.VIEW3D_PT_active_tool_duplicate.remove(UIPreset_ToolBox)
+    bpy.types.OBJECT_PT_context_object.remove(UIPreset_ObjectDataSheet)
+
     module_loader.developer_unregister_modules()
     unregister_properties()
 
