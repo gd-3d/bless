@@ -44,16 +44,18 @@ import importlib
 
 import bpy
 
-from . import bless
-from . import bless_keymap_utils
+from . import bless, bless_keymap_utils
+from .core import grid
+from .gltf import gltf_export
 from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
-from .gltf import gltf_export
-from .core import grid
+from .user_interface import BLESS_Object_Data_Layouts
+from .user_interface.BLESS_Object_Data_Layouts import (
+    GLOBAL_NAME_VAR, UIPreset_ObjectDataSheet, UIPreset_ToolBox)
 
 bl_info = {
     "name": "bless",
-    "author": "michaeljared, aaronfranke, yankscally, valyarhal",  # gd-3d developers
+    "author": "michaeljared, aaronfranke, yankscally, valeriearhal",  # gd-3d developers
     "description": "",
     "version": (0, 1, 3),
     "blender": (4, 2, 0),
@@ -69,7 +71,9 @@ bl_info = {
 class glTF2ExportUserExtension(gltf_export.BlessExport):
 
     def __init__(self):
-        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension  # type:ignore [available to blender not vscode and won't throw an error]
+        # [available to blender not vscode and won't throw an error]
+        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
+
         self.Extension = Extension
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
@@ -83,9 +87,7 @@ class glTF2ExportUserExtension(gltf_export.BlessExport):
 def register_properties():
     bpy.types.Object.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
     bpy.types.Object.shape_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsShape)
-    bpy.types.Object.collision_types = bpy.props.PointerProperty(type=bless.BlessCollisionTypes)
-    bpy.types.Object.collision_layers = bpy.props.PointerProperty(type=bless.BlessCollisionLayers)
-    bpy.types.Object.collision_mask = bpy.props.PointerProperty(type=bless.BlessCollisionMaskLayers)
+    bpy.types.Object.bless_object_collision_settings = bpy.props.PointerProperty(type=bless.BLESS_ObjectCollisionSettings)
 
     # Add default bless_class property
     bpy.types.Object.bless_class = bpy.props.EnumProperty(
@@ -95,8 +97,7 @@ def register_properties():
         default="NONE"
     )
 
-    # note[valy] this should not be saved on scene rather window_manager as window manager is session dependant and will persist until blender is closed,
-    # while scene will end up duplicating for each blender scene the settings and will lead to settings missmatch
+    # persistent-session bless properties
     bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=bless.BlessTools)
     bpy.types.WindowManager.unit_size = grid.unit_size
 
@@ -104,9 +105,9 @@ def register_properties():
 def unregister_properties():
     del bpy.types.Object.body_properties
     del bpy.types.Object.shape_properties
-    del bpy.types.Object.collision_types
-    del bpy.types.Object.collision_layers
-    del bpy.types.Object.collision_mask
+
+    del bpy.types.Object.bless_object_collision_settings
+
     del bpy.types.Object.bless_class
 
     del bpy.types.WindowManager.bless_tools
@@ -121,6 +122,9 @@ addon_updater = Alx_Addon_Updater(__path__[0], bl_info, "Github", "gd-3d", "bles
 def register():
     module_loader.developer_register_modules(mute=True)
     addon_updater.register_addon_updater(mute=True)
+
+    bpy.types.VIEW3D_PT_active_tool_duplicate.prepend(UIPreset_ToolBox)
+    bpy.types.OBJECT_PT_context_object.prepend(UIPreset_ObjectDataSheet)
 
     register_properties()
     bless_keymap_utils.bless_CreateKeymaps()

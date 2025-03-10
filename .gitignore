@@ -182,3 +182,4 @@ cython_debug/
 *.blend1
 #..
 *.blend2 
+modules/addon_updater_system/bless.modules.addon_updater_system_updater

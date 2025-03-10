@@ -12,6 +12,7 @@ unit_size = bpy.props.FloatProperty(
     max=1024.0,
     step=0.25,
     precision=2,
+    subtype="DISTANCE",
     update=lambda self, context: update_grid_scale(context, self.unit_size))
 
 
