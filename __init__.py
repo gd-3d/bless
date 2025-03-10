@@ -51,7 +51,7 @@ from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
 from .user_interface import BLESS_Object_Data_Layouts
 from .user_interface.BLESS_Object_Data_Layouts import (
-    GLOBAL_NAME_VAR, UIPreset_ObjectDataSheet, UIPreset_ToolBox)
+    UIPreset_ObjectDataSheet, UIPreset_ToolBox)
 
 bl_info = {
     "name": "bless",
