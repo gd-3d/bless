@@ -8,7 +8,7 @@ readme coming soon
 
 ### Thank you
 A big thank you to these contributers: 
-- Valy Arlhal -- for the blender expertise, autoregistration scripts and the release pipeline and all the extra help with bpy
+- Valerie Arhal -- for the blender expertise, autoregistration scripts and the release pipeline and all the extra help with bpy
 - michael jared -- the OG blender-godot-pipeline toolsmith, figured out the extension hooking and just a general chad
 - Aaron Franke, OMI group -- maintainer of godot gltf, as well as writing glTF extensions used in Bless
 - dogman35 -- the 3D bless logo asset and 
