@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import blf
 import bmesh
 import bpy
@@ -6,6 +8,8 @@ from bpy.props import BoolProperty, EnumProperty
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
+
+from .greybox_utils import mouse_to_3d_point
 
 
 def get_cuboid_vertices(start, end):
@@ -73,51 +77,12 @@ def intersect_line_plane(ray_origin, ray_target, plane_point, plane_normal):
     return None
 
 
-def mouse_to_3d_point(context, mouse_pos):
-    """Convert mouse position to 3D point on grid"""
-    region = context.region
-    region_3d = context.space_data.region_3d
-
-    # Get the ray from the viewport to the mouse
-    view_vector = view3d_utils.region_2d_to_vector_3d(region, region_3d, mouse_pos)
-    ray_origin = view3d_utils.region_2d_to_origin_3d(region, region_3d, mouse_pos)
-
-    # Try to find surface intersection first
-    result, location, normal, index, obj, matrix = context.scene.ray_cast(
-        context.view_layer.depsgraph,
-        ray_origin,
-        view_vector
-    )
-
-    if result:
-        # Found a surface point, return it
-        return location
-
-    # If no surface hit, intersect with XY plane at nearest grid height
-    grid_size = context.scene.unit_settings.scale_length
-
-    # Use XY plane at Z=0 as default drawing plane
-    plane_normal = Vector((0, 0, 1))
-    plane_point = Vector((0, 0, 0))
-
-    # Calculate intersection with plane
-    denominator = view_vector.dot(plane_normal)
-    if abs(denominator) > 1e-6:  # Check if not parallel
-        t = (plane_point - ray_origin).dot(plane_normal) / denominator
-        intersection = ray_origin + t * view_vector
-        return intersection
-
-    # Fallback if view is parallel to XY plane
-    return Vector((ray_origin.x, ray_origin.y, 0))
-
-
 def snap_to_grid(point, grid_size):
     """Snap a point to the nearest grid point"""
-    # Round each component to nearest grid unit
-    x = round(point.x / grid_size) * grid_size
-    y = round(point.y / grid_size) * grid_size
-    z = round(point.z / grid_size) * grid_size
-    return Vector((x, y, z))
+    x = round(point[0] / grid_size) * grid_size
+    y = round(point[1] / grid_size) * grid_size
+    z = round(point[2] / grid_size) * grid_size
+    return [x, y, z]
 
 
 def create_cuboid_mesh(start, end, name="Cuboid"):
@@ -280,8 +245,19 @@ class GreyboxDraw(bpy.types.Operator):
     bl_label = "Draw Greybox Cuboid"
     bl_options = {'REGISTER', 'UNDO'}
 
+    coordinate_points: list = []
+
+    @classmethod
+    def poll(self, context):
+        return True
+
+    # def terminate_operator():
+
     def modal(self, context, event):
         context.area.tag_redraw()
+
+        if (event.type == "ESC"):
+            return {"FINISHED"}
 
         # Track Alt key state
         if event.type in {'LEFT_ALT', 'RIGHT_ALT'}:
@@ -296,7 +272,7 @@ class GreyboxDraw(bpy.types.Operator):
         if event.type == 'MOUSEMOVE':
             mouse_pos = (event.mouse_region_x, event.mouse_region_y)
 
-            if self.is_alt_pressed and len(self.points) > 0:
+            if self.is_alt_pressed and len(self.coordinate_points) > 0:
                 # Alt is pressed - adjust height based on vertical mouse movement
                 if not hasattr(self, 'height_reference'):
                     self.height_reference = mouse_pos
@@ -330,63 +306,55 @@ class GreyboxDraw(bpy.types.Operator):
 
                     # Update position while maintaining current height
                     self.current_point = Vector((
-                        snapped_point.x,
-                        snapped_point.y,
-                        self.current_point.z if len(self.points) > 0 else snapped_point.z
+                        snapped_point[0],
+                        snapped_point[1],
+                        self.current_point[2] if len(self.coordinate_points) > 0 else snapped_point[2]
                     ))
 
             self.is_drawing = True
             return {'RUNNING_MODAL'}
 
-        elif event.type == 'LEFTMOUSE':
-            if event.value == 'PRESS':
-                if len(self.points) == 0:
-                    # First click - start drawing
-                    mouse_pos = (event.mouse_region_x, event.mouse_region_y)
-                    point = mouse_to_3d_point(context, mouse_pos)
-                    if point:
-                        grid_size = context.scene.unit_settings.scale_length
-                        snapped_point = snap_to_grid(point, grid_size)
-                        self.points.append(snapped_point)
-                        self.current_point = snapped_point.copy()
-                        # Set initial height one grid unit above base
-                        self.current_point.z += grid_size
-                        self.base_height = self.current_point.z  # Store base height for Alt adjustments
-                        self.is_drawing = True
-                else:
-                    # Second click - create the cuboid
-                    obj = create_cuboid_mesh(self.points[0], self.current_point)
-                    bpy.context.view_layer.objects.active = obj
-                    obj.select_set(True)
-                    bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-                    return {'FINISHED'}
+        if (event.type == "LEFTMOUSE"):
+            try:
+                self.coordinate_points[0]
+                obj = create_cuboid_mesh(self.coordinate_points[0], self.current_point)
+                bpy.context.view_layer.objects.active = obj
+                obj.select_set(True)
+                bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                return {'FINISHED'}
 
-        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            except:
+                point = mouse_to_3d_point(context, (event.mouse_region_x, event.mouse_region_y))
+
+                grid_size = context.scene.unit_settings.scale_length
+                snapped_point = snap_to_grid(point, grid_size)
+                self.coordinate_points.append(snapped_point)
+                self.current_point = deepcopy(snapped_point)
+
+                self.current_point[2] += grid_size
+                self.base_height = self.current_point[2]
+                self.is_drawing = True
+
+        if event.type in {'RIGHTMOUSE', 'ESC'}:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             return {'CANCELLED'}
 
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        if context.area.type == 'VIEW_3D':
-            # Initialize variables
-            self.points = []
-            self.current_point = Vector((0, 0, 0))
-            self.is_drawing = False
-            self.is_alt_pressed = False
-            self.base_height = 0
+        self.coordinate_points = []
+        self.current_point = Vector((0, 0, 0))
+        self.is_drawing = False
+        self.is_alt_pressed = False
+        self.base_height = 0
 
-            # Add the drawing callback
-            args = (self, context)
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(
-                draw_callback_px, args, 'WINDOW', 'POST_PIXEL'
-            )
+        args = (self, context)
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(
+            draw_callback_px, args, 'WINDOW', 'POST_PIXEL'
+        )
 
-            context.window_manager.modal_handler_add(self)
-            return {'RUNNING_MODAL'}
-        else:
-            self.report({'WARNING'}, "View3D not found, cannot run operator")
-            return {'CANCELLED'}
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
 
 
 class GreyboxFaceTransform(bpy.types.Operator):

@@ -6,14 +6,13 @@ def UIPreset_ToolBox(self, context: bpy.types.Context):
 
     window_manager = context.window_manager
 
-    if (context.object is not None):
-        layout.prop(
-            window_manager,
-            "bless_b_show_tool_box",
-            text="Bless ToolBox",
-            icon='TRIA_DOWN' if window_manager.bless_b_show_tool_box else 'TRIA_RIGHT',
-            emboss=False
-        )
+    layout.prop(
+        window_manager,
+        "bless_b_show_tool_box",
+        text="Bless ToolBox",
+        icon='TRIA_DOWN' if window_manager.bless_b_show_tool_box else 'TRIA_RIGHT',
+        emboss=False
+    )
 
     if (window_manager.bless_b_show_tool_box):
         row = layout.row().split(factor=0.02)

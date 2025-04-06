@@ -89,19 +89,6 @@ class Alx_Module_Manager():
 
     def __gather_classes_from_files(self, addon_files: dict[str, Path] = None):
         addon_classes: list[str] = list({cls[1] for file_name in addon_files.keys() for cls in getmembers(eval(file_name, self.__init_globals), isclass)})
-
-        # for addon_class in addon_classes:
-        #     if (hasattr(addon_class, "mm_flags")):
-        #         for flag in addon_class.mm_flags:
-        #             match flag:
-        #                 case Alx_Module_Manager_Utils.FLAG_DEPENDENCY:
-        #                     for dependency in flag[1]:
-        #                         dependency_index = addon_classes.index(dependency)
-        #                         addon_class_index = addon_classes.index(addon_class)
-        # if (dependency_index < addon_class_index):
-        #     dep = addon_classes.pop(dependency_index)
-        #     addon_classes.insert(addon_class_index, dep)
-        # print(addon_classes)
         return addon_classes
 
     def __execute_locals_update(self, path: str, addon_files: dict[str, Path]):
@@ -126,18 +113,22 @@ class Alx_Module_Manager():
                     with open(os.devnull, 'w') as print_discard_bin:
                         with redirect_stdout(print_discard_bin):
                             if ("WorkSpaceTool" in [base.__name__ for base in addon_class.__bases__]):
-                                bpy.utils.register_tool(addon_class,
-                                                        after=eval(addon_class.after, self.__init_globals),
-                                                        separator=addon_class.separator,
-                                                        group=addon_class.group)
+                                bpy.utils.register_tool(
+                                    addon_class,
+                                    after=eval(addon_class.after, self.__init_globals),
+                                    separator=addon_class.separator,
+                                    group=addon_class.group
+                                )
                             else:
                                 bpy.utils.register_class(addon_class)
                 else:
                     if ("WorkSpaceTool" in [base.__name__ for base in addon_class.__bases__]):
-                        bpy.utils.register_tool(addon_class,
-                                                after=eval(addon_class.after, self.__init_globals),
-                                                separator=addon_class.separator,
-                                                group=addon_class.group)
+                        bpy.utils.register_tool(
+                            addon_class,
+                            after=eval(addon_class.after, self.__init_globals),
+                            separator=addon_class.separator,
+                            group=addon_class.group
+                        )
                     else:
                         bpy.utils.register_class(addon_class)
 

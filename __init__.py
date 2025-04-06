@@ -54,8 +54,8 @@ from .user_interface.BLESS_Object_Data_Layouts import (
     UIPreset_ObjectDataSheet, UIPreset_ToolBox)
 
 bl_info = {
-    "name": "bless",
-    "author": "michaeljared, aaronfranke, yankscally, valeriearhal",  # gd-3d developers
+    "name": "Bless",
+    "author": "michaeljared, aaronfranke, yankscally, valerie-bosco",  # gd-3d developers
     "description": "",
     "version": (0, 1, 3),
     "blender": (4, 2, 0),
@@ -67,13 +67,11 @@ bl_info = {
 }
 
 
-# glTF2ExportUserExtension needs to be defined inside the __init__, this is a dummy class to allow the implementation to be outside the __init__
+# [REQUIRED] Interface class for GLTF
 class glTF2ExportUserExtension(gltf_export.BlessExport):
 
     def __init__(self):
-        # [available to blender not vscode and won't throw an error]
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
-
         self.Extension = Extension
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
@@ -83,7 +81,6 @@ class glTF2ExportUserExtension(gltf_export.BlessExport):
         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
-# import bless_preferences
 def register_properties():
     bpy.types.Object.body_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsBody)
     bpy.types.Object.shape_properties = bpy.props.PointerProperty(type=bless.OMIPhysicsShape)
