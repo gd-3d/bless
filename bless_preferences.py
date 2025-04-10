@@ -1,13 +1,12 @@
 import bpy
 import rna_keymap_ui
 
-from .modules.addon_updater_system.addon_updater import update_settings_ui
 from . import bless_keymap_utils
+from .modules.addon_updater_system.addon_updater import update_settings_ui
 
-
-class BlessGameConfig(bpy.types.PropertyGroup):
-    game: bpy.props.StringProperty(name="Game", description="Title of your project.", default="My Game")  # type:ignore
-    game_directory: bpy.props.StringProperty(name="Game Directory", description="Directory of the game.", default="C:\'")  # type:ignore
+# class BlessGameConfig(bpy.types.PropertyGroup):
+#     game: bpy.props.StringProperty(name="Game", description="Title of your project.", default="My Game")  # type:ignore
+#     game_directory: bpy.props.StringProperty(name="Game Directory", description="Directory of the game.", default="C:\'")  # type:ignore
 
 
 class bless_AddonPreferences(bpy.types.AddonPreferences):
