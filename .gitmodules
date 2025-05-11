@@ -1,6 +1,6 @@
 [submodule "ALXAddonUpdater"]
-	path = ALXAddonUpdater
+	path = bless/modules/ALXAddonUpdater
 	url = https://github.com/Valerie-Bosco/ALXAddonUpdater.git
 [submodule "ALXModuleManager"]
-	path = ALXModuleManager
+	path = bless/modules/ALXModuleManager
 	url = https://github.com/Valerie-Bosco/ALXModuleManager.git
