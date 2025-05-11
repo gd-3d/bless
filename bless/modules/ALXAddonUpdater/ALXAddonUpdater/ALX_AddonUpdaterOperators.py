@@ -1,11 +1,13 @@
 import os
+import re
 
 import bpy
 
-from .addon_updater_utils import get_addon_preferences, ui_refresh
+from .ALX_AddonUpdaterEngine import AddonUpdaterEngine
+from .ALX_AddonUpdaterUtils import get_addon_preferences, ui_refresh
 
-addon_name = str.lower(__package__).split(".")[0]
-addon_updater = None
+addon_updater: AddonUpdaterEngine = None
+addon_name = re.sub(r"\\|\/|-|\.", "_", str.lower(__package__).split(".")[0])
 
 
 class AddonUpdaterCheckNow(bpy.types.Operator):
@@ -27,7 +29,7 @@ class AddonUpdaterCheckNow(bpy.types.Operator):
             return {'CANCELLED'}
 
         # apply the UI settings
-        settings = get_addon_preferences(context, addon_updater.addon)
+        settings = get_addon_preferences(context, addon_updater.addon_name)
         if settings is None:
             addon_updater.print_verbose(
                 f"Could not get {__package__} preferences, update check skipped"
@@ -182,10 +184,10 @@ class AddonUpdaterInstallManually(bpy.types.Operator):
                 text="(failed to retrieve direct download)")
             row.enabled = False
 
-            if addon_updater.website is not None:
+            if addon_updater.manual_download_website is not None:
                 row = layout.row()
                 ops = row.operator("wm.url_open", text="Open website")
-                ops.url = addon_updater.website
+                ops.url = addon_updater.manual_download_website
             else:
                 row = layout.row()
                 row.label(text="See source website to download the update")
@@ -232,7 +234,7 @@ class AddonUpdaterUpdatedSuccessful(bpy.types.Operator):
             rw.operator(
                 "wm.url_open",
                 text="Click for manual download.",
-                icon="BLANK1").url = addon_updater.website
+                icon="BLANK1").url = addon_updater.manual_download_website
         elif not addon_updater.auto_reload_post_update:
             # Tell user to restart blender after an update/restore!
             if "just_restored" in saved and saved["just_restored"]:
@@ -411,7 +413,7 @@ class AddonUpdaterInstallPopup(bpy.types.Operator):
             return {'CANCELLED'}
 
         if addon_updater.manual_only:
-            bpy.ops.wm.url_open(url=addon_updater.website)
+            bpy.ops.wm.url_open(url=addon_updater.manual_download_website)
         elif addon_updater.update_ready:
 
             # Action based on enum selection.
@@ -466,7 +468,7 @@ class AddonUpdaterUpdateNow(bpy.types.Operator):
             return {'CANCELLED'}
 
         if addon_updater.manual_only:
-            bpy.ops.wm.url_open(url=addon_updater.website)
+            bpy.ops.wm.url_open(url=addon_updater.manual_download_website)
         if addon_updater.update_ready:
             # if it fails, offer to open the website instead
             try:
@@ -522,7 +524,7 @@ def post_update_callback(module_name, res=None):
         # This is the same code as in conditional at the end of the register
         # function, ie if "auto_reload_post_update" == True, skip code.
         addon_updater.print_verbose(
-            "{} updater: Running post update callback".format(addon_updater.addon))
+            "{} updater: Running post update callback".format(addon_updater.addon_name))
 
         atr = AddonUpdaterUpdatedSuccessful.bl_idname.split(".")
         getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')

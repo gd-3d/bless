@@ -4,7 +4,7 @@ import bpy
 
 # from . import bless, bless_keymap_utils
 # from .core import grid
-from .gltf import gltf_export
+# from .gltf import gltf_export
 from .modules.addon_updater_system.addon_updater import Alx_Addon_Updater
 from .modules.Alx_Module_Manager import Alx_Module_Manager
 
@@ -26,18 +26,18 @@ bl_info = {
 }
 
 
-# [REQUIRED] Interface class for GLTF
-class glTF2ExportUserExtension(gltf_export.BlessExport):
+# # [REQUIRED] Interface class for GLTF
+# class glTF2ExportUserExtension(gltf_export.BlessExport):
 
-    def __init__(self):
-        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
-        self.Extension = Extension
+#     def __init__(self):
+#         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
+#         self.Extension = Extension
 
-    def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
-        return super().gather_gltf_extensions_hook(gltf_plan, export_settings)
+#     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
+#         return super().gather_gltf_extensions_hook(gltf_plan, export_settings)
 
-    def gather_node_hook(self, gltf2_object, blender_object, export_settings):
-        return super().gather_node_hook(gltf2_object, blender_object, export_settings)
+#     def gather_node_hook(self, gltf2_object, blender_object, export_settings):
+#         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
 # def register_properties():
@@ -94,7 +94,7 @@ def unregister():
     # bpy.types.VIEW3D_PT_active_tool_duplicate.remove(UIPreset_ToolBox)
     # bpy.types.OBJECT_PT_context_object.remove(UIPreset_ObjectDataSheet)
 
-    module_loader.developer_unregister_modules()
+    # module_loader.developer_unregister_modules()
     # unregister_properties()
 
 

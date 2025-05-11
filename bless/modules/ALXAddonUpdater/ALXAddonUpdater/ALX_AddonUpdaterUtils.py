@@ -1,9 +1,9 @@
+import re
+
 import bpy
 
 
 def get_addon_preferences(context: bpy.types.Context = bpy.context, addon_name: str = ""):
-    """Intermediate method for pre and post blender 2.8 grabbing preferences"""
-
     addon = context.preferences.addons.get(addon_name)
     if (addon is not None):
         return addon.preferences
@@ -17,3 +17,10 @@ def ui_refresh(update_status):
         for window in windowManager.windows:
             for area in window.screen.areas:
                 area.tag_redraw()
+
+
+def is_url(url: str):
+    if (re.search(pattern=r"^(http\:\/\/[\S]+)$|^(https\:\/\/[\S]+)$", string=url, flags=re.IGNORECASE) is not None):
+        return True
+
+    return False

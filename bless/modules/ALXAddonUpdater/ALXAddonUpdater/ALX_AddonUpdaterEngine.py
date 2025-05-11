@@ -1,4 +1,3 @@
-
 import errno
 import fnmatch
 import json
@@ -16,6 +15,8 @@ from datetime import datetime, timedelta
 import addon_utils
 import bpy
 
+from .ALX_AddonUpdaterUtils import is_url
+
 
 class AddonUpdaterEngine:
     """Addon updater service class.
@@ -28,9 +29,9 @@ class AddonUpdaterEngine:
     def __init__(self):
 
         self._engine = GithubEngine()
-        self._user = None
-        self._repo = None
-        self._website = None
+        self._engine_user_name = None
+        self._engine_repo_name = None
+        self._manual_download_website = None
         self._current_version = None
         self._subfolder_path = None
         self._tags = list()
@@ -77,11 +78,10 @@ class AddonUpdaterEngine:
         self._select_link = None
         self.skip_tag = None
 
-        # Get data from the running blender module (addon).
-        self._addon = __package__.lower()
+        self._addon_name = ""
         self._addon_package = __package__  # Must not change.
         self._updater_path = os.path.join(
-            os.path.dirname(__file__), self._addon + "_updater")
+            os.path.dirname(__file__), self._addon_name + "_updater")
         self._addon_root = os.path.dirname(__file__)
         self._json = dict()
         self._error = None
@@ -109,18 +109,18 @@ class AddonUpdaterEngine:
         """Print out a verbose logging message if verbose is true."""
         if not self._verbose:
             return
-        print("{} addon: ".format(self.addon) + msg)
+        print("{} addon: ".format(self.addon_name) + msg)
 
     # -------------------------------------------------------------------------
     # Getters and setters
     # -------------------------------------------------------------------------
     @property
-    def addon(self):
-        return self._addon
+    def addon_name(self):
+        return self._addon_name
 
-    @addon.setter
-    def addon(self, value):
-        self._addon = str(value)
+    @addon_name.setter
+    def addon_name(self, value):
+        self._addon_name = str(value)
 
     @property
     def api_url(self):
@@ -128,9 +128,8 @@ class AddonUpdaterEngine:
 
     @api_url.setter
     def api_url(self, value):
-        if not self.check_is_url(value):
-            raise ValueError("Not a valid URL: " + value)
-        self._engine.api_url = value
+        if (is_url(value) == True):
+            self._engine.api_url = value
 
     @property
     def async_checking(self):
@@ -337,13 +336,13 @@ class AddonUpdaterEngine:
             self._remove_pre_update_patterns = value
 
     @property
-    def repo(self):
-        return self._repo
+    def engine_repo_name(self):
+        return self._engine_repo_name
 
-    @repo.setter
-    def repo(self, value):
+    @engine_repo_name.setter
+    def engine_repo_name(self, value):
         try:
-            self._repo = str(value)
+            self._engine_repo_name = str(value)
         except:
             raise ValueError("repo must be a string value")
 
@@ -424,13 +423,13 @@ class AddonUpdaterEngine:
             raise ValueError("use_releases must be a boolean value")
 
     @property
-    def user(self):
-        return self._user
+    def engine_user_name(self):
+        return self._engine_user_name
 
-    @user.setter
-    def user(self, value):
+    @engine_user_name.setter
+    def engine_user_name(self, value):
         try:
-            self._user = str(value)
+            self._engine_user_name = str(value)
         except:
             raise ValueError("User must be a string value")
 
@@ -490,25 +489,17 @@ class AddonUpdaterEngine:
         self._version_min_update = value
 
     @property
-    def website(self):
-        return self._website
+    def manual_download_website(self):
+        return self._manual_download_website
 
-    @website.setter
-    def website(self, value):
-        if not self.check_is_url(value):
-            raise ValueError("Not a valid URL: " + value)
-        self._website = value
+    @manual_download_website.setter
+    def manual_download_website(self, value):
+        if (is_url(value) == True):
+            self._manual_download_website = value
 
     # -------------------------------------------------------------------------
     # Parameter validation related functions
     # -------------------------------------------------------------------------
-    @staticmethod
-    def check_is_url(url):
-        if not ("http://" in url or "https://" in url):
-            return False
-        if "." not in url:
-            return False
-        return True
 
     def _get_tag_names(self):
         tag_names = list()
@@ -551,7 +542,7 @@ class AddonUpdaterEngine:
 
     def __str__(self):
         return "Updater, with user: {a}, repository: {b}, url: {c}".format(
-            a=self._user, b=self._repo, c=self.form_repo_url())
+            a=self._engine_user_name, b=self._engine_repo_name, c=self.form_repo_url())
 
     # -------------------------------------------------------------------------
     # API-related functions
@@ -778,7 +769,7 @@ class AddonUpdaterEngine:
         self.print_verbose("Backing up current addon folder")
         local = os.path.join(self._updater_path, "backup")
         tempdest = os.path.join(
-            self._addon_root, os.pardir, self._addon + "_updater_backup_temp")
+            self._addon_root, os.pardir, self._addon_name + "_updater_backup_temp")
 
         self.print_verbose("Backup destination path: " + str(local))
 
@@ -830,7 +821,7 @@ class AddonUpdaterEngine:
         self.print_verbose("Restoring backup, backing up current addon folder")
         backuploc = os.path.join(self._updater_path, "backup")
         tempdest = os.path.join(
-            self._addon_root, os.pardir, self._addon + "_updater_backup_temp")
+            self._addon_root, os.pardir, self._addon_name + "_updater_backup_temp")
         tempdest = os.path.abspath(tempdest)
 
         # Move instead contents back in place, instead of copy.
@@ -1180,7 +1171,7 @@ class AddonUpdaterEngine:
             # already running the bg thread
         elif self._update_ready is None:
             print("{} updater: Running background check for update".format(
-                  self.addon))
+                  self.addon_name))
             self.start_async_check_update(False, callback)
 
     def check_for_update_now(self, callback=None):
@@ -1219,10 +1210,10 @@ class AddonUpdaterEngine:
         if self._current_version is None:
             raise ValueError("current_version not yet defined")
 
-        if self._repo is None:
+        if self._engine_repo_name is None:
             raise ValueError("repo not yet defined")
 
-        if self._user is None:
+        if self._engine_user_name is None:
             raise ValueError("username not yet defined")
 
         self.set_updater_json()  # self._json
@@ -1603,24 +1594,23 @@ class GithubEngine:
         self.token = None
         self.name = "github"
 
-    def form_repo_url(self, updater):
-        return "{}/repos/{}/{}".format(
-            self.api_url, updater.user, updater.repo)
+    def form_repo_url(self, updater: AddonUpdaterEngine):
+        return f"{self.api_url}/repos/{updater.engine_user_name}/{updater.engine_repo_name}"
 
-    def form_tags_url(self, updater):
-        if updater.use_releases:
-            return "{}/releases".format(self.form_repo_url(updater))
+    def form_tags_url(self, updater: AddonUpdaterEngine):
+        if (updater.use_releases == True):
+            return f"{self.form_repo_url(updater)}/releases"
         else:
-            return "{}/tags".format(self.form_repo_url(updater))
+            return f"{self.form_repo_url(updater)}/tags"
 
-    def form_branch_list_url(self, updater):
-        return "{}/branches".format(self.form_repo_url(updater))
+    def form_branch_list_url(self, updater: AddonUpdaterEngine):
+        return f"{self.form_repo_url(updater)}/branches"
 
-    def form_branch_url(self, branch, updater):
-        return "{}/zipball/{}".format(self.form_repo_url(updater), branch)
+    def form_branch_url(self, branch, updater: AddonUpdaterEngine):
+        return f"{self.form_repo_url(updater)}/zipball/{branch}"
 
     def parse_tags(self, response, updater):
-        if response is None:
+        if (response is None):
             return list()
         return response
 
@@ -1633,39 +1623,31 @@ class GitlabEngine:
         self.token = None
         self.name = "gitlab"
 
-    def form_repo_url(self, updater):
-        return "{}/api/v4/projects/{}".format(self.api_url, updater.repo)
+    def form_repo_url(self, updater: AddonUpdaterEngine):
+        return f"{self.api_url}/api/v4/projects/{updater.engine_repo_name}"
 
-    def form_tags_url(self, updater):
-        return "{}/repository/tags".format(self.form_repo_url(updater))
+    def form_tags_url(self, updater: AddonUpdaterEngine):
+        return f"{self.form_repo_url(updater)}/repository/tags"
 
-    def form_branch_list_url(self, updater):
-        # does not validate branch name.
-        return "{}/repository/branches".format(
-            self.form_repo_url(updater))
+    def form_branch_list_url(self, updater: AddonUpdaterEngine):
+        return f"{self.form_repo_url(updater)}/repository/branches"
 
-    def form_branch_url(self, branch, updater):
-        # Could clash with tag names and if it does, it will download TAG zip
-        # instead of branch zip to get direct path, would need.
-        return "{}/repository/archive.zip?sha={}".format(
-            self.form_repo_url(updater), branch)
+    def form_branch_url(self, branch, updater: AddonUpdaterEngine):
+        return f"{self.form_repo_url(updater)}/repository/archive.zip?sha={branch}"
 
-    def get_zip_url(self, sha, updater):
-        return "{base}/repository/archive.zip?sha={sha}".format(
-            base=self.form_repo_url(updater),
-            sha=sha)
+    def get_zip_url(self, sha, updater: AddonUpdaterEngine):
+        return f"{self.form_repo_url(updater)}/repository/archive.zip?sha={sha}"
 
-    # def get_commit_zip(self, id, updater):
-    # 	return self.form_repo_url(updater)+"/repository/archive.zip?sha:"+id
-
-    def parse_tags(self, response, updater):
-        if response is None:
+    def parse_tags(self, response, updater: AddonUpdaterEngine):
+        if (response is None):
             return list()
         return [
             {
                 "name": tag["name"],
                 "zipball_url": self.get_zip_url(tag["commit"]["id"], updater)
-            } for tag in response]
+            }
+            for tag in response
+        ]
 
 
 class BitbucketEngine:
@@ -1676,23 +1658,19 @@ class BitbucketEngine:
         self.token = None
         self.name = "bitbucket"
 
-    def form_repo_url(self, updater):
-        return "{}/2.0/repositories/{}/{}".format(
-            self.api_url, updater.user, updater.repo)
+    def form_repo_url(self, updater: AddonUpdaterEngine):
+        return f"{self.api_url}/2.0/repositories/{updater.engine_user_name}/{updater.engine_repo_name}"
 
-    def form_tags_url(self, updater):
-        return self.form_repo_url(updater) + "/refs/tags?sort=-name"
+    def form_tags_url(self, updater: AddonUpdaterEngine):
+        return f"{self.form_repo_url(updater)}/refs/tags?sort=-name"
 
-    def form_branch_url(self, branch, updater):
+    def form_branch_url(self, branch, updater: AddonUpdaterEngine):
         return self.get_zip_url(branch, updater)
 
-    def get_zip_url(self, name, updater):
-        return "https://bitbucket.org/{user}/{repo}/get/{name}.zip".format(
-            user=updater.user,
-            repo=updater.repo,
-            name=name)
+    def get_zip_url(self, name, updater: AddonUpdaterEngine):
+        return f"https://bitbucket.org/{updater.engine_user_name}/{updater.engine_repo_name}/get/{name}.zip"
 
-    def parse_tags(self, response, updater):
+    def parse_tags(self, response, updater: AddonUpdaterEngine):
         if response is None:
             return list()
         return [
