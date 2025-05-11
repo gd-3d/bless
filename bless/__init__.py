@@ -1,7 +1,6 @@
-
-
+from .gltf.BLESS_gltf import BLESS_GLTF
 from .modules.ALXAddonUpdater.ALXAddonUpdater.ALX_AddonUpdater import \
-    ALX_Addon_Updater
+    Alx_Addon_Updater
 from .modules.ALXModuleManager.ALXModuleManager.ALX_ModuleManager import \
     Alx_Module_Manager
 
@@ -19,12 +18,47 @@ bl_info = {
 }
 
 
-module_loader = ALX_Module_Manager(ADDON_PATH, globals())
-addon_updater = ALX_Addon_Updater(ADDON_PATH[0], bl_info, "Github", "gd-3d", "bless", "https://github.com/gd-3d/bless/releases/")
+module_loader = Alx_Module_Manager(
+    path=__path__,
+    globals=globals(),
+    mute=True
+)
+addon_updater = Alx_Addon_Updater(
+    path=__path__,
+    bl_info=bl_info,
+    engine="Github",
+    engine_user_name="gd-3d",
+    engine_repo_name="bless",
+    manual_download_website="https://github.com/gd-3d/bless/releases/"
+)
+
+
+# [REQUIRED] Interface class for GLTF
+class glTF2ExportUserExtension(BLESS_GLTF):
+
+    def __init__(self):
+        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
+        self.Extension = Extension
+
+    def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
+        return super().gather_gltf_extensions_hook(gltf_plan, export_settings)
+
+    def gather_node_hook(self, gltf2_object, blender_object, export_settings):
+        return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
 def register():
-    module_loader.developer_register_modules(mute=True)
+    module_loader.developer_load_resources(
+        [
+            {
+                "name": "discord_icon",
+                "path": "resources\\icons\\discord_icon_white.png",
+                "resource_type": "IMAGE"
+            }
+        ]
+    )
+
+    module_loader.developer_register_modules()
     addon_updater.register_addon_updater(mute=True)
 
 
