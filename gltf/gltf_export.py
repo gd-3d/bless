@@ -1,7 +1,6 @@
-from .. import bless
-import copy
 
-import bpy
+
+from bless.utilities.BLESS_General_Utils import DEV_BlessConsolePrint
 
 # constants
 GLTF_LIGHT_FACTOR = 680
@@ -33,21 +32,6 @@ bless_extensions = [
 
 # TODO: allow user extensions. One day.
 user_extensions = []
-
-###### EXPORT #######
-
-
-def bless_print(message, header=False):
-    separator = "=" * 50
-    if header:
-        print(f"\n{separator}")
-        print(f"[BLESS] {message}")
-        print(f"{separator}")
-    else:
-        print(f"[BLESS] {message}")
-
-
-# go up a folder and import bless
 
 
 def build_body_dictionary(type, mass=None, linear_velocity=None, angular_velocity=None, center_of_mass=None, shape_index=None):
@@ -90,7 +74,7 @@ def build_collision_filter(obj):
     collide_with_systems = []
 
     # Debug print
-    bless_print(f"Building collision filter for object: {obj.name}")
+    DEV_BlessConsolePrint(f"Building collision filter for object: {obj.name}")
 
     # Get the layers that are enabled
     for i in range(1, 33):
@@ -99,7 +83,7 @@ def build_collision_filter(obj):
         # Debug prints
         layer_enabled = getattr(obj.collision_layers, layer_name, False)
         mask_enabled = getattr(obj.collision_mask, layer_name, False)
-        bless_print(f"Layer {i}: layer={layer_enabled}, mask={mask_enabled}")
+        DEV_BlessConsolePrint(f"Layer {i}: layer={layer_enabled}, mask={mask_enabled}")
 
         # Only add if explicitly True
         if layer_enabled is True:  # Explicit True check
@@ -108,8 +92,8 @@ def build_collision_filter(obj):
             collide_with_systems.append(f"Layer {i}")
 
     # Debug print
-    bless_print(f"Collision systems: {collision_systems}")
-    bless_print(f"Collide with systems: {collide_with_systems}")
+    DEV_BlessConsolePrint(f"Collision systems: {collision_systems}")
+    DEV_BlessConsolePrint(f"Collide with systems: {collide_with_systems}")
 
     # Only create filter if there are actually enabled layers
     if collision_systems or collide_with_systems:

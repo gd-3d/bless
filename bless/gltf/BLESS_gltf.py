@@ -1,3 +1,8 @@
+import bpy
+
+from ..utilities.BLESS_General_Utils import DEV_BlessConsolePrint
+
+
 class BLESS_GLTF:
     def __init__(self):
         from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
@@ -33,7 +38,7 @@ class BLESS_GLTF:
             gltf2_object.extras = {"class": class_data}
 
         if hasattr(blender_object, "type"):
-            bless_print(f"Object type: [{blender_object.type}]")
+            DEV_BlessConsolePrint(f"Object type: [{blender_object.type}]")
             node_tree[blender_object.name] = {}
 
             # Dictionary to store the node flags for each Blender object
@@ -68,11 +73,11 @@ class BLESS_GLTF:
                 node_tree[blender_object.name]["type"] = "camera"
 
             elif blender_object.type == "SPEAKER":
-                bless_print("Processing speaker object...")  # Debug print
+                DEV_BlessConsolePrint("Processing speaker object...")  # Debug print
 
                 # Only add audio emitter if there's a sound file assigned
                 if blender_object.data and blender_object.data.sound:
-                    bless_print(f"Found sound: {blender_object.data.sound.filepath}")  # Debug print
+                    DEV_BlessConsolePrint(f"Found sound: {blender_object.data.sound.filepath}")  # Debug print
                     audio_emitter = {
                         "type": "spatial",
                         "gain": blender_object.data.volume,
@@ -87,9 +92,9 @@ class BLESS_GLTF:
                     }
 
                     gltf2_object.extensions["KHR_audio_emitter"] = audio_emitter
-                    bless_print(f"Added audio emitter for {blender_object.name}")
+                    DEV_BlessConsolePrint(f"Added audio emitter for {blender_object.name}")
                 else:
-                    bless_print("No sound file assigned to speaker")  # Debug print
+                    DEV_BlessConsolePrint("No sound file assigned to speaker")  # Debug print
         else:
             # its a collection.
             node_tree[blender_object.name] = {}
@@ -142,7 +147,7 @@ class BLESS_GLTF:
         if has_audio:
             if "KHR_audio_emitter" not in gltf_plan.extensions_used:
                 gltf_plan.extensions_used.append("KHR_audio_emitter")
-                bless_print("Added KHR_audio_emitter to extensionsUsed")
+                DEV_BlessConsolePrint("Added KHR_audio_emitter to extensionsUsed")
 
         bodies = []
         shapes = []
@@ -251,9 +256,9 @@ class BLESS_GLTF:
         # Add collision filters extension, if we have any filters
         if collision_filters:
             # Debug print
-            bless_print("Original collision filters:")
+            DEV_BlessConsolePrint("Original collision filters:")
             for f in collision_filters:
-                bless_print(str(f))
+                DEV_BlessConsolePrint(str(f))
 
             # Deduplicate filters
             unique_filters = []
@@ -274,9 +279,9 @@ class BLESS_GLTF:
                     unique_filters.append(filter_data)
 
             # Debug print
-            bless_print("Deduplicated collision filters:")
+            DEV_BlessConsolePrint("Deduplicated collision filters:")
             for f in unique_filters:
-                bless_print(str(f))
+                DEV_BlessConsolePrint(str(f))
 
             if unique_filters:
                 gltf_plan.extensions["OMI_physics_body"] = self.Extension(
@@ -300,4 +305,4 @@ class BLESS_GLTF:
             if "KHR_audio_emitter" not in gltf_plan.extensions_used:
                 gltf_plan.extensions_used.append("KHR_audio_emitter")
 
-        bless_print("Gather extensions finished", header=True)
+        DEV_BlessConsolePrint("Gather extensions finished", header=True)

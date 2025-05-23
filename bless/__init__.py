@@ -37,8 +37,7 @@ addon_updater = Alx_Addon_Updater(
 class glTF2ExportUserExtension(BLESS_GLTF):
 
     def __init__(self):
-        from io_scene_gltf2.io.com.gltf2_io_extensions import Extension
-        self.Extension = Extension
+        super.__init__()
 
     def gather_gltf_extensions_hook(self, gltf_plan, export_settings):
         return super().gather_gltf_extensions_hook(gltf_plan, export_settings)
