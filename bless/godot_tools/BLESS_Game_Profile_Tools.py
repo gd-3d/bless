@@ -2,9 +2,9 @@ import json
 
 import bpy
 
-from bless.BLESS_Definitions import standard_texture_channels
-from bless.utilities.BLESS_Material_Utils import create_materials_from_textures
-from core.bless import BlessClassProperties
+from ..BLESS_Definitions import standard_texture_channels
+from ..BLESS_Properties import BlessClassProperties
+from ..utilities.BLESS_Material_Utils import create_materials_from_textures
 
 
 class BlessClassFactory(bpy.types.Operator):

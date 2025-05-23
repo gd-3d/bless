@@ -75,3 +75,8 @@ class BlessTools(bpy.types.PropertyGroup):
         options={'HIDDEN'},
         maxlen=255,
     )  # type: ignore
+
+
+class BlessClassProperties(bpy.types.PropertyGroup):
+    """Base class for dynamic properties"""
+    pass

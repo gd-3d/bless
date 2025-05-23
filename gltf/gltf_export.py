@@ -1,34 +1,7 @@
 
 
-from bless.utilities.BLESS_General_Utils import DEV_BlessConsolePrint
-
 # constants
 GLTF_LIGHT_FACTOR = 680
-
-###### EXTENSIONS #######
-
-# extensions are used by bless for collisions and base class objects/nodes.
-core_extensions = [
-    "KHR_node_visibility",  # Hidden nodes
-    "GODOT_node_lock",  # Locked nodes
-                        "KHR_audio_emitter",  # AudioStreamPlayer3D
-                        # "EXT_mesh_gpu_instancing", # MultiMeshInstance3D
-                        # "KHR_xmp_json_ld", # Metadata
-                        # OMI_environment_sky # WorldEnvironment sky resource.
-]
-
-physics_extensions = [
-    "OMI_physics_body",  # PhysicsBody3D
-    "OMI_physics_shape",  # CollisionShape3D
-    # OMI_physics_joint, # Joint3D
-]
-
-# optional extensions WILL BE included with bless and can be used as installable presets. (TODO)
-bless_extensions = [
-    # "OMI_seat", # Seat3D
-    # "OMI_spawn_point", # SpawnPoint3D
-    # "OMI_vehicle", # Vehicle3D (NOT body?)
-]
 
 # TODO: allow user extensions. One day.
 user_extensions = []

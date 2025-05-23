@@ -1,8 +1,15 @@
+import bpy
+
+from .BLESS_Properties import BLESS_ObjectCollisionSettings, BlessTools
+from .core.grid.BLESS_Grid_Properties import BLESS_GridData
 from .gltf.BLESS_gltf import BLESS_GLTF
+from .gltf.BLESS_gltf_definitions import OMIPhysicsBody, OMIPhysicsShape
 from .modules.ALXAddonUpdater.ALXAddonUpdater.ALX_AddonUpdater import \
     Alx_Addon_Updater
 from .modules.ALXModuleManager.ALXModuleManager.ALX_ModuleManager import \
     Alx_Module_Manager
+from .user_interface.BLESS_Object_Data_UIPresets import (
+    UIPreset_ObjectDataSheet, UIPreset_ToolBox)
 
 bl_info = {
     "name": "Bless",
@@ -46,6 +53,45 @@ class glTF2ExportUserExtension(BLESS_GLTF):
         return super().gather_node_hook(gltf2_object, blender_object, export_settings)
 
 
+def Properties_Register():
+    bpy.types.Object.body_properties = bpy.props.PointerProperty(type=OMIPhysicsBody)
+    bpy.types.Object.shape_properties = bpy.props.PointerProperty(type=OMIPhysicsShape)
+
+    bpy.types.Object.bless_object_collision_settings = bpy.props.PointerProperty(type=BLESS_ObjectCollisionSettings)
+
+    # Add default bless_class property
+    bpy.types.Object.bless_class = bpy.props.EnumProperty(
+        name="Godot Class",
+        description="Select Godot class for this object",
+        items=[("NONE", "None", "No Godot class assigned")],
+        default="NONE"
+    )
+
+    # persistent-session bless properties
+    bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=BlessTools)
+
+
+def Properties_Unregister():
+    del bpy.types.Object.body_properties
+    del bpy.types.Object.shape_properties
+
+    del bpy.types.Object.bless_object_collision_settings
+
+    del bpy.types.Object.bless_class
+
+    del bpy.types.WindowManager.bless_tools
+
+
+def UI_Load():
+    bpy.types.VIEW3D_PT_active_tool_duplicate.prepend(UIPreset_ToolBox)
+    bpy.types.OBJECT_PT_context_object.prepend(UIPreset_ObjectDataSheet)
+
+
+def UI_Unload():
+    bpy.types.VIEW3D_PT_active_tool_duplicate.remove(UIPreset_ToolBox)
+    bpy.types.OBJECT_PT_context_object.remove(UIPreset_ObjectDataSheet)
+
+
 def register():
     module_loader.developer_load_resources(
         [
@@ -60,8 +106,14 @@ def register():
     module_loader.developer_register_modules()
     addon_updater.register_addon_updater(mute=True)
 
+    UI_Load()
+
+    bpy.context.preferences.use_preferences_save = True
+
 
 def unregister():
+    UI_Unload()
+
     module_loader.developer_unregister_modules()
     addon_updater.unregister_addon_updater()
 

@@ -7,11 +7,6 @@ def update_camera_lock(self, context):
     bpy.ops.view3d.bless_camera_lock()
 
 
-class BlessClassProperties(bpy.types.PropertyGroup):
-    """Base class for dynamic properties"""
-    pass
-
-
 class BlessPanel(bpy.types.Panel):
     # memoryleak source ENTIRE CLASS
 
