@@ -1,6 +1,6 @@
 import bpy
 
-from .BLESS_Properties import BLESS_ObjectCollisionSettings, BlessTools
+from .BLESS_Properties import BLESS_ObjectCollisionSettings
 from .gltf.BLESS_gltf import BLESS_GLTF
 from .gltf.BLESS_gltf_definitions import OMIPhysicsBody, OMIPhysicsShape
 from .modules.ALXAddonUpdater.ALXAddonUpdater.ALX_AddonUpdater import \
@@ -59,15 +59,15 @@ def Properties_Register():
     bpy.types.Object.bless_object_collision_settings = bpy.props.PointerProperty(type=BLESS_ObjectCollisionSettings)
 
     # Add default bless_class property
-    bpy.types.Object.bless_class = bpy.props.EnumProperty(
-        name="Godot Class",
-        description="Select Godot class for this object",
-        items=[("NONE", "None", "No Godot class assigned")],
-        default="NONE"
-    )
+    # bpy.types.Object.bless_class = bpy.props.EnumProperty(
+    #     name="Godot Class",
+    #     description="Select Godot class for this object",
+    #     items=[("NONE", "None", "No Godot class assigned")],
+    #     default="NONE"
+    # )
 
-    # persistent-session bless properties
-    bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=BlessTools)
+    # # persistent-session bless properties
+    # bpy.types.WindowManager.bless_tools = bpy.props.PointerProperty(type=BlessTools)
 
 
 def Properties_Unregister():
