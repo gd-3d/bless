@@ -4,3 +4,6 @@
 [submodule "bless/modules/ALXModuleManager"]
 	path = bless/modules/ALXModuleManager
 	url = https://github.com/Valerie-Bosco/ALXModuleManager.git
+[submodule "development modules/ALX-Addon-Zipper"]
+	path = development modules/ALX-Addon-Zipper
+	url = https://github.com/Valerie-Bosco/ALX-Addon-Zipper.git
