@@ -1,7 +1,14 @@
 import bpy
 
 
-class BLESS_ObjectCollisionSettings(bpy.types.PropertyGroup):
+class BLESS_PG_SessionProperties(bpy.types.PropertyGroup):
+    b_show_tool_box: bpy.props.BoolProperty()  # type:ignore
+
+    b_show_object_data: bpy.props.BoolProperty()  # type:ignore
+    b_show_collision_settings: bpy.props.BoolProperty()  # type:ignore
+
+
+class BLESS_PG_ObjectCollisionSettings(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
         name="Collision Type",
         description="Static level geometry.",
@@ -21,7 +28,7 @@ class BLESS_ObjectCollisionSettings(bpy.types.PropertyGroup):
 
 
 # Default collision type for new objects.
-class BlessDefaultCollisionType(bpy.types.PropertyGroup):
+class BLESS_PG_DefaultCollisionType(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
         name="Collision Type",
         description="Static level geometry.",
