@@ -1,7 +1,6 @@
 import bpy
 
 from .BLESS_Properties import BLESS_ObjectCollisionSettings, BlessTools
-from .core.grid.BLESS_Grid_Properties import BLESS_GridData
 from .gltf.BLESS_gltf import BLESS_GLTF
 from .gltf.BLESS_gltf_definitions import OMIPhysicsBody, OMIPhysicsShape
 from .modules.ALXAddonUpdater.ALXAddonUpdater.ALX_AddonUpdater import \
