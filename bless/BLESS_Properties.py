@@ -20,14 +20,37 @@ class BLESS_PG_ObjectCollisionSettings(bpy.types.PropertyGroup):
             ("none", "None", "", 1 << 3),
         ])  # type: ignore
 
-    layers = [(f"LAYER_{n}", f"{n}", "") for n in range(32)]
-    collision_layers: bpy.props.EnumProperty(name="Collision Layers", options={"ENUM_FLAG"}, items=layers)  # type:ignore
+    # region collision mask layers
+    layers_1_8 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(0, 8)]
+    collision_layers_1_8: bpy.props.EnumProperty(name="collision layers 1-8", options={"ENUM_FLAG"}, items=layers_1_8)  # type:ignore
 
-    mask_layers = [(f"LAYER_{n}", f"{n}", "") for n in range(32)]
-    collision_mask_layers: bpy.props.EnumProperty(name="Collision Mask Layers", options={"ENUM_FLAG"}, items=mask_layers)  # type:ignore
+    layers_9_16 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(8, 16)]
+    collision_layers_9_16: bpy.props.EnumProperty(name="collision layers 9-16", options={"ENUM_FLAG"}, items=layers_9_16)  # type:ignore
 
+    layers_17_24 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(16, 24)]
+    collision_layers_17_24: bpy.props.EnumProperty(name="collision layers 17-24", options={"ENUM_FLAG"}, items=layers_17_24)  # type:ignore
+
+    layers_25_32 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(24, 32)]
+    collision_layers_25_32: bpy.props.EnumProperty(name="collision layers 25-32", options={"ENUM_FLAG"}, items=layers_25_32)  # type:ignore
+    # endregion
+
+    # region collision mask layers
+    mask_layers_1_8 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(0, 8)]
+    collision_mask_layers_1_8: bpy.props.EnumProperty(name="collision layers 1-8", options={"ENUM_FLAG"}, items=mask_layers_1_8)  # type:ignore
+
+    mask_layers_9_16 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(8, 16)]
+    collision_mask_layers_9_16: bpy.props.EnumProperty(name="collision layers 9-16", options={"ENUM_FLAG"}, items=mask_layers_9_16)  # type:ignore
+
+    mask_layers_17_24 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(16, 24)]
+    collision_mask_layers_17_24: bpy.props.EnumProperty(name="collision layers 17-24", options={"ENUM_FLAG"}, items=mask_layers_17_24)  # type:ignore
+
+    mask_layers_25_32 = [(f"LAYER_{n}", f"{n+1}", "") for n in range(24, 32)]
+    collision_mask_layers_25_32: bpy.props.EnumProperty(name="collision layers 25-32", options={"ENUM_FLAG"}, items=mask_layers_25_32)  # type:ignore
+    # endregion
 
 # Default collision type for new objects.
+
+
 class BLESS_PG_DefaultCollisionType(bpy.types.PropertyGroup):
     collision_types: bpy.props.EnumProperty(
         name="Collision Type",

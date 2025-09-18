@@ -120,10 +120,22 @@ def UIPreset_ObjectCollisionSettings(layout: bpy.types.UILayout, context: bpy.ty
                     pass
 
                 if (object_collision.collision_types != "none"):
-                    object_data_layout.label(text="Collision Layers:")
+                    object_data_layout.label(text="Collision Layers: (shift+click)")
                     collision_settings = context.object.bless_object_collision_settings
-                    object_data_layout.grid_flow(columns=16, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_layers")
 
-                    object_data_layout.label(text="Collision Mask Layers:")
+                    grid_collision_layers = object_data_layout.grid_flow(row_major=True)
+
+                    grid_collision_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_layers_1_8")
+                    grid_collision_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_layers_9_16")
+                    grid_collision_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_layers_17_24")
+                    grid_collision_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_layers_25_32")
+
+                    object_data_layout.label(text="Collision Mask Layers: (shift+click)")
                     collision_settings = context.object.bless_object_collision_settings
-                    object_data_layout.grid_flow(columns=16, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_mask_layers")
+
+                    grid_collision_mask_layers = object_data_layout.grid_flow(row_major=True)
+
+                    grid_collision_mask_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_mask_layers_1_8")
+                    grid_collision_mask_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_mask_layers_9_16")
+                    grid_collision_mask_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_mask_layers_17_24")
+                    grid_collision_mask_layers.grid_flow(columns=6, row_major=True, even_columns=True, even_rows=True, align=True).prop(collision_settings, "collision_mask_layers_25_32")
