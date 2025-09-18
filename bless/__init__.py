@@ -12,7 +12,7 @@ from .user_interface.BLESS_Object_Data_UIPresets import \
     UIPreset_ObjectDataSheet
 
 bl_info = {
-    "name": "Bless",
+    "name": "bless",
     "author": "michaeljared, aaronfranke, yankscally, valerie-bosco",
     "description": "",
     "version": (1, 0, 0),

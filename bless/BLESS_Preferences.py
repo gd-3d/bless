@@ -29,12 +29,12 @@ class bless_AddonPreferences(bpy.types.AddonPreferences):
         preference_box: bpy.types.UILayout = self.layout
         preference_box.grid_flow(row_major=True, align=True).prop(self, "addon_preference_tabs", expand=True)
 
-        # if (self.addon_preference_tabs == "HOME"):
-        # from .icons import icons_dictionary
-        # row = preference_box.split(factor=0.33)
-        # row.separator()
-        # row.operator("wm.url_open", text="BLESS Discord", icon_value=icons_dictionary["discord_icon"]).url = ""
-        # row.separator()
+        if (self.addon_preference_tabs == "HOME"):
+            from .icons import icons_dictionary
+            row = preference_box.split(factor=0.333)
+            row.separator()
+            row.operator("wm.url_open", text="BLESS Discord", icon_value=icons_dictionary["discord_icon"]).url = ""
+            row.separator()
 
         # if (self.addon_preference_tabs == "KEYBINDS"):
         #     keybinds_column = preference_box.column()
