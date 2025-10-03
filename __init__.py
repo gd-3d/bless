@@ -9,9 +9,6 @@ bl_info = {
 
 import bpy
 
-
-
-
 # Define a simple operator
 class OBJECT_OT_hello_operator(bpy.types.Operator):
     bl_idname = "object.say_hello"
